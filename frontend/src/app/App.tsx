@@ -408,13 +408,6 @@ function App() {
           </div>
 
           <div className="flex items-center gap-4">
-            {user?.adminNotes && (
-              <div className="hidden md:flex items-center gap-2 px-5 py-2.5 bg-amber-50 border border-amber-200 rounded-2xl text-amber-700 animate-pulse cursor-help" title={user.adminNotes}>
-                <Bell className="w-4 h-4" />
-                <span className="text-[10px] font-black uppercase tracking-widest">{language === 'uz' ? 'Yangi tavsiya' : 'Новое уведомление'}</span>
-              </div>
-            )}
-
             <div className="h-10 w-px bg-slate-200 mx-1 hidden sm:block" />
 
             <div className="flex items-center gap-4">
@@ -436,25 +429,6 @@ function App() {
 
         {/* Page Content */}
         <div className="p-8 md:p-12 max-w-7xl mx-auto w-full flex-1">
-          {/* Admin Recommendations Hero Card */}
-          <AnimatePresence>
-            {user?.adminNotes && (
-              <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="mb-10 p-10 bg-gradient-to-r from-blue-600 via-indigo-700 to-blue-800 rounded-[3rem] shadow-3xl shadow-blue-500/30 text-white relative overflow-hidden group">
-                <div className="absolute top-[-30%] right-[-10%] w-64 h-64 bg-white/10 blur-[100px] rounded-full group-hover:scale-150 transition-transform duration-1000" />
-                <div className="relative z-10 flex flex-col md:flex-row items-center gap-10">
-                  <div className="w-24 h-24 bg-white/20 backdrop-blur-2xl rounded-[2rem] flex items-center justify-center text-5xl shadow-2xl ring-4 ring-white/10">💡</div>
-                  <div className="flex-1 text-center md:text-left">
-                    <h3 className="text-xs font-black uppercase tracking-[0.3em] opacity-70 mb-4">{language === 'uz' ? 'Super Admin Tavsiyasi' : 'Рекомендация Super Admin'}</h3>
-                    <p className="text-2xl font-black leading-snug tracking-tight">{user.adminNotes}</p>
-                  </div>
-                  <motion.button whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.05 }} onClick={openSupport} className="bg-white text-blue-600 hover:bg-slate-50 font-black uppercase tracking-widest h-16 px-12 rounded-2xl border-none transition-all shadow-2xl flex items-center gap-3">
-                    {language === 'uz' ? 'Savol berish' : 'Задать вопрос'} <MessageSquare className="w-5 h-5" />
-                  </motion.button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
           <Routes>
             <Route path="/" element={
               activeTab === 'journal' ? <DailyJournal /> :

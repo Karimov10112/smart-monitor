@@ -37,14 +37,14 @@ export default function ForgotPasswordPage() {
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 relative overflow-hidden text-foreground">
       <div className="absolute top-0 right-0 w-full h-[50%] bg-gradient-to-b from-blue-600/10 to-transparent pointer-events-none" />
-      
+
       <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-lg relative z-10">
         <div className="text-center mb-10">
           <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-[2rem] flex items-center justify-center text-4xl mx-auto mb-6 shadow-2xl shadow-blue-500/30 text-white">
             <Activity className="w-10 h-10" />
           </div>
           <h1 className="text-4xl font-black text-foreground tracking-tight leading-none mb-3">
-             {t.forgotPassword}
+            {t.forgotPassword}
           </h1>
           <p className="text-muted-foreground font-bold uppercase tracking-widest text-[10px]">
             Password Recovery Process
@@ -55,13 +55,13 @@ export default function ForgotPasswordPage() {
           {!sent ? (
             <form onSubmit={handleSubmit} className="space-y-8">
               <div className="space-y-3">
-                 <p className="text-sm font-bold text-muted-foreground text-center px-4 leading-relaxed">
-                   {t.enterEmailToReset}
-                 </p>
-                 <div className="relative group pt-4">
-                    <Mail className="absolute left-5 top-[calc(50%+8px)] -translate-y-1/2 w-6 h-6 text-muted-foreground group-focus-within:text-blue-500 transition-colors" />
-                    <input type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="name@domain.com" className={inputClass} />
-                 </div>
+                <p className="text-sm font-bold text-muted-foreground text-center px-4 leading-relaxed">
+                  {t.enterEmailToReset}
+                </p>
+                <div className="relative group pt-4">
+                  <Mail className="absolute left-5 top-[calc(50%+8px)] -translate-y-1/2 w-6 h-6 text-muted-foreground group-focus-within:text-blue-500 transition-colors" />
+                  <input type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="name@domain.com" className={inputClass} />
+                </div>
               </div>
 
               <button
@@ -72,25 +72,25 @@ export default function ForgotPasswordPage() {
               </button>
 
               <div className="text-center">
-                 <Link to="/login" className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2rem] text-muted-foreground hover:text-blue-600 transition-colors">
-                    <ArrowLeft className="w-4 h-4" /> {t.backToLogin}
-                 </Link>
+                <Link to="/login" className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2rem] text-muted-foreground hover:text-blue-600 transition-colors">
+                  <ArrowLeft className="w-4 h-4" /> {t.backToLogin}
+                </Link>
               </div>
             </form>
           ) : (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-center space-y-8 py-4">
-               <div className="w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-500 mx-auto shadow-inner">
-                  <CheckCircle2 className="w-12 h-12" />
-               </div>
-               <div>
-                  <h3 className="text-2xl font-black text-foreground mb-2">{t.sent}</h3>
-                  <p className="text-sm font-bold text-muted-foreground px-6">
-                    {t.checkEmail}. {language === 'uz' ? 'Agar xat kelmasa, spam papkasini ham tekshirib ko\'ring.' : 'Если письмо не пришло, проверьте папку спам.'}
-                  </p>
-               </div>
-               <Link to="/login" className="w-full h-16 bg-secondary text-foreground font-black uppercase tracking-widest rounded-3xl hover:bg-accent transition-all flex items-center justify-center gap-2">
-                  {t.backToLogin}
-               </Link>
+              <div className="w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-500 mx-auto shadow-inner">
+                <CheckCircle2 className="w-12 h-12" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-black text-foreground mb-2">{t.sent}</h3>
+                <p className="text-sm font-bold text-muted-foreground px-6">
+                  {t.checkEmail}. {language === 'uz' ? 'Agar xat kelmasa, spam papkasini ham tekshirib ko\'ring.' : 'Если письмо не пришло, проверьте папку спам.'}
+                </p>
+              </div>
+              <Link to="/login" className="w-full h-16 bg-secondary text-foreground font-black uppercase tracking-widest rounded-3xl hover:bg-accent transition-all flex items-center justify-center gap-2">
+                {t.backToLogin}
+              </Link>
             </motion.div>
           )}
         </div>
