@@ -83,17 +83,41 @@ app.use(passport.initialize());
 // app.use('/api', limiter);
 // app.use('/api/auth', authLimiter);
 
-// Routes
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/admin', require('./routes/admin'));
-app.use('/api/blood-sugar', require('./routes/bloodSugar'));
-app.use('/api/ai', require('./routes/ai'));
-app.use('/api/doctor', require('./routes/doctor'));
-app.use('/api/products', require('./routes/product'));
-app.use('/api/reminders', require('./routes/reminders'));
+// Routes - mounted both with and without /api prefix to support Vercel rewriting
+const authRoutes = require('./routes/auth');
+const adminRoutes = require('./routes/admin');
+const bloodSugarRoutes = require('./routes/bloodSugar');
+const aiRoutes = require('./routes/ai');
+const doctorRoutes = require('./routes/doctor');
+const productRoutes = require('./routes/product');
+const reminderRoutes = require('./routes/reminders');
+
+app.use('/api/auth', authRoutes);
+app.use('/auth', authRoutes);
+
+app.use('/api/admin', adminRoutes);
+app.use('/admin', adminRoutes);
+
+app.use('/api/blood-sugar', bloodSugarRoutes);
+app.use('/blood-sugar', bloodSugarRoutes);
+
+app.use('/api/ai', aiRoutes);
+app.use('/ai', aiRoutes);
+
+app.use('/api/doctor', doctorRoutes);
+app.use('/doctor', doctorRoutes);
+
+app.use('/api/products', productRoutes);
+app.use('/products', productRoutes);
+
+app.use('/api/reminders', reminderRoutes);
+app.use('/reminders', reminderRoutes);
 
 // Health check
-app.get('/api/health', (req, res) => res.json({ status: 'ok', time: new Date() }));
+const healthCheck = (req, res) => res.json({ status: 'ok', time: new Date() });
+app.get('/api/health', healthCheck);
+app.get('/health', healthCheck);
+
 
 // Create super admin on startup
 const createSuperAdmin = async () => {
