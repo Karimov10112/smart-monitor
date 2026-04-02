@@ -56,6 +56,8 @@ export default function AdminPage() {
   const [users, setUsers] = useState<any[]>([]);
   const [search, setSearch] = useState('');
   const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [selectedUserRecords, setSelectedUserRecords] = useState<any[]>([]);
+  const [showUserGraphs, setShowUserGraphs] = useState(false);
   const [replyText, setReplyText] = useState('');
   const [sendingReply, setSendingReply] = useState(false);
   const chatEndRef = React.useRef<HTMLDivElement>(null);
@@ -156,6 +158,8 @@ export default function AdminPage() {
     // Keyin foydalanuvchini yangilangan ma'lumotlari bian yuklab olamiz
     const { data } = await adminAPI.getUser(userId);
     setSelectedUser(data.user);
+    setSelectedUserRecords(data.records ? [...data.records].reverse() : []);
+    setShowUserGraphs(false);
     setTab('user-detail');
     setIsNotificationsOpen(false);
     
@@ -543,11 +547,50 @@ export default function AdminPage() {
                       </div>
                       <div className="bg-gradient-to-br from-indigo-600 to-blue-800 rounded-[3.5rem] p-10 text-white shadow-3xl shadow-blue-500/30 group overflow-hidden relative">
                          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 blur-3xl rounded-full group-hover:scale-150 transition-transform duration-1000" />
-                         <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/50 mb-4">Quick Health Status</p>
-                         <p className="text-4xl font-black tracking-tighter mb-8 italic">Healthy Profile</p>
-                         <div className="h-64 w-full bg-white/5 rounded-3xl backdrop-blur-xl border border-white/10 flex items-center justify-center p-6">
-                            <p className="text-center text-[10px] font-black uppercase tracking-widest leading-loose text-white/40">Real-time metrics monitoring active...</p>
+                         <div className="flex items-center justify-between mb-8 relative z-10">
+                            <div>
+                               <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/50 mb-2">Health Analytics</p>
+                               <p className="text-3xl font-black tracking-tighter italic">Blood Sugar</p>
+                            </div>
+                            <button onClick={() => setShowUserGraphs(!showUserGraphs)} className="px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-2xl backdrop-blur-md text-xs font-black uppercase tracking-widest transition-all shadow-lg hover:shadow-xl active:scale-95 text-white">
+                               {showUserGraphs ? 'Yopish' : 'Grafiklar'}
+                            </button>
                          </div>
+                         
+                         <AnimatePresence mode="wait">
+                            {showUserGraphs ? (
+                               <motion.div key="graphs" initial={{opacity: 0, y: 10}} animate={{opacity: 1, y: 0}} exit={{opacity: 0, y: -10}} className="h-64 w-full mt-4">
+                                  {selectedUserRecords && selectedUserRecords.length > 0 ? (
+                                     <ResponsiveContainer width="100%" height="100%">
+                                        <AreaChart data={selectedUserRecords.map(r => ({ date: format(new Date(r.date), 'dd/MM HH:mm'), mgdl: r.sugarLevel }))}>
+                                           <defs>
+                                              <linearGradient id="userSg" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="#fff" stopOpacity={0.4}/>
+                                                <stop offset="95%" stopColor="#fff" stopOpacity={0}/>
+                                              </linearGradient>
+                                           </defs>
+                                           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.1)" />
+                                           <XAxis dataKey="date" hide />
+                                           <Tooltip 
+                                              contentStyle={{borderRadius: '16px', border: 'none', backgroundColor: 'rgba(255,255,255,0.95)', color: '#000', fontWeight: '900', fontSize: '12px'}}
+                                           />
+                                           <Area type="monotone" dataKey="mgdl" stroke="#fff" strokeWidth={3} fillOpacity={1} fill="url(#userSg)" />
+                                        </AreaChart>
+                                     </ResponsiveContainer>
+                                  ) : (
+                                     <div className="w-full h-full bg-white/5 rounded-3xl backdrop-blur-xl border border-white/10 flex flex-col items-center justify-center p-6 text-white/50">
+                                        <Activity className="w-10 h-10 mb-4 opacity-50" />
+                                        <p className="text-[10px] font-black uppercase tracking-widest leading-loose">Foydalanuvchi hali<br/>qand miqdorini kiritmagan</p>
+                                     </div>
+                                  )}
+                               </motion.div>
+                            ) : (
+                               <motion.div key="placeholder" initial={{opacity: 0, y: 10}} animate={{opacity: 1, y: 0}} exit={{opacity: 0, y: -10}} className="h-64 w-full bg-white/5 rounded-3xl backdrop-blur-xl border border-white/10 flex flex-col items-center justify-center p-6 mt-4">
+                                  <Activity className="w-12 h-12 mb-4 text-emerald-400 animate-pulse drop-shadow-[0_0_15px_rgba(52,211,153,0.5)]" />
+                                  <p className="text-center text-[10px] font-black uppercase tracking-widest leading-loose text-white/40">Tizim holati barqaror<br/>Grafiklarni ko'rish uchun "Grafiklar" tugmasini bosing</p>
+                               </motion.div>
+                            )}
+                         </AnimatePresence>
                       </div>
                    </div>
                 </div>
