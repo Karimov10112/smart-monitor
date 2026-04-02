@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { Loader2, MapPin, User, Calendar, HeartPulse, ChevronRight, Phone, CheckCircle2, Save } from 'lucide-react';
+import { Loader2, MapPin, User, Calendar, HeartPulse, ChevronRight, Phone, CheckCircle2, Save, LogOut } from 'lucide-react';
 import { useApp } from '../contexts/AppContext';
 import { useAuth } from '../contexts/AuthContext';
 import { authAPI } from '../utils/api';
@@ -43,7 +43,7 @@ const DIABETES_TYPES = [
 
 export default function CompleteProfilePage() {
   const { language } = useApp();
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, logout } = useAuth();
   const navigate = useNavigate();
   const t = translations[language];
 
@@ -331,6 +331,10 @@ export default function CompleteProfilePage() {
 
               <button type="button" onClick={() => navigate(user?.role === 'superadmin' ? '/admin' : '/')} className="w-full text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground hover:text-blue-600 transition-all">
                 {isEditing ? (t.backBtn || 'Orqaga') : t.fillLater}
+              </button>
+
+              <button type="button" onClick={logout} className="w-full text-[10px] font-black uppercase tracking-[0.4em] text-rose-500 hover:text-rose-700 transition-all flex justify-center items-center gap-2 mt-4">
+                <LogOut className="w-4 h-4" /> {t.logoutUser || 'Chiqish'}
               </button>
             </div>
           </form>
