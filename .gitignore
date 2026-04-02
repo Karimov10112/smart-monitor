@@ -1,0 +1,15 @@
+node_modules/
+.env
+dist/
+build/
+.DS_Store
+*.log
+backend/error.txt
+backend/nslookup_output.txt
+backend/nslookup_utf8.txt
+frontend/dist/
+frontend/build/
+.vscode/
+.idea/
+*.tmp
+*.temp
