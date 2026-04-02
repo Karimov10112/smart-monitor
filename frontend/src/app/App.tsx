@@ -337,7 +337,7 @@ function App() {
             </div>
           </div>
 
-          <nav className="flex-1 space-y-2">
+          <nav className="flex-1 space-y-2 overflow-y-auto pr-2 pb-4 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
             <NavLink to="/?tab=journal" icon={ClipboardList} label={getT('dailyJournal')} active={activeTab === 'journal'} />
             <NavLink to="/?tab=products" icon={Database} label={getT('products')} active={activeTab === 'products'} />
             <NavLink to="/?tab=stats" icon={BarChart3} label={getT('statistics')} active={activeTab === 'stats'} />
@@ -413,7 +413,7 @@ function App() {
 
           </nav>
 
-          <div className="pt-8 border-t border-slate-100 space-y-3">
+          <div className="pt-6 mt-2 border-t border-slate-100 space-y-3 shrink-0">
             {/* Edit Profile Link */}
             <button onClick={() => navigate('/complete-profile')} className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-blue-600 hover:bg-blue-50 transition-all font-black text-[10px] uppercase tracking-widest leading-none">
               <UserCog className="w-5 h-5" /> {t.editProfile || 'Profilni tahrirlash'}
