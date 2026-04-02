@@ -61,7 +61,9 @@ export default function AdminPage() {
   const chatEndRef = React.useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (chatEndRef.current && chatEndRef.current.parentElement) {
+      chatEndRef.current.parentElement.scrollTop = chatEndRef.current.parentElement.scrollHeight;
+    }
   };
 
   useEffect(() => {
@@ -521,11 +523,17 @@ export default function AdminPage() {
                          <div className="space-y-4 mb-4 mb-10">
                             <label className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground block mb-4">Privilege Level</label>
                             {['user', 'doctor', 'superadmin'].map(r => (
-                               <button key={r} onClick={() => adminAPI.updateRole(selectedUser._id, r).then(() => handleOpenUser(selectedUser._id))} className={`w-full py-4 px-6 rounded-2xl text-xs font-black uppercase tracking-widest transition-all !border-none ${selectedUser.role === r ? 'bg-blue-600 text-white shadow-xl shadow-blue-500/30 scale-105 z-10' : 'bg-slate-100 text-slate-500 hover:bg-slate-200 shadow-sm opacity-80 hover:opacity-100'}`}>{r}</button>
+                               <button key={r} onClick={() => {
+                                 setSelectedUser({ ...selectedUser, role: r });
+                                 adminAPI.updateRole(selectedUser._id, r).catch(() => toast.error("Role o'zgartirishda xato"));
+                               }} className={`w-full py-4 px-6 rounded-2xl text-xs font-black uppercase tracking-widest transition-all !border-none ${selectedUser.role === r ? 'bg-blue-600 text-white shadow-xl shadow-blue-500/30 scale-105 z-10' : 'bg-slate-100 text-slate-500 hover:bg-slate-200 shadow-sm opacity-80 hover:opacity-100'}`}>{r}</button>
                             ))}
                          </div>
                          <div className="flex flex-col gap-4">
-                            <button onClick={() => adminAPI.toggleBan(selectedUser._id).then(() => handleOpenUser(selectedUser._id))} className={`w-full h-16 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] transition-all shadow-2xl active:scale-95 ${selectedUser.isBanned ? 'bg-emerald-500 text-white' : 'bg-orange-500 text-white shadow-orange-500/40'}`}>
+                            <button onClick={() => {
+                               setSelectedUser({ ...selectedUser, isBanned: !selectedUser.isBanned });
+                               adminAPI.toggleBan(selectedUser._id).catch(() => toast.error("Xatolik"));
+                            }} className={`w-full h-16 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] transition-all shadow-2xl active:scale-95 ${selectedUser.isBanned ? 'bg-emerald-500 text-white' : 'bg-orange-500 text-white shadow-orange-500/40'}`}>
                                {selectedUser.isBanned ? 'Unban Account' : 'Restrict Access'}
                             </button>
                             <button onClick={() => handleDeleteUser(selectedUser._id)} className="w-full h-16 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] transition-all shadow-2xl active:scale-95 bg-rose-600 text-white shadow-rose-600/40 hover:bg-rose-700 flex items-center justify-center gap-2">
