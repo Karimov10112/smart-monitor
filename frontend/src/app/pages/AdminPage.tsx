@@ -40,7 +40,7 @@ import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianG
 import { Card } from '../components/ui/card';
 
 
-type Tab = 'dashboard' | 'users' | 'user-detail' | 'products' | 'system';
+type Tab = 'dashboard' | 'users' | 'user-detail' | 'products';
 
 export default function AdminPage() {
   const { user, logout } = useAuth();
@@ -232,8 +232,7 @@ export default function AdminPage() {
             {[
               { id: 'dashboard', icon: BarChart3, label: t.dashboard },
               { id: 'users', icon: Users, label: t.users },
-              { id: 'products', icon: Package, label: language === 'uz' ? 'Mahsulotlar' : 'Продукты' },
-              { id: 'system', icon: Settings, label: language === 'uz' ? 'Tizim' : 'Система' },
+              { id: 'products', icon: Package, label: language === 'uz' ? 'Mahsulotlar' : 'Продукты' }
             ].map(item => (
               <motion.button key={item.id} whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.05 }} onClick={() => setTab(item.id as Tab)} className={`flex items-center gap-3 px-8 py-4 rounded-2xl text-[10px] uppercase font-black tracking-widest transition-all whitespace-nowrap ${tab === item.id || (tab === 'user-detail' && item.id === 'users') ? 'bg-blue-600 text-white shadow-lg' : 'text-muted-foreground hover:bg-accent'}`}>
                  <item.icon className="w-4 h-4" /> {item.label}
@@ -527,78 +526,6 @@ export default function AdminPage() {
               </motion.div>
             )}
 
-            {tab === 'system' && (
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-                 <div className="flex items-center justify-between mb-12">
-                    <div>
-                       <h2 className="text-4xl font-black tracking-tighter leading-none uppercase mb-2">Tizim Sozlamalari</h2>
-                       <p className="text-sm font-bold text-muted-foreground">Manage database, security and global application parameters</p>
-                    </div>
-                 </div>
-
-                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-                    <div className="p-10 bg-card rounded-[3rem] border border-border shadow-3xl relative overflow-hidden group">
-                       <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 blur-3xl rounded-full group-hover:scale-150 transition-transform duration-700" />
-                       <div className="flex items-center gap-6 mb-8">
-                          <div className="w-16 h-16 bg-secondary rounded-3xl flex items-center justify-center text-emerald-600 shadow-inner">
-                             <Activity className="w-8 h-8" />
-                          </div>
-                          <div>
-                             <h4 className="text-xl font-black uppercase tracking-tighter leading-none">Server Health</h4>
-                             <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500 mt-1">Status: Stable</p>
-                          </div>
-                       </div>
-                       <div className="space-y-6">
-                          <div className="h-2 bg-secondary rounded-full overflow-hidden">
-                             <motion.div initial={{ width: 0 }} animate={{ width: '45%' }} className="h-full bg-emerald-500" />
-                          </div>
-                          <div className="flex justify-between text-[9px] font-black uppercase tracking-widest">
-                             <span className="text-muted-foreground">Memory Usage</span>
-                             <span>45% / 2.0GB</span>
-                          </div>
-                       </div>
-                    </div>
-
-                    <div className="p-10 bg-card rounded-[3rem] border border-border shadow-3xl relative overflow-hidden group">
-                       <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 blur-3xl rounded-full group-hover:scale-150 transition-transform duration-700" />
-                       <div className="flex items-center gap-6 mb-8">
-                          <div className="w-16 h-16 bg-secondary rounded-3xl flex items-center justify-center text-blue-600 shadow-inner">
-                             <Trash2 className="w-8 h-8" />
-                          </div>
-                          <div>
-                             <h4 className="text-xl font-black uppercase tracking-tighter leading-none">Maintenance</h4>
-                             <p className="text-[10px] font-black uppercase tracking-widest text-blue-500 mt-1">Manual cleanup</p>
-                          </div>
-                       </div>
-                       <motion.button whileTap={{ scale: 0.95 }} className="w-full py-4 bg-secondary hover:bg-rose-500 hover:text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all">Clear Temp Logs</motion.button>
-                    </div>
-
-                    <div className="p-10 bg-card rounded-[3rem] border border-border shadow-3xl relative overflow-hidden group">
-                       <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 blur-3xl rounded-full group-hover:scale-150 transition-transform duration-700" />
-                       <div className="flex items-center gap-6 mb-8">
-                          <div className="w-16 h-16 bg-secondary rounded-3xl flex items-center justify-center text-amber-600 shadow-inner">
-                             <Settings className="w-8 h-8" />
-                          </div>
-                          <div>
-                             <h4 className="text-xl font-black uppercase tracking-tighter leading-none">Security</h4>
-                             <p className="text-[10px] font-black uppercase tracking-widest text-amber-500 mt-1">Firewall Active</p>
-                          </div>
-                       </div>
-                       <motion.button whileTap={{ scale: 0.95 }} className="w-full py-4 bg-secondary hover:bg-foreground hover:text-background rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all">Audit Logs</motion.button>
-                    </div>
-                 </div>
-
-                 <div className="mt-12 p-12 bg-card rounded-[4rem] border border-border shadow-3xl">
-                    <h3 className="text-2xl font-black uppercase tracking-tighter mb-8 flex items-center gap-4">
-                       <div className="w-2 h-10 bg-blue-600 rounded-full" /> Global System Broadcast
-                    </h3>
-                    <div className="relative">
-                       <textarea placeholder="Send a notification to all users..." className="w-full h-32 p-8 bg-background border-none rounded-[2rem] font-bold tracking-tight resize-none focus:ring-4 focus:ring-blue-600/10 transition-all text-sm mb-6" />
-                       <motion.button whileTap={{ scale: 0.95 }} className="px-12 h-16 bg-blue-600 text-white font-black uppercase tracking-widest text-[10px] rounded-2xl shadow-3xl shadow-blue-500/40">Broadcast Notify</motion.button>
-                    </div>
-                 </div>
-              </motion.div>
-            )}
          </div>
       </main>
 
