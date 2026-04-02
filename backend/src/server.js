@@ -122,8 +122,20 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, async () => {
-  console.log(`🚀 Server ishlamoqda: http://localhost:${PORT}`);
-  await createSuperAdmin();
-  await seedProducts();
-});
+
+// Export for Vercel
+if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+  server.listen(PORT, async () => {
+    console.log(`🚀 Server ishlamoqda: http://localhost:${PORT}`);
+    await createSuperAdmin();
+    await seedProducts();
+  });
+} else {
+  // On Vercel, we still need to run these once if possible, 
+  // but serverless functions are stateless. 
+  // Database connection is already called globally.
+  createSuperAdmin().catch(console.error);
+  seedProducts().catch(console.error);
+}
+
+module.exports = app;
