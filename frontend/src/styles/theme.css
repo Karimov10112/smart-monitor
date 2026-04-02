@@ -133,6 +133,7 @@
     font-size: var(--text-base);
     font-weight: var(--font-weight-medium);
     line-height: 1.5;
+    @apply shadow-md hover:-translate-y-[2px] transition-all duration-300 hover:shadow-lg active:translate-y-0 active:shadow-sm border border-black/5;
   }
 
   input {
