@@ -130,7 +130,7 @@ const createSuperAdmin = async () => {
 };
 
 // 404
-app.use((req, res) => res.status(404).json({ success: false, message: 'Endpoint topilmadi' }));
+app.use((req, res) => res.status(404).json({ success: false, message: 'Endpoint topilmadi', url: req.originalUrl, path: req.path }));
 
 // Error handler
 app.use((err, req, res, next) => {
