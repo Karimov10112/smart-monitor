@@ -396,7 +396,10 @@ export default function AdminPage() {
                                  <td className="px-10 py-8">
                                     <span className={`px-4 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest ${u.role === 'superadmin' ? 'bg-rose-500 text-white' : 'bg-secondary text-muted-foreground'}`}>{u.role}</span>
                                  </td>
-                                 <td className="px-10 py-8 text-right">
+                                 <td className="px-10 py-8 text-right flex items-center justify-end gap-3">
+                                    <button onClick={(e) => { e.stopPropagation(); handleDeleteUser(u._id); }} className="w-10 h-10 bg-secondary text-rose-500 hover:bg-rose-500 hover:text-white rounded-xl flex items-center justify-center transition-all shadow-sm">
+                                       <Trash2 className="w-4 h-4" />
+                                    </button>
                                     <ChevronRight className="w-6 h-6 text-border group-hover:text-blue-600 transform group-hover:translate-x-3 transition-all" />
                                  </td>
                               </tr>
