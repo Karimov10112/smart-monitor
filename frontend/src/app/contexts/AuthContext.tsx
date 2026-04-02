@@ -11,6 +11,7 @@ export interface User {
   role: UserRole;
   avatar?: string;
   phone?: string;
+  telegramUsername?: string;
   dateOfBirth?: string;
   region?: string;
   district?: string;

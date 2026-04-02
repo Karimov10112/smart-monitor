@@ -48,7 +48,7 @@ export default function CompleteProfilePage() {
   const t = translations[language];
 
   const [form, setForm] = useState({
-    firstName: '', lastName: '', phone: '',
+    firstName: '', lastName: '', phone: '', telegramUsername: '',
     dateOfBirth: '', gender: '', region: '',
     district: '', mfy: '', diabetesType: '', doctorName: '',
     email: '', currentPassword: '', newPassword: '',
@@ -62,6 +62,7 @@ export default function CompleteProfilePage() {
         firstName: user.firstName || '',
         lastName: user.lastName || '',
         phone: user.phone || '',
+        telegramUsername: user.telegramUsername || '',
         dateOfBirth: user.dateOfBirth ? new Date(user.dateOfBirth).toISOString().split('T')[0] : '',
         gender: user.gender || '',
         region: user.region || '',
@@ -182,6 +183,18 @@ export default function CompleteProfilePage() {
                     <input type="tel" value={form.phone} onChange={e => set('phone', e.target.value)} placeholder="+998 90 123 45 67" className={inputClass + " pl-10"} />
                   </div>
                 </div>
+                {user?.role === 'superadmin' && (
+                  <div className="space-y-2">
+                    <label className={labelClass}>{language === 'uz' ? 'Telegram Username' : 'Telegram Username'}</label>
+                    <div className="relative">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-bold">@</span>
+                      <input type="text" value={form.telegramUsername} onChange={e => set('telegramUsername', e.target.value)} placeholder="username" className={inputClass + " pl-10"} />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-2">
                   <label className={labelClass}>{t.dob}</label>
                   <div className="relative">

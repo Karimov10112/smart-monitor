@@ -16,6 +16,7 @@ const userSchema = new mongoose.Schema(
     // Profile
     avatar: String,
     phone: String,
+    telegramUsername: String,
     dateOfBirth: Date,
     gender: { type: String, enum: ['male', 'female', 'other'] },
     region: String,   // viloyat

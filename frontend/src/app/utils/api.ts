@@ -75,6 +75,7 @@ export const adminAPI = {
   addNote: (id: string, notes: string) => api.patch(`/admin/users/${id}/notes`, { notes }),
   markMessagesAsRead: (id: string) => api.patch(`/admin/users/${id}/read-messages`),
   replyToUser: (userId: string, text: string) => api.post(`/admin/reply-to-user`, { userId, text }),
+  getContacts: () => api.get('/admin/contacts'),
 };
 
 export const productAPI = {

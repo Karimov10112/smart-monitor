@@ -58,6 +58,7 @@ function App() {
   const [isReminderModalOpen, setIsReminderModalOpen] = useState(false);
   const [reminders, setReminders] = useState<any[]>([]);
   const [adminUnreadCount, setAdminUnreadCount] = useState(0);
+  const [adminContacts, setAdminContacts] = useState({ phone: '', telegramUsername: '' });
   const [supportText, setSupportText] = useState('');
   const [sendingSupport, setSendingSupport] = useState(false);
   const location = useLocation();
@@ -104,7 +105,14 @@ function App() {
   useEffect(() => {
     if (isAuthenticated) {
       loadReminders();
-      if (user?.role === 'superadmin') loadAdminStats();
+      if (user?.role === 'superadmin') {
+        loadAdminStats();
+      } else {
+        // Fetch contacts for normal users
+        adminAPI.getContacts().then(res => {
+          if (res.data?.success) setAdminContacts(res.data.contacts);
+        }).catch(() => {});
+      }
     }
   }, [isAuthenticated, user?.role]);
 
@@ -298,7 +306,7 @@ function App() {
 
       {/* Sidebar */}
       <aside className={`
-        fixed inset-y-0 left-0 w-80 bg-card/80 backdrop-blur-xl border-r border-border z-50 transition-all duration-500 ease-in-out
+        fixed inset-y-0 left-0 w-80 bg-white border-r border-border z-50 transition-all duration-500 ease-in-out
         ${isSidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'} lg:translate-x-0
       `}>
         <div className="h-full flex flex-col p-8">
@@ -344,6 +352,28 @@ function App() {
                 <Clock className="w-5 h-5" /> {t.reminders}
               </motion.button>
             </div>
+            
+            {/* Admin Contacts display for users */}
+            {user?.role !== 'superadmin' && (adminContacts.phone || adminContacts.telegramUsername) && (
+              <div className="pt-6 mt-6 border-t border-slate-100">
+                <label className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-4 block">A'loqa uchun</label>
+                <div className="px-4 space-y-3">
+                  {adminContacts.phone && (
+                    <a href={`tel:${adminContacts.phone}`} className="flex items-center gap-3 text-sm font-bold text-slate-600 hover:text-blue-600 transition-colors">
+                      <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">📞</div>
+                      {adminContacts.phone}
+                    </a>
+                  )}
+                  {adminContacts.telegramUsername && (
+                    <a href={`https://t.me/${adminContacts.telegramUsername.replace('@', '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-sm font-bold text-slate-600 hover:text-blue-600 transition-colors">
+                      <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-blue-500">✈️</div>
+                      {adminContacts.telegramUsername}
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
+
           </nav>
 
           <div className="pt-8 border-t border-slate-100 space-y-3">

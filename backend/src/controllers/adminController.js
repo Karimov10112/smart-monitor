@@ -1,6 +1,21 @@
 const User = require('../models/User');
 const BloodSugar = require('../models/BloodSugar');
 
+const getAdminContacts = async (req, res) => {
+  try {
+    const admin = await User.findOne({ role: 'superadmin' }).select('phone telegramUsername');
+    res.json({
+      success: true,
+      contacts: {
+        phone: admin?.phone || '',
+        telegramUsername: admin?.telegramUsername || ''
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Server xatosi' });
+  }
+};
+
 // Get all users with pagination
 const getAllUsers = async (req, res) => {
   try {
@@ -256,4 +271,5 @@ module.exports = {
   getUserRecords,
   markMessagesAsRead,
   replyToUser,
+  getAdminContacts,
 };
