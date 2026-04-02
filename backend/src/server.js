@@ -159,7 +159,7 @@ app.use((req, res) => res.status(404).json({ success: false, message: 'Endpoint 
 // Error handler
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({ success: false, message: 'Server xatosi' });
+  res.status(500).json({ success: false, message: 'Server xatosi', errorDetails: err.message });
 });
 
 const PORT = process.env.PORT || 5000;
