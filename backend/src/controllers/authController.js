@@ -35,7 +35,7 @@ const register = async (req, res) => {
     });
   } catch (err) {
     console.error('Register error:', err);
-    res.status(500).json({ success: false, message: 'Server xatosi' });
+    res.status(500).json({ success: false, message: 'Server xatosi', dbgObj: err.toString() });
   }
 };
 
