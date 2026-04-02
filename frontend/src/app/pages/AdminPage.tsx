@@ -480,7 +480,7 @@ export default function AdminPage() {
                          </div>
                       </div>
 
-                      <div className="bg-card rounded-[4rem] border border-border p-12 shadow-3xl h-[700px] flex flex-col">
+                      <div className="bg-card rounded-[4rem] border border-border p-8 lg:p-10 shadow-3xl h-[470px] flex flex-col">
                          <div className="flex items-center justify-between mb-10">
                             <h3 className="text-2xl font-black uppercase tracking-tighter flex items-center gap-5 leading-none">
                                <div className="w-3 h-10 bg-indigo-500 rounded-full" /> Live Support Session
@@ -511,7 +511,7 @@ export default function AdminPage() {
                          </div>
 
                          <div className="relative group">
-                            <textarea value={replyText} onChange={e => setReplyText(e.target.value)} placeholder="Type a professional response..." className="w-full h-24 p-6 pr-20 bg-secondary border-none rounded-3xl font-black tracking-tight resize-none focus:ring-4 focus:ring-blue-600/10 transition-all text-sm" />
+                            <textarea value={replyText} onChange={e => setReplyText(e.target.value)} placeholder="Type a professional response..." className="w-full h-20 p-6 pr-20 bg-secondary border-none rounded-3xl font-black tracking-tight resize-none focus:ring-4 focus:ring-blue-600/10 transition-all text-sm" />
                             <motion.button whileTap={{ scale: 0.9 }} onClick={handleReply} disabled={sendingReply || !replyText.trim()} className="absolute right-4 bottom-4 w-12 h-12 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30 transition-all">
                                {sendingReply ? <Loader2 className="w-5 h-5 animate-spin" /> : <SendHorizontal className="w-5 h-5" />}
                             </motion.button>
@@ -520,29 +520,38 @@ export default function AdminPage() {
                    </div>
 
                    <div className="space-y-12">
-                      <div className="bg-card rounded-[3.5rem] border border-border p-10 shadow-3xl sticky top-32">
-                         <h4 className="text-xl font-black uppercase tracking-tighter mb-8 flex items-center gap-4 underline decoration-blue-500/20 underline-offset-8">
-                            <Shield className="w-6 h-6 text-blue-500" /> Account Security
-                         </h4>
-                         <div className="space-y-4 mb-4 mb-10">
-                            <label className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground block mb-4">Privilege Level</label>
-                            {['user', 'doctor', 'superadmin'].map(r => (
-                               <button key={r} onClick={() => {
-                                 setSelectedUser({ ...selectedUser, role: r });
-                                 adminAPI.updateRole(selectedUser._id, r).catch(() => toast.error("Role o'zgartirishda xato"));
-                               }} className={`w-full py-4 px-6 rounded-2xl text-xs font-black uppercase tracking-widest transition-all !border-none ${selectedUser.role === r ? 'bg-blue-600 text-white shadow-xl shadow-blue-500/30 scale-105 z-10' : 'bg-slate-100 text-slate-500 hover:bg-slate-200 shadow-sm opacity-80 hover:opacity-100'}`}>{r}</button>
-                            ))}
+                      <div className="bg-card rounded-[3.5rem] border border-border p-8 md:p-10 shadow-3xl sticky top-8">
+                         <div className="flex items-center justify-between mb-8">
+                           <h4 className="text-xl font-black uppercase tracking-tighter flex items-center gap-3">
+                              <Shield className="w-6 h-6 text-blue-500" /> Security Controls
+                           </h4>
                          </div>
-                         <div className="flex flex-col gap-4">
-                            <button onClick={() => {
-                               setSelectedUser({ ...selectedUser, isBanned: !selectedUser.isBanned });
-                               adminAPI.toggleBan(selectedUser._id).catch(() => toast.error("Xatolik"));
-                            }} className={`w-full h-16 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] transition-all shadow-2xl active:scale-95 ${selectedUser.isBanned ? 'bg-emerald-500 text-white' : 'bg-orange-500 text-white shadow-orange-500/40'}`}>
-                               {selectedUser.isBanned ? 'Unban Account' : 'Restrict Access'}
-                            </button>
-                            <button onClick={() => handleDeleteUser(selectedUser._id)} className="w-full h-16 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] transition-all shadow-2xl active:scale-95 bg-rose-600 text-white shadow-rose-600/40 hover:bg-rose-700 flex items-center justify-center gap-2">
-                               <Trash2 className="w-4 h-4" /> Delete Account
-                            </button>
+
+                         <div className="mb-8">
+                            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground block mb-4">Privilege Level</label>
+                            <div className="bg-secondary/50 p-2 rounded-[2rem] flex flex-col xl:flex-row gap-2 shadow-inner">
+                               {['user', 'doctor', 'superadmin'].map(r => (
+                                  <button key={r} onClick={() => {
+                                    setSelectedUser({ ...selectedUser, role: r });
+                                    adminAPI.updateRole(selectedUser._id, r).catch(() => toast.error("Role o'zgartirishda xato"));
+                                  }} className={`flex-1 py-5 px-3 rounded-3xl text-[10px] font-black uppercase tracking-wider transition-all !border-none ${selectedUser.role === r ? 'bg-blue-600 text-white shadow-xl shadow-blue-500/30' : 'text-muted-foreground hover:bg-black/5 dark:hover:bg-white/5 opacity-70 hover:opacity-100'}`}>{r}</button>
+                               ))}
+                            </div>
+                         </div>
+
+                         <div className="border border-rose-500/20 bg-rose-500/5 rounded-[2.5rem] p-6 md:p-8">
+                            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-rose-500 mb-6 flex items-center gap-2"><ShieldAlert className="w-4 h-4" /> Danger Zone</p>
+                            <div className="flex flex-col gap-4">
+                               <button onClick={() => {
+                                  setSelectedUser({ ...selectedUser, isBanned: !selectedUser.isBanned });
+                                  adminAPI.toggleBan(selectedUser._id).catch(() => toast.error("Xatolik"));
+                               }} className={`w-full py-5 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] transition-all shadow-md active:scale-95 flex items-center justify-center gap-3 ${selectedUser.isBanned ? 'bg-emerald-500 text-white shadow-emerald-500/30' : 'bg-orange-500 text-white shadow-orange-500/30 hover:bg-orange-600'}`}>
+                                  <Ban className="w-4 h-4" /> {selectedUser.isBanned ? 'Unban Account' : 'Restrict Access'}
+                               </button>
+                               <button onClick={() => handleDeleteUser(selectedUser._id)} className="w-full py-5 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] transition-all shadow-md active:scale-95 bg-rose-600 text-white shadow-rose-600/30 hover:bg-rose-700 flex items-center justify-center gap-3">
+                                  <Trash2 className="w-4 h-4" /> Delete Forever
+                               </button>
+                            </div>
                          </div>
                       </div>
                       <div className="bg-gradient-to-br from-indigo-600 to-blue-800 rounded-[3.5rem] p-10 text-white shadow-3xl shadow-blue-500/30 group overflow-hidden relative">
