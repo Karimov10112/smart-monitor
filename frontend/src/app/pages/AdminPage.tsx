@@ -264,8 +264,8 @@ export default function AdminPage() {
 
                   <AnimatePresence>
                      {isNotificationsOpen && (
-                        <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }} className="absolute right-0 mt-6 w-96 bg-card rounded-[2.5rem] shadow-3xl border border-border overflow-hidden z-[60]">
-                           <div className="p-8 bg-muted/50 flex items-center justify-between border-b border-border">
+                        <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }} className="absolute right-0 mt-6 w-96 bg-white rounded-[2.5rem] shadow-[0_10px_50px_rgba(0,0,0,0.2)] border border-slate-200 overflow-hidden z-[100]">
+                           <div className="p-8 bg-slate-50 flex items-center justify-between border-b border-slate-200">
                              <h4 className="text-xs font-black uppercase tracking-widest leading-none">Yang xabarlar</h4>
                              <button onClick={() => setIsNotificationsOpen(false)} className="p-2"><X className="w-5 h-5" /></button>
                            </div>
