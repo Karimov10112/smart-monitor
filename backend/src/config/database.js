@@ -1,18 +1,39 @@
 const mongoose = require('mongoose');
 
+let cached = global.mongoose;
+
+if (!cached) {
+  cached = global.mongoose = { conn: null, promise: null };
+}
+
 const connectDB = async () => {
-  try {
-    // Agar .env dan o'qiy olmasa, vaqtincha to'g'ridan-to'g'ri yozib ko'ramiz
+  if (cached.conn) {
+    return cached.conn;
+  }
+
+  if (!cached.promise) {
     const connStr = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/diabetes_db';
     
-    const conn = await mongoose.connect(connStr, {
+    cached.promise = mongoose.connect(connStr, {
+      bufferCommands: false,
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
+    }).then((mongoose) => {
+      console.log(`✅ MongoDB ulandi: ${mongoose.connection.host}`);
+      return mongoose;
+    }).catch(error => {
+      console.error(`❌ MongoDB ulanishda xato:`, error);
+      cached.promise = null;
+      throw error;
     });
-    console.log(`✅ MongoDB ulandi: ${conn.connection.host}`);
-  } catch (error) {
-    console.error(`❌ MongoDB ulanishda xato: ${error.message}`);
-    console.log('⚠️ Server bazasiz ishlashni davom ettiradi (ba\'zi funksiyalar ishlamasligi mumkin).');
+  }
+
+  try {
+    cached.conn = await cached.promise;
+    return cached.conn;
+  } catch (e) {
+    cached.promise = null;
+    throw e;
   }
 };
 
