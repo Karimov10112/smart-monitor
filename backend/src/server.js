@@ -13,9 +13,26 @@ const http = require('http');
 const server = http.createServer(app);
 const { Server } = require('socket.io');
 
+// Dynamic CORS — works for localhost, mobile devices (192.168.x.x), and Vercel
+const ALLOWED_ORIGINS = [
+  process.env.FRONTEND_URL,
+  'http://localhost:5173',
+  'http://localhost:3000',
+].filter(Boolean);
+
+const corsOriginFn = (origin, callback) => {
+  // Allow requests with no origin (Postman, mobile apps, server-to-server)
+  if (!origin) return callback(null, true);
+  // In development allow any origin (local network, mobile)
+  if (process.env.NODE_ENV !== 'production') return callback(null, true);
+  // In production only allow configured origins
+  if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+  callback(new Error('Not allowed by CORS'));
+};
+
 const io = new Server(server, {
   cors: {
-    origin: [process.env.FRONTEND_URL, 'http://localhost:5173', 'http://localhost:3000'],
+    origin: corsOriginFn,
     methods: ["GET", "POST"],
     credentials: true
   }
@@ -52,7 +69,7 @@ connectDB();
 
 // Middleware
 app.use(cors({
-  origin: [process.env.FRONTEND_URL, 'http://localhost:5173', 'http://localhost:3000'],
+  origin: corsOriginFn,
   credentials: true,
 }));
 app.use(express.json({ limit: '10mb' }));
