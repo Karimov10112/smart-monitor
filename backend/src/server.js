@@ -64,9 +64,6 @@ io.on('connection', (socket) => {
   });
 });
 
-// Connect DB
-connectDB();
-
 // Middleware
 app.use(cors({
   origin: corsOriginFn,
@@ -75,6 +72,17 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(passport.initialize());
+
+// DB Connection Middleware for Serverless
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    console.error('DB Connection error:', err);
+    res.status(500).json({ success: false, message: 'Database ulanishida xatolik', dbgObj: err.toString() });
+  }
+});
 
 // Rate limiting (Test uchun o'chirildi)
 // const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 });
