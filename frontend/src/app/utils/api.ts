@@ -76,6 +76,7 @@ export const adminAPI = {
   markMessagesAsRead: (id: string) => api.patch(`/admin/users/${id}/read-messages`),
   replyToUser: (userId: string, text: string) => api.post(`/admin/reply-to-user`, { userId, text }),
   getContacts: () => api.get('/admin/contacts'),
+  updateContacts: (data: { phone: string; telegramUsername: string }) => api.put('/admin/contacts', data),
 };
 
 export const productAPI = {

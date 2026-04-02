@@ -12,10 +12,12 @@ const {
   markMessagesAsRead,
   replyToUser,
   getAdminContacts,
+  updateAdminContacts,
 } = require('../controllers/adminController');
 const { protect, requireSuperAdmin } = require('../middleware/auth');
 
 router.get('/contacts', protect, getAdminContacts);
+router.put('/contacts', protect, requireSuperAdmin, updateAdminContacts);
 
 router.use(protect, requireSuperAdmin);
 

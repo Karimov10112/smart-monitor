@@ -145,10 +145,10 @@ export default function CompleteProfilePage() {
              <User className="w-12 h-12" />
            </motion.div>
            <h1 className="text-4xl font-black text-foreground tracking-tight leading-none mb-3">
-             {isEditing ? (language === 'uz' ? 'Profilni tahrirlash' : 'Редактировать профиль') : t.profileTitle}
+             {isEditing ? (t.editProfile || 'Profilni tahrirlash') : t.profileTitle}
            </h1>
            <p className="text-muted-foreground font-bold uppercase tracking-[0.2em] text-[10px]">
-             {isEditing ? (language === 'uz' ? 'O\'z ma\'lumotlaringizni yangilang' : 'Обновите свои данные') : t.profileSubtitle}
+             {isEditing ? (t.updateYourData || 'O\'z ma\'lumotlaringizni yangilang') : t.profileSubtitle}
            </p>
         </div>
 
@@ -183,15 +183,6 @@ export default function CompleteProfilePage() {
                     <input type="tel" value={form.phone} onChange={e => set('phone', e.target.value)} placeholder="+998 90 123 45 67" className={inputClass + " pl-10"} />
                   </div>
                 </div>
-                {user?.role === 'superadmin' && (
-                  <div className="space-y-2">
-                    <label className={labelClass}>{language === 'uz' ? 'Telegram Username' : 'Telegram Username'}</label>
-                    <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-bold">@</span>
-                      <input type="text" value={form.telegramUsername} onChange={e => set('telegramUsername', e.target.value)} placeholder="username" className={inputClass + " pl-10"} />
-                    </div>
-                  </div>
-                )}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -311,7 +302,7 @@ export default function CompleteProfilePage() {
                       placeholder="••••••••" 
                       autoComplete="new-password"
                     />
-                    <p className="text-[9px] text-muted-foreground ml-2 italic">* {language === 'uz' ? 'Email yoki parolni o\'zgartirish uchun kerak' : 'Нужен для смены email или пароля'}</p>
+                    <p className="text-[9px] text-muted-foreground ml-2 italic">* {t.passwordRequiredForChange || 'Email yoki parolni o\'zgartirish uchun kerak'}</p>
                   </div>
                   <div className="space-y-2">
                     <label className={labelClass}>{t.newPassword}</label>
@@ -332,14 +323,14 @@ export default function CompleteProfilePage() {
               <button type="submit" disabled={loading || !form.region || !form.district || !form.diabetesType}
                 className="w-full h-20 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 text-white font-black uppercase tracking-widest rounded-[2rem] hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-3 shadow-2xl shadow-blue-500/40 active:scale-[0.97] transition-all text-lg">
                 {loading ? <Loader2 className="w-8 h-8 animate-spin" /> : 
-                  <>{isEditing ? (language === 'uz' ? 'Saqlash' : 'Сохранить') : t.saveContinue} 
+                  <>{isEditing ? (t.saveBtn || 'Saqlash') : t.saveContinue} 
                     {isEditing ? <Save className="w-6 h-6" /> : <ChevronRight className="w-6 h-6" />}
                   </>
                 }
               </button>
 
               <button type="button" onClick={() => navigate(user?.role === 'superadmin' ? '/admin' : '/')} className="w-full text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground hover:text-blue-600 transition-all">
-                {isEditing ? (language === 'uz' ? 'Orqaga' : 'Назад') : t.fillLater}
+                {isEditing ? (t.backBtn || 'Orqaga') : t.fillLater}
               </button>
             </div>
           </form>

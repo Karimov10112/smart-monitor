@@ -16,6 +16,31 @@ const getAdminContacts = async (req, res) => {
   }
 };
 
+const updateAdminContacts = async (req, res) => {
+  try {
+    const { phone, telegramUsername } = req.body;
+    
+    // Allow any superadmin to update these
+    if (req.user.role !== 'superadmin') {
+      return res.status(403).json({ success: false, message: 'Faqatgina superadmin o\'zgartirishi mumkin' });
+    }
+
+    const admin = await User.findOneAndUpdate(
+       { role: 'superadmin' }, 
+       { phone, telegramUsername },
+       { new: true }
+    );
+    
+    res.json({ 
+      success: true, 
+      message: 'Kontaktlar yangilandi',
+      contacts: { phone: admin.phone, telegramUsername: admin.telegramUsername }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Server xatosi' });
+  }
+};
+
 // Get all users with pagination
 const getAllUsers = async (req, res) => {
   try {
@@ -272,4 +297,5 @@ module.exports = {
   markMessagesAsRead,
   replyToUser,
   getAdminContacts,
+  updateAdminContacts,
 };

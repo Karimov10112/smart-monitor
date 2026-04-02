@@ -169,7 +169,7 @@ export default function AdminPage() {
       if (data.success) {
         setSelectedUser(data.user);
         setReplyText('');
-        toast.success(language === 'uz' ? 'Javob yuborildi' : 'Ответ отправлен');
+        toast.success(t.replySent || 'Javob yuborildi');
       } else {
         toast.error(data.message || 'Xatolik yuz berdi');
       }
@@ -186,10 +186,10 @@ export default function AdminPage() {
     try {
       if (editingProduct) {
         await productAPI.update(editingProduct._id, productForm);
-        toast.success(language === 'uz' ? 'Mahsulot yangilandi' : 'Продукт обновлен');
+        toast.success(t.productUpdated || 'Mahsulot yangilandi');
       } else {
         await productAPI.create(productForm);
-        toast.success(language === 'uz' ? 'Mahsulot qo\'shildi' : 'Продукт добавлен');
+        toast.success(t.productAdded || 'Mahsulot qo\'shildi');
       }
       setIsProductModalOpen(false);
       setEditingProduct(null);
@@ -232,7 +232,7 @@ export default function AdminPage() {
             {[
               { id: 'dashboard', icon: BarChart3, label: t.dashboard },
               { id: 'users', icon: Users, label: t.users },
-              { id: 'products', icon: Package, label: language === 'uz' ? 'Mahsulotlar' : 'Продукты' }
+              { id: 'products', icon: Package, label: t.products }
             ].map(item => (
               <motion.button key={item.id} whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.05 }} onClick={() => setTab(item.id as Tab)} className={`flex items-center gap-3 px-8 py-4 rounded-2xl text-[10px] uppercase font-black tracking-widest transition-all whitespace-nowrap ${tab === item.id || (tab === 'user-detail' && item.id === 'users') ? 'bg-blue-600 text-white shadow-lg' : 'text-muted-foreground hover:bg-accent'}`}>
                  <item.icon className="w-4 h-4" /> {item.label}
@@ -399,9 +399,9 @@ export default function AdminPage() {
             {tab === 'products' && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                 <div className="flex items-center justify-between mb-10">
-                   {sectionHeader(language === 'uz' ? 'Mahsulotlar Boshqaruvi' : 'Управление продуктами', 'Manage diabetes product database and advisory system')}
+                   {sectionHeader(t.products, 'Manage diabetes product database and advisory system')}
                    <motion.button whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.05 }} onClick={() => { setEditingProduct(null); setProductForm({name:{uz:'',ru:'',en:''}, category:'vegetables', emoji:'🥗', gi:0, gl:0, advice:{uz:'',ru:'',en:''}}); setIsProductModalOpen(true); }} className="px-8 h-16 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-widest text-[10px] rounded-3xl shadow-2xl shadow-blue-500/40 flex items-center gap-3 transition-all">
-                      <Plus className="w-5 h-5" /> {language === 'uz' ? 'Yangi qo\'shish' : 'Добавить'}
+                      <Plus className="w-5 h-5" /> {t.addNew || 'Yangi qo\'shish'}
                    </motion.button>
                 </div>
 

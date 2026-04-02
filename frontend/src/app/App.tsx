@@ -59,6 +59,7 @@ function App() {
   const [reminders, setReminders] = useState<any[]>([]);
   const [adminUnreadCount, setAdminUnreadCount] = useState(0);
   const [adminContacts, setAdminContacts] = useState({ phone: '', telegramUsername: '' });
+  const [contactSaving, setContactSaving] = useState(false);
   const [supportText, setSupportText] = useState('');
   const [sendingSupport, setSendingSupport] = useState(false);
   const location = useLocation();
@@ -107,6 +108,10 @@ function App() {
       loadReminders();
       if (user?.role === 'superadmin') {
         loadAdminStats();
+        // Superadmin needs their own contacts to edit
+        adminAPI.getContacts().then(res => {
+          if (res.data?.success) setAdminContacts(res.data.contacts);
+        }).catch(() => {});
       } else {
         // Fetch contacts for normal users
         adminAPI.getContacts().then(res => {
@@ -240,6 +245,18 @@ function App() {
     }
   };
 
+  const handleSaveContacts = async () => {
+    setContactSaving(true);
+    try {
+      await adminAPI.updateContacts(adminContacts);
+      toast.success(t.success || 'Muvaffaqiyatli saqlandi');
+    } catch {
+      toast.error(t.error || 'Xato yuz berdi');
+    } finally {
+      setContactSaving(false);
+    }
+  };
+
   const NavLink = ({ to, icon: Icon, label, active }: any) => (
     <motion.div whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.02 }}>
       <Link
@@ -315,7 +332,7 @@ function App() {
               <Database className="w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-xl font-black tracking-tight leading-none">Qand Nazorati</h1>
+              <h1 className="text-xl font-black tracking-tight leading-none">{t.appName || 'Qand Nazorati'}</h1>
               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mt-1">Smart Monitor</p>
             </div>
           </div>
@@ -326,7 +343,7 @@ function App() {
             <NavLink to="/?tab=stats" icon={BarChart3} label={getT('statistics')} active={activeTab === 'stats'} />
 
             <div className="pt-6 mt-6 border-t border-slate-100">
-              <label className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-4 block">System Panel</label>
+              <label className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-4 block">{t.systemPanel || 'System Panel'}</label>
               {user?.role === 'superadmin' && (
                 <motion.button whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.02 }} onClick={() => navigate('/admin')} className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all duration-300 ${location.pathname === '/admin' ? 'bg-blue-600 text-white shadow-lg' : 'text-muted-foreground hover:bg-accent'}`}>
                   <div className="flex items-center gap-3">
@@ -342,7 +359,7 @@ function App() {
               )}
               <motion.button whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.02 }} onClick={openSupport} className="w-full flex items-center justify-between px-4 py-3 rounded-2xl text-muted-foreground hover:bg-accent transition-all font-bold tracking-tight">
                 <div className="flex items-center gap-3">
-                  <MessageSquare className="w-5 h-5" /> {language === 'uz' ? 'Support Chat' : 'Чат поддержки'}
+                  <MessageSquare className="w-5 h-5" /> {t.supportChat || 'Support Chat'}
                 </div>
                 {unreadSupportCount > 0 && (
                   <span className="w-5 h-5 bg-rose-600 text-white text-[10px] font-black rounded-full flex items-center justify-center animate-pulse">{unreadSupportCount}</span>
@@ -356,7 +373,7 @@ function App() {
             {/* Admin Contacts display for users */}
             {user?.role !== 'superadmin' && (adminContacts.phone || adminContacts.telegramUsername) && (
               <div className="pt-6 mt-6 border-t border-slate-100">
-                <label className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-4 block">A'loqa uchun</label>
+                <label className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-4 block">{t.contactLabel || "A'loqa uchun"}</label>
                 <div className="px-4 space-y-3">
                   {adminContacts.phone && (
                     <a href={`tel:${adminContacts.phone}`} className="flex items-center gap-3 text-sm font-bold text-slate-600 hover:text-blue-600 transition-colors">
@@ -374,20 +391,40 @@ function App() {
               </div>
             )}
 
+            {/* Admin Contacts Editor for Superadmin */}
+            {user?.role === 'superadmin' && (
+              <div className="pt-6 mt-6 border-t border-slate-100">
+                <label className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-4 block">{t.contactLabel || "A'loqa uchun"}</label>
+                <div className="px-4 space-y-3">
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px]">📞</span>
+                    <input type="text" value={adminContacts.phone} onChange={e => setAdminContacts({...adminContacts, phone: e.target.value})} placeholder="+998 90 123 45 67" className="w-full text-xs font-bold pl-8 pr-3 h-10 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-blue-500 transition-colors" />
+                  </div>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] text-blue-500">✈️</span>
+                    <input type="text" value={adminContacts.telegramUsername} onChange={e => setAdminContacts({...adminContacts, telegramUsername: e.target.value})} placeholder="@username" className="w-full text-xs font-bold pl-8 pr-3 h-10 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-blue-500 transition-colors" />
+                  </div>
+                  <button onClick={handleSaveContacts} disabled={contactSaving} className="w-full h-10 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">
+                    {contactSaving ? '...' : (t.saveBtn || 'Saqlash')}
+                  </button>
+                </div>
+              </div>
+            )}
+
           </nav>
 
           <div className="pt-8 border-t border-slate-100 space-y-3">
             {/* Edit Profile Link */}
             <button onClick={() => navigate('/complete-profile')} className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-blue-600 hover:bg-blue-50 transition-all font-black text-[10px] uppercase tracking-widest leading-none">
-              <UserCog className="w-5 h-5" /> {language === 'uz' ? 'Profilni tahrirlash' : 'Редактировать профиль'}
+              <UserCog className="w-5 h-5" /> {t.editProfile || 'Profilni tahrirlash'}
             </button>
 
             <motion.button whileTap={{ scale: 0.95 }} onClick={() => setLanguage(language === 'uz' ? 'ru' : language === 'ru' ? 'en' : 'uz')} className="w-full flex items-center justify-center gap-3 h-12 rounded-2xl bg-secondary text-secondary-foreground hover:bg-accent transition-all text-[10px] font-black uppercase tracking-widest leading-none">
-                <Languages className="w-5 h-5" /> {language === 'uz' ? "Tilni o'zgartirish" : language === 'ru' ? 'Сменить язык' : 'Change Language'} ({language.toUpperCase()})
+                <Languages className="w-5 h-5" /> {t.changeLanguage || "Tilni o'zgartirish"} ({language.toUpperCase()})
             </motion.button>
 
             <motion.button whileTap={{ scale: 0.95 }} onClick={logout} className="w-full h-12 flex items-center gap-3 px-6 rounded-2xl bg-rose-50 text-rose-600 hover:bg-rose-100 transition-all font-bold tracking-tight">
-              <LogOut className="w-4 h-4" /> {language === 'uz' ? 'Chiqish' : 'Logout'}
+              <LogOut className="w-4 h-4" /> {t.logoutUser || 'Chiqish'}
             </motion.button>
           </div>
         </div>
@@ -455,8 +492,8 @@ function App() {
                       <MessageSquare className="w-5 h-5" />
                     </div>
                     <div>
-                      <h3 className="text-xl font-black tracking-tight">{language === 'uz' ? 'Support Chat' : 'Поддержка'}</h3>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Super Admin is here to help</p>
+                      <h3 className="text-xl font-black tracking-tight">{t.supportChat || 'Support Chat'}</h3>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{t.supportChatDesc || 'Super Admin is here to help'}</p>
                     </div>
                   </div>
                   <button onClick={() => setIsSupportModalOpen(false)} className="w-12 h-12 flex items-center justify-center hover:bg-accent rounded-2xl transition-all"><X className="w-6 h-6" /></button>
@@ -487,7 +524,7 @@ function App() {
                   {(!user?.supportMessages || user?.supportMessages.length === 0) && (
                     <div className="h-full flex flex-col items-center justify-center text-slate-300 opacity-50 space-y-4">
                       <MessageSquare className="w-20 h-20" />
-                      <p className="text-xs font-black uppercase tracking-[0.3em]">{language === 'uz' ? 'Savol bering' : 'Задайте вопрос'}</p>
+                      <p className="text-xs font-black uppercase tracking-[0.3em]">{t.askQuestion || 'Savol bering'}</p>
                     </div>
                   )}
                 </div>
@@ -495,7 +532,7 @@ function App() {
                 {/* Input Area */}
                 <div className="p-8 pb-10 bg-white">
                   <div className="relative group">
-                    <textarea value={supportText} onChange={e => setSupportText(e.target.value)} placeholder={language === 'uz' ? 'Xabaringizni yozing...' : 'Напишите ваше сообщение...'} className="w-full h-24 p-6 pr-20 rounded-3xl bg-slate-50 border-none resize-none focus:ring-4 focus:ring-blue-500/10 font-bold transition-all text-sm" />
+                    <textarea value={supportText} onChange={e => setSupportText(e.target.value)} placeholder={t.writeMessage || 'Xabaringizni yozing...'} className="w-full h-24 p-6 pr-20 rounded-3xl bg-slate-50 border-none resize-none focus:ring-4 focus:ring-blue-500/10 font-bold transition-all text-sm" />
                     <button onClick={handleSendSupport} disabled={sendingSupport || !supportText.trim()} className="absolute right-4 bottom-4 w-12 h-12 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30 transition-all active:scale-90">
                       {sendingSupport ? <div className="w-5 h-5 border-4 border-white/30 border-t-white rounded-full animate-spin" /> : <SendHorizontal className="w-5 h-5" />}
                     </button>
