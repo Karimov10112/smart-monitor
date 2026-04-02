@@ -210,6 +210,18 @@ export default function AdminPage() {
     }
   };
 
+  const handleDeleteUser = async (id: string) => {
+    if (!confirm('Rostdan ham bu foydalanuvchini umuman o\'chirib tashlamoqchimisiz? Bu amalni orqaga qaytarib bo\'lmaydi.')) return;
+    try {
+      await adminAPI.deleteUser(id);
+      toast.success('Foydalanuvchi muvaffaqiyatli o\'chirildi');
+      setTab('users');
+      loadUsers();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Foydalanuvchini o\'chirishda xato');
+    }
+  };
+
   const sectionHeader = (title: string, subtitle: string) => (
     <div className="mb-10">
       <h2 className="text-4xl font-black text-foreground tracking-tighter leading-none uppercase mb-3">{title}</h2>
@@ -509,9 +521,14 @@ export default function AdminPage() {
                                <button key={r} onClick={() => adminAPI.updateRole(selectedUser._id, r).then(() => handleOpenUser(selectedUser._id))} className={`w-full py-4 px-6 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border-2 ${selectedUser.role === r ? 'bg-foreground text-background border-foreground shadow-xl' : 'bg-secondary border-transparent text-muted-foreground hover:border-border'}`}>{r}</button>
                             ))}
                          </div>
-                         <button onClick={() => adminAPI.toggleBan(selectedUser._id).then(() => handleOpenUser(selectedUser._id))} className={`w-full h-16 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] transition-all shadow-2xl active:scale-95 ${selectedUser.isBanned ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white shadow-rose-500/40'}`}>
-                            {selectedUser.isBanned ? 'Unban Account' : 'Restrict Access'}
-                         </button>
+                         <div className="flex flex-col gap-4">
+                            <button onClick={() => adminAPI.toggleBan(selectedUser._id).then(() => handleOpenUser(selectedUser._id))} className={`w-full h-16 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] transition-all shadow-2xl active:scale-95 ${selectedUser.isBanned ? 'bg-emerald-500 text-white' : 'bg-orange-500 text-white shadow-orange-500/40'}`}>
+                               {selectedUser.isBanned ? 'Unban Account' : 'Restrict Access'}
+                            </button>
+                            <button onClick={() => handleDeleteUser(selectedUser._id)} className="w-full h-16 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] transition-all shadow-2xl active:scale-95 bg-rose-600 text-white shadow-rose-600/40 hover:bg-rose-700 flex items-center justify-center gap-2">
+                               <Trash2 className="w-4 h-4" /> Delete Account
+                            </button>
+                         </div>
                       </div>
                       <div className="bg-gradient-to-br from-indigo-600 to-blue-800 rounded-[3.5rem] p-10 text-white shadow-3xl shadow-blue-500/30 group overflow-hidden relative">
                          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 blur-3xl rounded-full group-hover:scale-150 transition-transform duration-1000" />
