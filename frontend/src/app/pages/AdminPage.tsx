@@ -170,14 +170,22 @@ export default function AdminPage() {
     setStats(data.stats);
   };
 
-  const loadUsers = async () => {
+  const loadUsers = async (customSearch?: string, customRole?: string) => {
     try {
-      const { data } = await adminAPI.getUsers({ search: searchFilter, role: roleFilter, limit: 100 });
+      const s = customSearch !== undefined ? customSearch : searchFilter;
+      const r = customRole !== undefined ? customRole : roleFilter;
+      const { data } = await adminAPI.getUsers({ search: s, role: r, limit: 100 });
       setUsers(data.users);
     } catch (err) {
       toast.error('Foydalanuvchilarni yuklashda xato');
     }
   };
+
+  // Keep local state in sync with URL (for back/forward buttons)
+  useEffect(() => {
+    setSearch(searchFilter);
+    setRole(roleFilter);
+  }, [searchFilter, roleFilter]);
 
   // Debounced search effect
   useEffect(() => {
@@ -187,9 +195,9 @@ export default function AdminPage() {
       }
     }, 500);
     return () => clearTimeout(timer);
-  }, [search]);
+  }, [search, searchFilter]);
 
-  // Load users when filters change
+  // Load users when filters in URL change
   useEffect(() => {
     if (tab === 'users') {
       loadUsers();
@@ -445,7 +453,16 @@ export default function AdminPage() {
                         <option value="superadmin">SuperAdmin</option>
                       </select>
                    </div>
-                   <motion.button whileTap={{ scale: 0.95 }} onClick={loadUsers} className="px-10 h-16 bg-blue-600 text-white font-black uppercase tracking-widest text-[10px] rounded-3xl shadow-xl hover:shadow-2xl transition-all">Apply</motion.button>
+                   <motion.button 
+                     whileTap={{ scale: 0.95 }} 
+                     onClick={() => {
+                        updateFilters({ search, role });
+                        loadUsers(search, role);
+                     }} 
+                     className="px-10 h-16 bg-blue-600 text-white font-black uppercase tracking-widest text-[10px] rounded-3xl shadow-xl hover:shadow-2xl transition-all"
+                   >
+                     Apply
+                   </motion.button>
                 </div>
 
                 <div className="bg-card rounded-[3.5rem] border border-border overflow-hidden shadow-3xl">
