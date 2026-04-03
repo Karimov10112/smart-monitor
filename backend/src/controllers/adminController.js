@@ -118,10 +118,6 @@ const toggleBanUser = async (req, res) => {
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ success: false, message: 'Topilmadi' });
 
-    if (user.role === 'superadmin') {
-      return res.status(403).json({ success: false, message: 'Super adminni bloklab bo\'lmaydi' });
-    }
-
     user.isBanned = !user.isBanned;
     user.banReason = user.isBanned ? reason : undefined;
     await user.save();
@@ -141,10 +137,6 @@ const deleteUser = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ success: false, message: 'Topilmadi' });
-    if (user.role === 'superadmin') {
-      return res.status(403).json({ success: false, message: 'Super adminni o\'chirib bo\'lmaydi' });
-    }
-
     await BloodSugar.deleteMany({ user: user._id });
     await User.findByIdAndDelete(req.params.id);
 
