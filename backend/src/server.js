@@ -131,12 +131,11 @@ app.get('/health', healthCheck);
 const createSuperAdmin = async () => {
   try {
     const adminEmail = process.env.SUPER_ADMIN_EMAIL || 'admin';
-    const adminPassword = process.env.SUPER_ADMIN_PASSWORD || 'supperadmin';
+    const adminPassword = process.env.SUPER_ADMIN_PASSWORD || 'admin123';
 
     let admin = await User.findOne({ email: adminEmail });
     
     if (!admin) {
-      // Agar 'admin' loginli foydalanuvchi bo'lmasa, yangi yaratamiz
       admin = new User({
         email: adminEmail,
         password: adminPassword,
@@ -150,11 +149,12 @@ const createSuperAdmin = async () => {
       await admin.save();
       console.log('✅ Yangi Super admin yaratildi:', adminEmail);
     } else {
-      // Agar bo'lsa, parolini yangilab qo'yamiz (ixtiyoriy, lekin yangi ma'lumotlarga moslashish uchun yaxshi)
+      // Faqat parol va rolni yangilaymiz, kontakt ma'lumotlarini SAQLAYMIZ
       admin.password = adminPassword;
-      admin.role = 'superadmin'; // Rolini aniqlashtiramiz
+      admin.role = 'superadmin';
+      // phone va telegramUsername ni O'ZGARTIRMAYMIZ — ular saqlanib qolsin
       await admin.save();
-      console.log('🔄 Super admin ma\'lumotlari yangilandi:', adminEmail);
+      console.log('🔄 Super admin yangilandi (kontaktlar saqlanib qoldi):', adminEmail);
     }
   } catch (err) {
     console.error('Super admin yaratishda xato:', err.message);

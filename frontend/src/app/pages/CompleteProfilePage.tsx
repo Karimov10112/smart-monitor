@@ -1,13 +1,45 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'motion/react';
-import { Loader2, MapPin, User, Calendar, HeartPulse, ChevronRight, Phone, CheckCircle2, Save, LogOut } from 'lucide-react';
 import { useApp } from '../contexts/AppContext';
 import { useAuth } from '../contexts/AuthContext';
 import { authAPI } from '../utils/api';
 import { translations } from '../utils/translations';
 import { toast } from 'sonner';
-import { Card } from '../components/ui/card';
+
+// MUI Components
+import {
+  Box,
+  Typography,
+  Card,
+  CardContent,
+  TextField,
+  Button,
+  Grid,
+  Stack,
+  Paper,
+  Divider,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Avatar,
+  IconButton,
+  alpha,
+  useTheme,
+  CircularProgress,
+  Container
+} from '@mui/material';
+
+// MUI Icons
+import PersonIcon from '@mui/icons-material/Person';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import BiotechIcon from '@mui/icons-material/Biotech';
+import PhoneIcon from '@mui/icons-material/Phone';
+import SaveIcon from '@mui/icons-material/Save';
+import LogoutIcon from '@mui/icons-material/Logout';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
 const UZ_REGIONS = [
   'Toshkent shahri', 'Toshkent viloyati', 'Samarqand viloyati', 'Buxoro viloyati',
@@ -44,6 +76,7 @@ const DIABETES_TYPES = [
 export default function CompleteProfilePage() {
   const { language } = useApp();
   const { user, updateUser, logout } = useAuth();
+  const theme = useTheme();
   const navigate = useNavigate();
   const t = translations[language];
 
@@ -55,7 +88,6 @@ export default function CompleteProfilePage() {
   });
   const [loading, setLoading] = useState(false);
 
-  // Pre-fill form if user data exists (Editing Mode)
   useEffect(() => {
     if (user) {
       setForm({
@@ -77,10 +109,9 @@ export default function CompleteProfilePage() {
     }
   }, [user]);
 
-  const set = (key: string, value: string) => {
+  const handleChange = (key: string, value: string) => {
     setForm(prev => {
       const next = { ...prev, [key]: value };
-      // Clear district if region changes
       if (key === 'region') next.district = '';
       return next;
     });
@@ -92,29 +123,13 @@ export default function CompleteProfilePage() {
     try {
       const { data } = await authAPI.completeProfile(form);
       if (data.success) {
-        // If password was updated, we need to handle that specifically if needed
-        // but the backend just returns success.
-        
-        // Update profile credentials if changed
         if (user && (form.newPassword || (form.email && form.email !== user.email))) {
-           if (form.email && form.email !== user.email) {
-              await authAPI.updateProfile({ email: form.email });
-           }
-           if (form.newPassword) {
-              await authAPI.updatePassword({ 
-                currentPassword: form.currentPassword, 
-                newPassword: form.newPassword 
-              });
-           }
+           if (form.email && form.email !== user.email) await authAPI.updateProfile({ email: form.email });
+           if (form.newPassword) await authAPI.updatePassword({ currentPassword: form.currentPassword, newPassword: form.newPassword });
         }
-
         toast.success(t.success);
         updateUser(data.user);
-        
-        // Small delay to let context update
-        setTimeout(() => {
-          navigate(user?.role === 'superadmin' ? '/admin' : '/');
-        }, 300);
+        setTimeout(() => navigate(user?.role === 'superadmin' ? '/admin' : '/'), 300);
       }
     } catch (err: any) {
       toast.error(err.response?.data?.message || t.error);
@@ -124,222 +139,178 @@ export default function CompleteProfilePage() {
   };
 
   const isEditing = user?.isProfileComplete;
-  const inputClass = "w-full px-4 h-14 rounded-2xl border-none bg-secondary text-foreground focus:ring-4 focus:ring-blue-500/10 font-bold text-sm transition-all placeholder:font-medium placeholder:text-muted-foreground/30";
-  const labelClass = "block text-[10px] uppercase tracking-[0.2em] font-black text-muted-foreground mb-2 ml-2";
-  const sectionTitle = "flex items-center gap-3 mb-6 p-1 pr-4 bg-secondary w-fit rounded-2xl";
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 transition-colors duration-500 overflow-x-hidden text-foreground">
-      {/* Dynamic Background */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/10 blur-[100px] rounded-full animate-pulse" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600/10 blur-[100px] rounded-full animate-pulse" style={{ animationDelay: '1s' }} />
-      </div>
-      
-      <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-2xl relative z-10 py-10">
-        <div className="text-center mb-10">
-           <motion.div 
-             initial={{ scale: 0.8 }} animate={{ scale: 1 }}
-             className="w-24 h-24 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-[2rem] flex items-center justify-center text-4xl mx-auto mb-6 shadow-2xl shadow-blue-500/30 text-white"
-           >
-             <User className="w-12 h-12" />
-           </motion.div>
-           <h1 className="text-4xl font-black text-foreground tracking-tight leading-none mb-3">
-             {isEditing ? (t.editProfile || 'Profilni tahrirlash') : t.profileTitle}
-           </h1>
-           <p className="text-muted-foreground font-bold uppercase tracking-[0.2em] text-[10px]">
-             {isEditing ? (t.updateYourData || 'O\'z ma\'lumotlaringizni yangilang') : t.profileSubtitle}
-           </p>
-        </div>
+    <Container maxWidth="md" sx={{ py: 6 }}>
+      <Box sx={{ textAlign: 'center', mb: 6 }}>
+        <Avatar 
+          sx={{ 
+            width: 80, 
+            height: 80, 
+            bgcolor: 'primary.main', 
+            borderRadius: 2, 
+            mx: 'auto', 
+            mb: 2,
+            fontSize: 40
+          }}
+        >
+          {user?.firstName?.[0] || <PersonIcon fontSize="large" />}
+        </Avatar>
+        <Typography variant="h4" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 2 }}>
+          {isEditing ? (t.editProfile || 'Profilni tahrirlash') : t.profileTitle}
+        </Typography>
+        <Typography variant="overline" sx={{ fontWeight: 800, color: 'text.secondary', letterSpacing: 1 }}>
+          {isEditing ? (t.updateYourData || 'O\'z ma\'lumotlaringizni yangilang') : t.profileSubtitle}
+        </Typography>
+      </Box>
 
-        <Card className="p-1 border border-border bg-card/80 backdrop-blur-xl shadow-3xl rounded-[3rem] overflow-hidden">
-          <form onSubmit={handleSubmit} className="p-8 md:p-12 space-y-12">
+      <Card elevation={0} sx={{ border: `1px solid ${theme.palette.divider}` }}>
+        <CardContent sx={{ p: { xs: 3, md: 5 } }}>
+          <Box component="form" onSubmit={handleSubmit}>
             
-            {/* Personal Info */}
-            <div className="space-y-8">
-              <div className={sectionTitle}>
-                 <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-500/30">
-                    <User className="w-5 h-5" />
-                 </div>
-                 <span className="text-xs font-black uppercase tracking-widest text-foreground/80">{t.personalInfo}</span>
-              </div>
+            {/* Section: Personal Info */}
+            <Box sx={{ mb: 6 }}>
+              <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 3 }}>
+                <PersonIcon color="primary" fontSize="small" />
+                <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5 }}>{t.personalInfo}</Typography>
+              </Stack>
+              <Grid container spacing={3}>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField fullWidth size="small" label={t.firstName} value={form.firstName} onChange={e => handleChange('firstName', e.target.value)} required />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField fullWidth size="small" label={t.lastName} value={form.lastName} onChange={e => handleChange('lastName', e.target.value)} required />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField fullWidth size="small" label={t.phone} placeholder="+998 90 123 45 67" value={form.phone} onChange={e => handleChange('phone', e.target.value)} InputProps={{ startAdornment: <PhoneIcon sx={{ mr: 1, fontSize: 18, color: 'text.secondary' }} /> }} />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField fullWidth size="small" type="date" label={t.dob} value={form.dateOfBirth} onChange={e => handleChange('dateOfBirth', e.target.value)} InputLabelProps={{ shrink: true }} InputProps={{ startAdornment: <CalendarMonthIcon sx={{ mr: 1, fontSize: 18, color: 'text.secondary' }} /> }} />
+                </Grid>
+                <Grid size={{ xs: 12 }}>
+                  <Typography variant="caption" sx={{ fontWeight: 800, mb: 1.5, display: 'block', textTransform: 'uppercase', color: 'text.secondary' }}>{t.gender}</Typography>
+                  <Stack direction="row" spacing={2}>
+                    {['male', 'female', 'other'].map(g => (
+                      <Button 
+                        key={g} 
+                        variant={form.gender === g ? 'contained' : 'outlined'} 
+                        onClick={() => handleChange('gender', g)}
+                        sx={{ flex: 1, fontWeight: 800, borderRadius: 1.5 }}
+                      >
+                        {language === 'uz' ? (g === 'male' ? 'Erkak' : g === 'female' ? 'Ayol' : 'Boshqa') : g}
+                      </Button>
+                    ))}
+                  </Stack>
+                </Grid>
+              </Grid>
+            </Box>
+
+            <Divider sx={{ mb: 6 }} />
+
+            {/* Section: Location */}
+            <Box sx={{ mb: 6 }}>
+              <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 3 }}>
+                <LocationOnIcon sx={{ color: '#10b981' }} fontSize="small" />
+                <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5 }}>{t.location}</Typography>
+              </Stack>
+              <Grid container spacing={3}>
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <FormControl fullWidth size="small">
+                    <InputLabel>{t.region} *</InputLabel>
+                    <Select value={form.region} label={t.region + " *"} onChange={e => handleChange('region', e.target.value)} required>
+                      {UZ_REGIONS.map(r => <MenuItem key={r} value={r}>{r}</MenuItem>)}
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <FormControl fullWidth size="small" disabled={!form.region}>
+                    <InputLabel>{t.districtCity} *</InputLabel>
+                    <Select value={form.district} label={t.districtCity + " *"} onChange={e => handleChange('district', e.target.value)} required>
+                      {form.region && UZ_DISTRICTS[form.region]?.map(d => <MenuItem key={d} value={d}>{d}</MenuItem>)}
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <TextField fullWidth size="small" label={t.mfy + " *"} value={form.mfy} onChange={e => handleChange('mfy', e.target.value)} disabled={!form.district} required />
+                </Grid>
+              </Grid>
+            </Box>
+
+            <Divider sx={{ mb: 6 }} />
+
+            {/* Section: Medical */}
+            <Box sx={{ mb: 6 }}>
+              <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 3 }}>
+                <BiotechIcon sx={{ color: '#f43f5e' }} fontSize="small" />
+                <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5 }}>{t.medicalInfo}</Typography>
+              </Stack>
+              <Grid container spacing={3}>
+                <Grid size={{ xs: 12 }}>
+                  <Typography variant="caption" sx={{ fontWeight: 800, mb: 1.5, display: 'block', textTransform: 'uppercase', color: 'text.secondary' }}>{t.diabetesType} *</Typography>
+                  <Grid container spacing={2}>
+                    {DIABETES_TYPES.map(dt => (
+                      <Grid size={{ xs: 12, sm: 6, md: 4 }} key={dt.value}>
+                        <Button 
+                          fullWidth 
+                          variant={form.diabetesType === dt.value ? 'contained' : 'outlined'} 
+                          onClick={() => handleChange('diabetesType', dt.value)}
+                          startIcon={form.diabetesType === dt.value && <CheckCircleIcon />}
+                          sx={{ justifyContent: 'start', px: 2, fontWeight: 700, borderRadius: 1.5, py: 1.5 }}
+                        >
+                          {dt[language] || dt.uz}
+                        </Button>
+                      </Grid>
+                    ))}
+                  </Grid>
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                   <TextField fullWidth size="small" label={t.doctorName} value={form.doctorName} onChange={e => handleChange('doctorName', e.target.value)} placeholder="Dr. Azamat Karimov" />
+                </Grid>
+              </Grid>
+            </Box>
+
+            <Divider sx={{ mb: 6 }} />
+
+            {/* Section: Credentials */}
+            <Paper elevation={0} sx={{ p: 4, bgcolor: alpha(theme.palette.primary.main, 0.02), border: `1px solid ${theme.palette.divider}`, mb: 6, borderRadius: 2 }}>
+              <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 3 }}>
+                <SaveIcon sx={{ color: '#8b5cf6' }} fontSize="small" />
+                <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5 }}>Security Update</Typography>
+              </Stack>
+              <Grid container spacing={3}>
+                <Grid size={{ xs: 12 }}>
+                  <TextField fullWidth size="small" type="email" label={t.email} value={form.email} onChange={e => handleChange('email', e.target.value)} />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField fullWidth size="small" type="password" label={t.currentPassword} value={form.currentPassword} onChange={e => handleChange('currentPassword', e.target.value)} placeholder="••••••••" helperText="Email yoki parolni o'zgartirish uchun kerak" />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField fullWidth size="small" type="password" label={t.newPassword} value={form.newPassword} onChange={e => handleChange('newPassword', e.target.value)} placeholder="••••••••" />
+                </Grid>
+              </Grid>
+            </Paper>
+
+            <Stack spacing={2}>
+              <Button 
+                fullWidth 
+                type="submit" 
+                variant="contained" 
+                size="large" 
+                disabled={loading || !form.region || !form.district || !form.diabetesType}
+                sx={{ height: 64, fontWeight: 900, fontSize: '1rem', borderRadius: 2, boxShadow: 'none', '&:hover': { boxShadow: 'none' } }}
+              >
+                {loading ? <CircularProgress size={24} color="inherit" /> : (isEditing ? 'Saqlash' : t.saveContinue)}
+              </Button>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-2">
-                  <label className={labelClass}>{t.firstName}</label>
-                  <input type="text" value={form.firstName} onChange={e => set('firstName', e.target.value)} className={inputClass} placeholder="Azamat" />
-                </div>
-                <div className="space-y-2">
-                  <label className={labelClass}>{t.lastName}</label>
-                  <input type="text" value={form.lastName} onChange={e => set('lastName', e.target.value)} className={inputClass} placeholder="Karimov" />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-2">
-                  <label className={labelClass}>{t.phone}</label>
-                  <div className="relative">
-                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <input type="tel" value={form.phone} onChange={e => set('phone', e.target.value)} placeholder="+998 90 123 45 67" className={inputClass + " pl-10"} />
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-2">
-                  <label className={labelClass}>{t.dob}</label>
-                  <div className="relative">
-                    <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <input type="date" value={form.dateOfBirth} onChange={e => set('dateOfBirth', e.target.value)} className={inputClass + " pl-10"} />
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <label className={labelClass}>{t.gender}</label>
-                <div className="grid grid-cols-3 gap-4">
-                  {[
-                    { v: 'male', uz: 'Erkak', ru: 'Мужской', en: 'Male' },
-                    { v: 'female', uz: 'Ayol', ru: 'Женский', en: 'Female' },
-                    { v: 'other', uz: 'Boshqa', ru: 'Другой', en: 'Other' },
-                  ].map(g => (
-                    <button key={g.v} type="button" onClick={() => set('gender', g.v)}
-                      className={`h-16 rounded-2xl flex items-center justify-center text-sm font-black transition-all ${form.gender === g.v ? 'bg-blue-600 text-white shadow-xl shadow-blue-500/20' : 'bg-secondary text-muted-foreground hover:bg-accent'}`}>
-                      {g[language] || g.uz}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Location */}
-            <div className="space-y-8">
-              <div className={sectionTitle}>
-                 <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-emerald-500/30">
-                    <MapPin className="w-5 h-5" />
-                 </div>
-                 <span className="text-xs font-black uppercase tracking-widest text-foreground/80">{t.location}</span>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="space-y-3">
-                <label className={labelClass}>{t.region} *</label>
-                <select value={form.region} onChange={e => set('region', e.target.value)} className={inputClass}>
-                  <option value="">{t.select}</option>
-                  {UZ_REGIONS.map(r => <option key={r} value={r}>{r}</option>)}
-                </select>
-              </div>
-              <div className="space-y-3">
-                <label className={labelClass}>{t.districtCity} *</label>
-                {form.region && UZ_DISTRICTS[form.region] ? (
-                  <select value={form.district} onChange={e => set('district', e.target.value)} className={inputClass} disabled={!form.region}>
-                    <option value="">{t.select}</option>
-                    {UZ_DISTRICTS[form.region].map(d => <option key={d} value={d}>{d}</option>)}
-                  </select>
-                ) : (
-                  <input type="text" value={form.district} onChange={e => set('district', e.target.value)} className={inputClass} placeholder="Chilonzor t." disabled={!form.region} />
-                )}
-              </div>
-              <div className="space-y-3">
-                <label className={labelClass}>{t.mfy} *</label>
-                <input type="text" value={form.mfy} onChange={e => set('mfy', e.target.value)} className={inputClass} placeholder={"O'rikzor" + (language === 'uz' ? ' MFY' : ' МСГ')} disabled={!form.district} />
-              </div>
-            </div>
-            </div>
-
-            {/* Medical Info */}
-            <div className="space-y-8">
-              <div className={sectionTitle}>
-                 <div className="w-10 h-10 bg-rose-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-rose-500/30">
-                    <HeartPulse className="w-5 h-5" />
-                 </div>
-                 <span className="text-xs font-black uppercase tracking-widest text-foreground/80">{t.medicalInfo}</span>
-              </div>
-              <div className="space-y-4">
-                <label className={labelClass}>{t.diabetesType} *</label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {DIABETES_TYPES.map(dt => (
-                    <button key={dt.value} type="button" onClick={() => set('diabetesType', dt.value)}
-                      className={`px-6 h-16 rounded-[1.5rem] flex items-center gap-4 text-sm font-bold transition-all border-2 ${form.diabetesType === dt.value ? 'border-blue-600 bg-blue-50 text-blue-600' : 'border-transparent bg-secondary text-muted-foreground hover:border-border/50'}`}>
-                      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${form.diabetesType === dt.value ? 'border-blue-600 bg-blue-600' : 'border-border'}`}>
-                         {form.diabetesType === dt.value && <CheckCircle2 className="w-4 h-4 text-white" />}
-                      </div>
-                      {dt[language] || dt.uz}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="space-y-2 pt-2">
-                <label className={labelClass}>{t.doctorName}</label>
-                <input type="text" value={form.doctorName} onChange={e => set('doctorName', e.target.value)} className={inputClass} placeholder={"Dr. " + (language === 'uz' ? 'Azamat Karimov' : 'Азамат Каримов')} />
-              </div>
-            </div>
-
-            {/* Credentials Update */}
-            <div className="space-y-8 pt-4">
-              <div className={sectionTitle}>
-                 <div className="w-10 h-10 bg-indigo-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
-                    <Save className="w-5 h-5" />
-                 </div>
-                 <span className="text-xs font-black uppercase tracking-widest text-foreground/80">
-                    {t.changeCredentials}
-                 </span>
-              </div>
+              {!isEditing && (
+                <Button fullWidth onClick={() => navigate('/')} sx={{ fontWeight: 800, color: 'text.secondary' }}>{t.fillLater}</Button>
+              )}
               
-              <div className="space-y-6 bg-secondary/50 p-6 rounded-3xl border border-border">
-                <div className="space-y-2">
-                  <label className={labelClass}>{t.email}</label>
-                  <input type="email" value={form.email} onChange={e => set('email', e.target.value)} className={inputClass} />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className={labelClass}>{t.currentPassword}</label>
-                    <input 
-                      type="password" 
-                      value={form.currentPassword} 
-                      onChange={e => set('currentPassword', e.target.value)} 
-                      className={inputClass} 
-                      placeholder="••••••••" 
-                      autoComplete="new-password"
-                    />
-                    <p className="text-[9px] text-muted-foreground ml-2 italic">* {t.passwordRequiredForChange || 'Email yoki parolni o\'zgartirish uchun kerak'}</p>
-                  </div>
-                  <div className="space-y-2">
-                    <label className={labelClass}>{t.newPassword}</label>
-                    <input 
-                      type="password" 
-                      value={form.newPassword} 
-                      onChange={e => set('newPassword', e.target.value)} 
-                      className={inputClass} 
-                      placeholder="••••••••" 
-                      autoComplete="new-password"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="pt-10 space-y-6">
-              <button type="submit" disabled={loading || !form.region || !form.district || !form.diabetesType}
-                className="w-full h-20 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 text-white font-black uppercase tracking-widest rounded-[2rem] hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-3 shadow-2xl shadow-blue-500/40 active:scale-[0.97] transition-all text-lg">
-                {loading ? <Loader2 className="w-8 h-8 animate-spin" /> : 
-                  <>{isEditing ? (t.saveBtn || 'Saqlash') : t.saveContinue} 
-                    {isEditing ? <Save className="w-6 h-6" /> : <ChevronRight className="w-6 h-6" />}
-                  </>
-                }
-              </button>
-
-              <button type="button" onClick={() => navigate(user?.role === 'superadmin' ? '/admin' : '/')} className="w-full text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground hover:text-blue-600 transition-all">
-                {isEditing ? (t.backBtn || 'Orqaga') : t.fillLater}
-              </button>
-
-              <button type="button" onClick={logout} className="w-full text-[10px] font-black uppercase tracking-[0.4em] text-rose-500 hover:text-rose-700 transition-all flex justify-center items-center gap-2 mt-4">
-                <LogOut className="w-4 h-4" /> {t.logoutUser || 'Chiqish'}
-              </button>
-            </div>
-          </form>
-        </Card>
-      </motion.div>
-    </div>
+              <Button fullWidth color="error" startIcon={<LogoutIcon />} onClick={logout} sx={{ fontWeight: 800 }}>Logout</Button>
+            </Stack>
+          </Box>
+        </CardContent>
+      </Card>
+    </Container>
   );
 }

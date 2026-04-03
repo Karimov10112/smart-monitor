@@ -3,15 +3,44 @@ import { useApp } from '../contexts/AppContext';
 import { translations } from '../utils/translations';
 import { categories, getProductStatus, Product } from '../data/products';
 import { productAPI } from '../utils/api';
-import { Card } from './ui/card';
-import { Input } from './ui/input';
-import { Badge } from './ui/badge';
-import { Dialog, DialogContent, DialogTitle } from './ui/dialog';
-import { Search, Filter, X, Info, Loader2 } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+
+// MUI Components
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  TextField,
+  Button,
+  Grid,
+  Stack,
+  Chip,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  InputAdornment,
+  CircularProgress,
+  alpha,
+  useTheme,
+  Paper,
+  Divider,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel
+} from '@mui/material';
+
+// MUI Icons
+import SearchIcon from '@mui/icons-material/Search';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import CloseIcon from '@mui/icons-material/Close';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import StarIcon from '@mui/icons-material/Star';
 
 export function Products() {
   const { language, currentFasting, currentPostMeal } = useApp();
+  const theme = useTheme();
   const t = translations[language];
 
   const [products, setProducts] = useState<Product[]>([]);
@@ -42,7 +71,6 @@ export function Products() {
     }
   };
 
-  // Filter products locally for status (since status depends on current sugar levels)
   const filteredProducts = useMemo(() => {
     return products.filter(product => {
       if (selectedStatus !== 'all') {
@@ -62,195 +90,339 @@ export function Products() {
     return groups;
   }, [filteredProducts]);
 
-  const getStatusColor = (status: 'safe' | 'caution' | 'avoid') => {
+  const getStatusInfo = (status: 'safe' | 'caution' | 'avoid') => {
     switch (status) {
-      case 'safe': return 'bg-emerald-50 text-emerald-700 border border-emerald-100';
-      case 'caution': return 'bg-amber-50 text-amber-700 border border-amber-100';
-      case 'avoid': return 'bg-rose-50 text-rose-700 border border-rose-100';
-    }
-  };
-
-  const getStatusText = (status: 'safe' | 'caution' | 'avoid') => {
-    switch (status) {
-      case 'safe': return t.safe;
-      case 'caution': return t.caution;
-      case 'avoid': return t.avoid;
+      case 'safe': return { color: 'success', text: t.safe, icon: '🟢' };
+      case 'caution': return { color: 'warning', text: t.caution, icon: '🟡' };
+      case 'avoid': return { color: 'error', text: t.avoid, icon: '🔴' };
     }
   };
 
   return (
-    <div className="space-y-6">
-      {/* Search and Filters */}
-      <Card className="p-4 bg-white border border-slate-100 rounded-2xl shadow-sm">
-        <div className="space-y-4">
-          <div className="relative group">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
-            <Input
+    <Box sx={{ spaceY: 3 }}>
+      {/* Search and Filters (Official Look) */}
+      <Card elevation={0} sx={{ border: `1px solid ${theme.palette.divider}`, mb: 4 }}>
+        <CardContent sx={{ p: 3 }}>
+          <Stack spacing={2}>
+            <TextField
               placeholder={t.search + '...'}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 h-12 rounded-xl bg-slate-50 border-slate-100"
+              variant="outlined"
+              size="small"
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon fontSize="small" sx={{ color: 'text.secondary' }} />
+                  </InputAdornment>
+                ),
+                endAdornment: searchQuery && (
+                  <InputAdornment position="end">
+                    <IconButton size="small" onClick={() => setSearchQuery('')}><CloseIcon fontSize="small" /></IconButton>
+                  </InputAdornment>
+                )
+              }}
+              sx={{ bgcolor: 'background.paper' }}
             />
-            {searchQuery && (
-              <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-                <X className="w-4 h-4" />
-              </button>
-            )}
-          </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${showFilters ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
-            >
-              <Filter className="w-4 h-4" /> {language === 'uz' ? 'Filtrlar' : 'Фильтры'}
-            </button>
-            <div className="text-xs font-bold text-slate-400 ml-2">
-              {filteredProducts.length} {t.productsCount}
-            </div>
-          </div>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Button
+                size="small"
+                variant={showFilters ? 'contained' : 'outlined'}
+                onClick={() => setShowFilters(!showFilters)}
+                startIcon={<FilterListIcon fontSize="small" />}
+                sx={{ borderRadius: 1.5, fontWeight: 800, textTransform: 'uppercase', fontSize: 10 }}
+              >
+                {language === 'uz' ? 'Filtrlar' : 'Фильтры'}
+              </Button>
+              <Typography variant="caption" sx={{ fontWeight: 800, color: 'text.secondary', ml: 'auto', textTransform: 'uppercase', letterSpacing: 1 }}>
+                {filteredProducts.length} {t.productsCount}
+              </Typography>
+            </Box>
 
-          <AnimatePresence>
             {showFilters && (
-              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-slate-100 overflow-hidden">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">{t.category}</label>
-                  <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className="w-full h-10 px-3 rounded-lg bg-slate-50 border border-slate-100 text-sm focus:ring-2 focus:ring-blue-500/20 transition-all outline-none">
-                    <option value="all">{t.allCategories}</option>
-                    {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.emoji} {t[cat.nameKey as keyof typeof t] as string}</option>)}
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">{t.status}</label>
-                  <select value={selectedStatus} onChange={(e) => setSelectedStatus(e.target.value)} className="w-full h-10 px-3 rounded-lg bg-slate-50 border border-slate-100 text-sm focus:ring-2 focus:ring-blue-500/20 transition-all outline-none">
-                    <option value="all">{t.allStatuses}</option>
-                    <option value="safe">🟢 {t.safe}</option>
-                    <option value="caution">🟡 {t.caution}</option>
-                    <option value="avoid">🔴 {t.avoid}</option>
-                  </select>
-                </div>
-              </motion.div>
+              <Box sx={{ pt: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
+                <Grid container spacing={2}>
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <FormControl fullWidth size="small">
+                      <InputLabel sx={{ fontWeight: 800, textTransform: 'uppercase', fontSize: 10, bgcolor: 'background.paper', px: 1 }}>{t.category}</InputLabel>
+                      <Select
+                        value={selectedCategory}
+                        onChange={(e) => setSelectedCategory(e.target.value)}
+                      >
+                        <MenuItem value="all">{t.allCategories}</MenuItem>
+                        {categories.map(cat => <MenuItem key={cat.id} value={cat.id}>{cat.emoji} {t[cat.nameKey as keyof typeof t] as string}</MenuItem>)}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <FormControl fullWidth size="small">
+                      <InputLabel sx={{ fontWeight: 800, textTransform: 'uppercase', fontSize: 10, bgcolor: 'background.paper', px: 1 }}>{t.status}</InputLabel>
+                      <Select
+                        value={selectedStatus}
+                        onChange={(e) => setSelectedStatus(e.target.value)}
+                      >
+                        <MenuItem value="all">{t.allStatuses}</MenuItem>
+                        <MenuItem value="safe">🟢 {t.safe}</MenuItem>
+                        <MenuItem value="caution">🟡 {t.caution}</MenuItem>
+                        <MenuItem value="avoid">🔴 {t.avoid}</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                </Grid>
+              </Box>
             )}
-          </AnimatePresence>
-        </div>
+          </Stack>
+        </CardContent>
       </Card>
 
       {/* Loading State */}
       {loading && products.length === 0 && (
-        <div className="py-20 flex flex-col items-center justify-center opacity-30">
-          <Loader2 className="w-10 h-10 animate-spin mb-4" />
-          <p className="text-xs font-black uppercase tracking-widest leading-none">Mahsulotlar yuklanmoqda...</p>
-        </div>
+        <Box sx={{ py: 10, textAlign: 'center', opacity: 0.5 }}>
+          <CircularProgress size={30} sx={{ mb: 2 }} />
+          <Typography variant="overline" sx={{ display: 'block', fontWeight: 800, letterSpacing: 2 }}>Mahsulotlar yuklanmoqda...</Typography>
+        </Box>
       )}
 
       {/* Products Grid */}
-      <div className="space-y-10 pb-10">
+      <Stack spacing={6}>
         {categories.filter(cat => groupedProducts[cat.id]?.length > 0).map((category) => (
-          <div key={category.id} className="space-y-4">
-            <div className="flex items-center gap-2 ml-2">
-              <span className="text-2xl">{category.emoji}</span>
-              <h2 className="text-lg font-bold text-slate-800 uppercase tracking-tight">
+          <Box key={category.id}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2, px: 1 }}>
+              <Typography variant="h5" sx={{ fontSize: 24, lineHeight: 1 }}>{category.emoji}</Typography>
+              <Typography variant="subtitle1" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5 }}>
                 {t[category.nameKey as keyof typeof t] as string}
-              </h2>
-              <span className="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full font-bold ml-2">
-                {groupedProducts[category.id].length}
-              </span>
-            </div>
+              </Typography>
+              <Chip
+                label={groupedProducts[category.id].length}
+                size="small"
+                sx={{ height: 20, fontSize: 10, fontWeight: 900, ml: 1, bgcolor: alpha(theme.palette.primary.main, 0.05), color: 'primary.main', border: 'none' }}
+              />
+            </Box>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <Grid container spacing={2}>
               {groupedProducts[category.id].map((product) => {
                 const status = getProductStatus(product, currentFasting, currentPostMeal);
+                const info = getStatusInfo(status);
                 return (
-                  <motion.div key={product._id || product.id} whileHover={{ y: -4 }}>
+                  <Grid size={{ xs: 12, sm: 6, lg: 4, xl: 3 }} key={product._id || product.id}>
                     <Card
-                      className="p-5 cursor-pointer bg-white border border-slate-100 hover:shadow-lg transition-all rounded-2xl relative overflow-hidden group"
+                      elevation={0}
                       onClick={() => setSelectedProduct(product)}
+                      sx={{
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.02), border: `1px solid ${theme.palette.primary.main}` }
+                      }}
                     >
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">
-                          {product.emoji}
-                        </div>
-                        <Badge className={`${getStatusColor(status)} shadow-none border-none py-1 px-2.5 font-bold text-[10px] uppercase tracking-widest`}>
-                          {getStatusText(status)}
-                        </Badge>
-                      </div>
+                      <CardContent sx={{ p: 2.5 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                          <Box sx={{ width: 44, height: 44, bgcolor: 'background.default', borderRadius: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>
+                            {product.emoji}
+                          </Box>
+                          <Chip
+                            label={info?.text}
+                            size="small"
+                            color={info?.color as any}
+                            variant="outlined"
+                            sx={{ height: 22, fontSize: 9, fontWeight: 900, textTransform: 'uppercase', px: 0.5 }}
+                          />
+                        </Box>
 
-                      <h3 className="font-bold text-slate-800 mb-2 truncate">
-                        {product.name[language] || product.name['uz']}
-                      </h3>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 2, textTransform: 'lowercase', '&:first-letter': { textTransform: 'uppercase' }, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {product.name[language] || product.name['uz']}
+                        </Typography>
 
-                      <div className="flex items-center gap-4 mt-4 py-3 border-t border-slate-50">
-                        <div className="text-center flex-1">
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">GI</p>
-                          <p className="font-bold text-blue-600">{product.gi}</p>
-                        </div>
-                        <div className="w-px h-6 bg-slate-100" />
-                        <div className="text-center flex-1">
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">GL</p>
-                          <p className="font-bold text-purple-600">{product.gl}</p>
-                        </div>
-                      </div>
+                        <Divider sx={{ mb: 1.5, opacity: 0.5 }} />
+
+                        <Stack direction="row" spacing={3}>
+                          <Box sx={{ textAlign: 'center', flex: 1 }}>
+                            <Typography variant="caption" sx={{ display: 'block', fontWeight: 800, color: 'text.secondary', fontSize: 8 }}>GI</Typography>
+                            <Typography variant="body2" sx={{ fontWeight: 800, color: 'primary.main' }}>{product.gi}</Typography>
+                          </Box>
+                          <Box sx={{ width: 1, bgcolor: 'divider' }} />
+                          <Box sx={{ textAlign: 'center', flex: 1 }}>
+                            <Typography variant="caption" sx={{ display: 'block', fontWeight: 800, color: 'text.secondary', fontSize: 8 }}>GL</Typography>
+                            <Typography variant="body2" sx={{ fontWeight: 800, color: 'text.secondary' }}>{product.gl}</Typography>
+                          </Box>
+                        </Stack>
+                      </CardContent>
                     </Card>
-                  </motion.div>
+                  </Grid>
                 );
               })}
-            </div>
-          </div>
+            </Grid>
+          </Box>
         ))}
 
         {!loading && filteredProducts.length === 0 && (
-          <div className="text-center py-20 flex flex-col items-center opacity-40">
-            <Search className="w-16 h-16 mb-4" />
-            <p className="text-lg font-bold">Mahsulot topilmadi</p>
-          </div>
+          <Box sx={{ textAlign: 'center', py: 10, opacity: 0.3 }}>
+            <SearchIcon sx={{ fontSize: 60, mb: 2 }} />
+            <Typography variant="h6" sx={{ fontWeight: 800 }}>Mahsulot topilmadi</Typography>
+          </Box>
         )}
-      </div>
+      </Stack>
 
       {/* Product Detail Modal */}
-      <Dialog open={!!selectedProduct} onOpenChange={() => setSelectedProduct(null)}>
-        <DialogContent className="max-w-xl p-0 border-none bg-white rounded-3xl overflow-hidden shadow-2xl">
-          {selectedProduct && (
-            <div className="flex flex-col">
-              <div className="p-8 bg-blue-600 text-white relative">
-                <div className="relative z-10 flex items-center gap-6">
-                  <div className="w-20 h-20 bg-white/20 backdrop-blur-xl rounded-2xl flex items-center justify-center text-5xl shadow-xl">
-                    {selectedProduct.emoji}
-                  </div>
-                  <div>
-                    <Badge className="bg-white text-blue-600 font-black text-[10px] uppercase mb-2">
-                      {getStatusText(getProductStatus(selectedProduct, currentFasting, currentPostMeal))}
-                    </Badge>
-                    <DialogTitle className="text-3xl font-black">{selectedProduct.name[language] || selectedProduct.name['uz']}</DialogTitle>
-                  </div>
-                </div>
-              </div>
+      <Dialog
+        open={!!selectedProduct}
+        onClose={() => setSelectedProduct(null)}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: 4, overflow: 'hidden' } }}
+      >
+        {selectedProduct && (() => {
+          const status = getProductStatus(selectedProduct, currentFasting, currentPostMeal);
+          const info = getStatusInfo(status);
+          
+          // Data normalization
+          const cal = selectedProduct.calories || selectedProduct.nutrition?.calories || 0;
+          const carb = selectedProduct.carbs || selectedProduct.nutrition?.carbs || 0;
+          const prot = selectedProduct.protein || selectedProduct.nutrition?.protein || 0;
+          const fat = selectedProduct.fats || selectedProduct.nutrition?.fat || 0;
+          const sugar = selectedProduct.sugar || selectedProduct.nutrition?.sugar || 0;
+          const fiber = selectedProduct.fiber || selectedProduct.nutrition?.fiber || 0;
 
-              <div className="p-8 space-y-8">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">{t.glycemicIndex}</p>
-                    <p className="text-3xl font-black text-blue-600">{selectedProduct.gi}</p>
-                  </div>
-                  <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">{t.glycemicLoad}</p>
-                    <p className="text-3xl font-black text-purple-600">{selectedProduct.gl}</p>
-                  </div>
-                </div>
+          // Nutrient Distribution Percentage
+          const total = carb + prot + fat;
+          const carbPct = total > 0 ? (carb / total) * 100 : 0;
+          const protPct = total > 0 ? (prot / total) * 100 : 0;
+          const fatPct = total > 0 ? (fat / total) * 100 : 0;
 
-                <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100">
-                  <div className="flex items-center gap-3 mb-3">
-                    <Info className="w-5 h-5 text-blue-500" />
-                    <h4 className="text-sm font-black uppercase tracking-widest">{t.detailedAdvice}</h4>
-                  </div>
-                  <p className="text-sm font-medium leading-relaxed opacity-80 italic">
-                    "{selectedProduct.advice?.[language] || selectedProduct.advice?.['uz'] || 'Tavsiya mavjud emas'}"
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-        </DialogContent>
+          return (
+            <Box sx={{ bgcolor: 'white' }}>
+              {/* Header */}
+              <Box sx={{ p: 3, pb: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Stack direction="row" spacing={2} alignItems="center">
+                   <Box sx={{ fontSize: 40 }}>{selectedProduct.emoji}</Box>
+                   <Box>
+                      <Typography variant="h5" sx={{ fontWeight: 800, color: '#1f2937', mb: 0.5 }}>
+                        {selectedProduct.name[language] || selectedProduct.name['uz']}
+                      </Typography>
+                      <Box sx={{ 
+                        display: 'inline-block', 
+                        px: 1.5, py: 0.3, 
+                        bgcolor: info?.color === 'success' ? '#fef3c7' : info?.color === 'warning' ? '#fee2e2' : '#f3f4f6',
+                        color: info?.color === 'success' ? '#d97706' : info?.color === 'warning' ? '#dc2626' : '#4b5563',
+                        borderRadius: 1, fontSize: 12, fontWeight: 700 
+                      }}>
+                        {info?.text}
+                      </Box>
+                   </Box>
+                </Stack>
+                <IconButton onClick={() => setSelectedProduct(null)} size="small" sx={{ bgcolor: '#f3f4f6' }}>
+                  <CloseIcon fontSize="small" />
+                </IconButton>
+              </Box>
+
+              <DialogContent sx={{ p: 3 }}>
+                {/* GI and GL Cards */}
+                <Grid container spacing={2} sx={{ mb: 4 }}>
+                  <Grid size={{ xs: 6 }}>
+                    <Box sx={{ p: 2.5, borderRadius: 3, bgcolor: '#f0f7ff', border: '1px solid #e0f2fe', height: '100%' }}>
+                      <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600, display: 'block', mb: 2 }}>Glikemik indeks</Typography>
+                      <Typography variant="h3" sx={{ fontWeight: 800, color: '#2563eb' }}>{selectedProduct.gi}</Typography>
+                    </Box>
+                  </Grid>
+                  <Grid size={{ xs: 6 }}>
+                    <Box sx={{ p: 2.5, borderRadius: 3, bgcolor: '#faf5ff', border: '1px solid #f3e8ff', height: '100%' }}>
+                      <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600, display: 'block', mb: 2 }}>Glikemik yuk</Typography>
+                      <Typography variant="h3" sx={{ fontWeight: 800, color: '#9333ea' }}>{selectedProduct.gl}</Typography>
+                    </Box>
+                  </Grid>
+                </Grid>
+
+                {/* Nutrition Grid */}
+                <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#1f2937', mb: 2 }}>Ozuqaviy ma'lumot (100g uchun)</Typography>
+                <Grid container spacing={1.5} sx={{ mb: 4 }}>
+                   {[
+                     { label: 'Kaloriya', val: `${cal} kcal` },
+                     { label: 'Uglevodlar', val: `${carb}g` },
+                     { label: 'Shakar', val: `${sugar}g` },
+                     { label: 'Tola', val: `${fiber}g` },
+                     { label: 'Oqsil', val: `${prot}g` },
+                     { label: 'Yog\'', val: `${fat}g` },
+                   ].map((item, i) => (
+                     <Grid size={{ xs: 4 }} key={i}>
+                       <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: '#f8fafc', height: '100%' }}>
+                         <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600, display: 'block', mb: 1, fontSize: 10 }}>{item.label}</Typography>
+                         <Typography variant="body2" sx={{ fontWeight: 800, color: '#1f2937' }}>{item.val}</Typography>
+                       </Box>
+                     </Grid>
+                   ))}
+                </Grid>
+
+                {/* Carbohydrate Distribution */}
+                <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#1f2937', mb: 2 }}>Uglevodlar taqsimoti</Typography>
+                <Stack spacing={3} sx={{ mb: 4 }}>
+                   <Box>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                        <Typography variant="caption" sx={{ fontWeight: 700, color: '#4b5563' }}>Shakar</Typography>
+                        <Typography variant="caption" sx={{ fontWeight: 800, color: '#1f2937' }}>{sugar}g</Typography>
+                      </Box>
+                      <Box sx={{ height: 8, borderRadius: 4, bgcolor: '#f3f4f6', overflow: 'hidden' }}>
+                        <Box sx={{ height: '100%', width: carb > 0 ? `${(sugar / carb) * 100}%` : 0, bgcolor: '#ef4444' }} />
+                      </Box>
+                   </Box>
+                   <Box>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                        <Typography variant="caption" sx={{ fontWeight: 700, color: '#4b5563' }}>Tola</Typography>
+                        <Typography variant="caption" sx={{ fontWeight: 800, color: '#1f2937' }}>{fiber}g</Typography>
+                      </Box>
+                      <Box sx={{ height: 8, borderRadius: 4, bgcolor: '#f3f4f6', overflow: 'hidden' }}>
+                        <Box sx={{ height: '100%', width: carb > 0 ? `${(fiber / carb) * 100}%` : 0, bgcolor: '#22c55e' }} />
+                      </Box>
+                   </Box>
+                </Stack>
+
+                {/* Main Nutrients Stacked Bar */}
+                <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#1f2937', mb: 2 }}>Asosiy ozuqa moddalari</Typography>
+                <Box sx={{ mb: 4 }}>
+                   <Box sx={{ height: 24, borderRadius: 12, bgcolor: '#f3f4f6', overflow: 'hidden', display: 'flex', mb: 2 }}>
+                      {total > 0 ? (
+                        <>
+                          <Box sx={{ height: '100%', width: `${carbPct}%`, bgcolor: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 10, fontWeight: 700 }}>
+                            {carbPct > 10 ? `${Math.round(carbPct)}%` : ''}
+                          </Box>
+                          <Box sx={{ height: '100%', width: `${protPct}%`, bgcolor: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 10, fontWeight: 700 }}>
+                            {protPct > 10 ? `${Math.round(protPct)}%` : ''}
+                          </Box>
+                          <Box sx={{ height: '100%', width: `${fatPct}%`, bgcolor: '#eab308', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 10, fontWeight: 700 }}>
+                            {fatPct > 10 ? `${Math.round(fatPct)}%` : ''}
+                          </Box>
+                        </>
+                      ) : (
+                        <Box sx={{ height: '100%', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af', fontSize: 10 }}>Ma'lumot yo'q</Box>
+                      )}
+                   </Box>
+                   <Stack direction="row" spacing={3} justifyContent="center">
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: '#3b82f6' }} />
+                        <Typography variant="caption" sx={{ fontWeight: 600, color: '#4b5563' }}>Uglevodlar</Typography>
+                      </Stack>
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: '#ef4444' }} />
+                        <Typography variant="caption" sx={{ fontWeight: 600, color: '#4b5563' }}>Oqsil</Typography>
+                      </Stack>
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: '#eab308' }} />
+                        <Typography variant="caption" sx={{ fontWeight: 600, color: '#4b5563' }}>Yog'</Typography>
+                      </Stack>
+                   </Stack>
+                </Box>
+
+                {/* Advice Section */}
+                <Box sx={{ p: 2.5, borderRadius: 3, bgcolor: '#f0f9ff' }}>
+                   <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#0c4a6e', mb: 1.5 }}>Batafsil tavsiya</Typography>
+                   <Typography variant="body2" sx={{ color: '#1e3a8a', lineHeight: 1.6, fontWeight: 500 }}>
+                      {selectedProduct.advice?.[language] || selectedProduct.advice?.['uz'] || 'Tavsiya mavjud emas'}
+                   </Typography>
+                </Box>
+              </DialogContent>
+            </Box>
+          );
+        })()}
       </Dialog>
-    </div>
+    </Box>
   );
 }

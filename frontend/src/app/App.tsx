@@ -1,9 +1,59 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, Navigate, Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { Routes, Route, Navigate, Link as RouterLink, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 import { useApp } from './contexts/AppContext';
 import { translations } from './utils/translations';
-import { motion, AnimatePresence } from 'motion/react';
+
+// MUI Components
+import {
+  Box,
+  Drawer,
+  AppBar,
+  Toolbar,
+  Typography,
+  IconButton,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Avatar,
+  Badge,
+  Divider,
+  Button as MuiButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  TextField,
+  Paper,
+  Stack,
+  useTheme,
+  alpha,
+  useMediaQuery,
+  CircularProgress,
+  Link
+} from '@mui/material';
+
+// MUI Icons
+import MenuIcon from '@mui/icons-material/Menu';
+import CloseIcon from '@mui/icons-material/Close';
+import LogoutIcon from '@mui/icons-material/Logout';
+import PersonIcon from '@mui/icons-material/Person';
+import LanguageIcon from '@mui/icons-material/Language';
+import StorageIcon from '@mui/icons-material/Storage';
+import AssignmentIcon from '@mui/icons-material/Assignment';
+import BarChartIcon from '@mui/icons-material/BarChart';
+import SettingsIcon from '@mui/icons-material/Settings';
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
+import MedicalServicesIcon from '@mui/icons-material/MedicalServices';
+import NotificationsIcon from '@mui/icons-material/Notifications';
+import ForumIcon from '@mui/icons-material/Forum';
+import SendIcon from '@mui/icons-material/Send';
+import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import CallIcon from '@mui/icons-material/Call';
+import TelegramIcon from '@mui/icons-material/Telegram';
+import SaveIcon from '@mui/icons-material/Save';
 
 // Components
 import { DailyJournal } from './components/DailyJournal';
@@ -21,36 +71,18 @@ import CompleteProfilePage from './pages/CompleteProfilePage';
 import AdminPage from './pages/AdminPage';
 import DoctorPage from './pages/DoctorPage';
 
-// UI
-import { Button } from './components/ui/button';
-import {
-  LogOut,
-  User,
-  Menu,
-  X,
-  Languages,
-  Database,
-  ClipboardList,
-  BarChart3,
-  Settings,
-  ShieldCheck,
-  Stethoscope,
-  Bell,
-  MessageSquare,
-  SendHorizontal,
-  UserCog,
-  Clock
-} from 'lucide-react';
 import { Toaster, toast } from 'sonner';
-// import { authAPI } from './utils/api'; // Duplicate removed
+
+const SIDEBAR_WIDTH = 300;
 
 function App() {
   const { user, isAuthenticated, logout, loading, updateUser } = useAuth();
-  const { language, setLanguage } = useApp();
+  const { language, setLanguage, socket } = useApp();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('lg'));
   const t = translations[language] || translations['uz'];
   const navigate = useNavigate();
 
-  // Safe translation helper
   const getT = (key: keyof typeof translations['uz']) => t[key] || (translations['uz'] as any)[key] || key;
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -78,7 +110,6 @@ function App() {
     }
   }, [isSupportModalOpen, user?.supportMessages]);
 
-  // Redirect to complete profile if necessary
   useEffect(() => {
     if (isAuthenticated && user && !user.isProfileComplete && location.pathname !== '/complete-profile') {
       const timer = setTimeout(() => {
@@ -107,22 +138,13 @@ function App() {
   useEffect(() => {
     if (isAuthenticated) {
       loadReminders();
-      if (user?.role === 'superadmin') {
-        loadAdminStats();
-        // Superadmin needs their own contacts to edit
-        adminAPI.getContacts().then(res => {
-          if (res.data?.success) setAdminContacts(res.data.contacts);
-        }).catch(() => {});
-      } else {
-        // Fetch contacts for normal users
-        adminAPI.getContacts().then(res => {
-          if (res.data?.success) setAdminContacts(res.data.contacts);
-        }).catch(() => {});
-      }
+      adminAPI.getContacts().then(res => {
+        if (res.data?.success) setAdminContacts(res.data.contacts);
+      }).catch(() => {});
+      if (user?.role === 'superadmin') loadAdminStats();
     }
   }, [isAuthenticated, user?.role]);
 
-  // Reminder Engine
   useEffect(() => {
     if (!isAuthenticated || reminders.length === 0) return;
 
@@ -145,35 +167,31 @@ function App() {
     };
 
     const interval = setInterval(checkReminders, 60000);
-    checkReminders(); // Initial check
+    checkReminders();
     return () => clearInterval(interval);
   }, [isAuthenticated, reminders, t.reminderTriggered]);
 
   const openSupport = async () => {
+    setIsReminderModalOpen(false); // Close reminders if open
+    setIsSidebarOpen(false); // Close sidebar for focus
     setIsSupportModalOpen(true);
     try {
       await authAPI.markMessagesAsRead();
       const { data } = await authAPI.getMe();
       updateUser(data.user);
       if (user?.role === 'superadmin') loadAdminStats();
-    } catch (err) {
-      console.error('Socket refresh error:', err);
-    }
+    } catch (err) { }
   };
 
-  const { socket } = useApp();
+  // socket is already destructured above from useApp()
 
-  // Socket listeners for real-time updates
   useEffect(() => {
     if (isAuthenticated && socket) {
-      // For Admin: Refresh stats when any user reads messages or a new message arrives
       const handleReadByUser = (data: any) => {
         if (user?.role === 'superadmin') loadAdminStats();
       };
       const handleNewMessage = async (data: any) => {
         if (user?.role === 'superadmin') loadAdminStats();
-
-        // For User: If modal is open and message is from admin, auto-mark as read
         if (isSupportModalOpen && data.sender === 'admin') {
           try {
             await authAPI.markMessagesAsRead();
@@ -182,10 +200,8 @@ function App() {
           } catch (err) { }
         }
       };
-
       socket.on('support-messages-read-by-user', handleReadByUser);
       socket.on('new-message', handleNewMessage);
-
       return () => {
         socket.off('support-messages-read-by-user', handleReadByUser);
         socket.off('new-message', handleNewMessage);
@@ -195,15 +211,15 @@ function App() {
 
   if (loading) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-slate-50">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
-      </div>
+      <Box sx={{ display: 'flex', height: '100vh', width: '100%', alignItems: 'center', justifyContent: 'center', bgcolor: 'background.default' }}>
+        <CircularProgress size={40} thickness={4} />
+      </Box>
     );
   }
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-slate-50 transition-colors duration-500 overflow-hidden">
+      <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', overflow: 'hidden' }}>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
@@ -212,7 +228,7 @@ function App() {
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
         <Toaster position="top-right" richColors />
-      </div>
+      </Box>
     );
   }
 
@@ -222,7 +238,6 @@ function App() {
     if (!supportText.trim()) return;
     setSendingSupport(true);
     try {
-      // Optimistic update: xabarni darhol State'ga yozamiz
       const newMessage: any = {
         sender: 'user',
         text: supportText,
@@ -232,13 +247,9 @@ function App() {
       if (user) {
         updateUser({ ...user, supportMessages: [...(user.supportMessages || []), newMessage] });
       }
-
       await authAPI.sendMessageToAdmin({ text: supportText });
-
       toast.success(language === 'uz' ? 'Xabar yuborildi!' : 'Сообщение отправлено!');
       setSupportText('');
-      // We don't close modal immediately anymore for a better chat feel
-      // setIsSupportModalOpen(false); 
     } catch (err) {
       toast.error('Error sending message');
     } finally {
@@ -258,215 +269,223 @@ function App() {
     }
   };
 
-  const NavLink = ({ to, icon: Icon, label, active }: any) => (
-    <motion.div whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.02 }}>
-      <Link
-        to={to}
-        className={`flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 ${active
-          ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
-          : 'text-slate-500 hover:bg-slate-100'
-          }`}
-        onClick={() => setIsSidebarOpen(false)}
-      >
-        <Icon className="w-5 h-5" />
-        <span className="font-bold tracking-tight">{label}</span>
-      </Link>
-    </motion.div>
+  const SidebarContent = (
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', p: 3 }}>
+      {/* Brand */}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 4, px: 1 }}>
+        <Box
+          sx={{
+            width: 40,
+            height: 40,
+            background: theme.palette.primary.main,
+            borderRadius: 1.5,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'white'
+          }}
+        >
+          <StorageIcon fontSize="small" />
+        </Box>
+        <Box>
+          <Typography variant="subtitle1" sx={{ fontWeight: 800, lineHeight: 1 }}>{t.appName || 'Qand Nazorati'}</Typography>
+          <Typography variant="overline" sx={{ fontWeight: 800, letterSpacing: 1.5, color: 'text.secondary', fontSize: 8 }}>Professional Monitor</Typography>
+        </Box>
+      </Box>
+
+      <Divider sx={{ mb: 3 }} />
+
+      {/* Navigation */}
+      <List sx={{ flexGrow: 1, px: 0 }}>
+        <ListItem disablePadding sx={{ mb: 0.5 }}>
+          <ListItemButton
+            component={RouterLink}
+            to="/?tab=journal"
+            selected={activeTab === 'journal'}
+            onClick={() => setIsSidebarOpen(false)}
+            sx={{
+              borderRadius: 1.5,
+              py: 1,
+              '&.Mui-selected': { bgcolor: alpha(theme.palette.primary.main, 0.08), color: 'primary.main', '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.12) }, '& .MuiListItemIcon-root': { color: 'primary.main' } }
+            }}
+          >
+            <ListItemIcon sx={{ minWidth: 40 }}><AssignmentIcon fontSize="small" /></ListItemIcon>
+            <ListItemText primary={getT('dailyJournal')} primaryTypographyProps={{ fontWeight: 700, fontSize: '0.875rem' }} />
+          </ListItemButton>
+        </ListItem>
+
+        <ListItem disablePadding sx={{ mb: 0.5 }}>
+          <ListItemButton
+            component={RouterLink}
+            to="/?tab=products"
+            selected={activeTab === 'products'}
+            onClick={() => setIsSidebarOpen(false)}
+            sx={{
+              borderRadius: 1.5,
+              py: 1,
+              '&.Mui-selected': { bgcolor: alpha(theme.palette.primary.main, 0.08), color: 'primary.main', '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.12) }, '& .MuiListItemIcon-root': { color: 'primary.main' } }
+            }}
+          >
+            <ListItemIcon sx={{ minWidth: 40 }}><StorageIcon fontSize="small" /></ListItemIcon>
+            <ListItemText primary={getT('products')} primaryTypographyProps={{ fontWeight: 700, fontSize: '0.875rem' }} />
+          </ListItemButton>
+        </ListItem>
+
+        <ListItem disablePadding sx={{ mb: 0.5 }}>
+          <ListItemButton
+            component={RouterLink}
+            to="/?tab=stats"
+            selected={activeTab === 'stats'}
+            onClick={() => setIsSidebarOpen(false)}
+            sx={{
+              borderRadius: 1.5,
+              py: 1,
+              '&.Mui-selected': { bgcolor: alpha(theme.palette.primary.main, 0.08), color: 'primary.main', '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.12) }, '& .MuiListItemIcon-root': { color: 'primary.main' } }
+            }}
+          >
+            <ListItemIcon sx={{ minWidth: 40 }}><BarChartIcon fontSize="small" /></ListItemIcon>
+            <ListItemText primary={getT('statistics')} primaryTypographyProps={{ fontWeight: 700, fontSize: '0.875rem' }} />
+          </ListItemButton>
+        </ListItem>
+
+        <Divider sx={{ my: 2, opacity: 0.5 }} />
+
+        <Typography variant="overline" sx={{ px: 1.5, fontWeight: 800, color: 'text.secondary', letterSpacing: 1.5, fontSize: 10 }}>{t.systemPanel}</Typography>
+        
+        {user?.role === 'superadmin' && (
+          <ListItem disablePadding sx={{ mt: 0.5 }}>
+            <ListItemButton
+              onClick={() => { navigate('/admin'); setIsSidebarOpen(false); }}
+              selected={location.pathname === '/admin'}
+              sx={{ borderRadius: 1.5, py: 1 }}
+            >
+              <ListItemIcon sx={{ minWidth: 40 }}><AdminPanelSettingsIcon fontSize="small" /></ListItemIcon>
+              <ListItemText primary={getT('adminPanel')} primaryTypographyProps={{ fontWeight: 700, fontSize: '0.875rem' }} />
+              {adminUnreadCount > 0 && <Badge badgeContent={adminUnreadCount} color="error" sx={{ ml: 2 }} />}
+            </ListItemButton>
+          </ListItem>
+        )}
+
+        {user?.role === 'doctor' && (
+          <ListItem disablePadding sx={{ mt: 0.5 }}>
+            <ListItemButton
+              component={RouterLink}
+              to="/doctor"
+              selected={location.pathname === '/doctor'}
+              sx={{ borderRadius: 1.5, py: 1 }}
+            >
+              <ListItemIcon sx={{ minWidth: 40 }}><MedicalServicesIcon fontSize="small" /></ListItemIcon>
+              <ListItemText primary={getT('doctorPanel')} primaryTypographyProps={{ fontWeight: 700, fontSize: '0.875rem' }} />
+            </ListItemButton>
+          </ListItem>
+        )}
+
+        <ListItem disablePadding sx={{ mt: 0.5 }}>
+          <ListItemButton onClick={openSupport} sx={{ borderRadius: 1.5, py: 1 }}>
+            <ListItemIcon sx={{ minWidth: 40 }}><ForumIcon fontSize="small" /></ListItemIcon>
+            <ListItemText primary={t.supportChat} primaryTypographyProps={{ fontWeight: 700, fontSize: '0.875rem' }} />
+            {unreadSupportCount > 0 && <Badge badgeContent={unreadSupportCount} color="error" sx={{ ml: 2 }} />}
+          </ListItemButton>
+        </ListItem>
+
+        <ListItem disablePadding sx={{ mt: 0.5 }}>
+          <ListItemButton 
+            onClick={() => {
+              setIsSupportModalOpen(false);
+              setIsSidebarOpen(false);
+              setIsReminderModalOpen(true);
+            }} 
+            sx={{ borderRadius: 1.5, py: 1 }}
+          >
+            <ListItemIcon sx={{ minWidth: 40 }}><AccessTimeIcon fontSize="small" /></ListItemIcon>
+            <ListItemText primary={t.reminders} primaryTypographyProps={{ fontWeight: 700, fontSize: '0.875rem' }} />
+          </ListItemButton>
+        </ListItem>
+      </List>
+
+      {/* Footer Area */}
+      <Box sx={{ mt: 'auto', pt: 3 }}>
+        <Stack spacing={1}>
+          <MuiButton fullWidth startIcon={<ManageAccountsIcon />} onClick={() => navigate('/complete-profile')} sx={{ borderRadius: 1.5, justifyContent: 'start', py: 1, color: 'text.secondary', fontWeight: 700 }}>{t.editProfile}</MuiButton>
+          <MuiButton fullWidth startIcon={<LanguageIcon />} onClick={() => setLanguage(language === 'uz' ? 'ru' : language === 'ru' ? 'en' : 'uz')} sx={{ borderRadius: 1.5, justifyContent: 'start', py: 1, color: 'text.secondary', fontWeight: 700 }}>{t.changeLanguage} ({language.toUpperCase()})</MuiButton>
+          
+          {(adminContacts.phone || adminContacts.telegramUsername) && (
+            <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1.5, bgcolor: alpha(theme.palette.primary.main, 0.02), borderStyle: 'dashed' }}>
+               <Typography variant="caption" sx={{ fontWeight: 900, color: 'primary.main', display: 'block', mb: 1, textTransform: 'uppercase', fontSize: 8 }}>{t.contactSupport || 'Bog\'lanish'}</Typography>
+               <Stack spacing={1}>
+                  {adminContacts.phone && (
+                    <Link href={`tel:${adminContacts.phone}`} sx={{ display: 'flex', alignItems: 'center', gap: 1, textDecoration: 'none', color: 'text.primary', '&:hover': { color: 'primary.main' } }}>
+                       <CallIcon sx={{ fontSize: 14 }} />
+                       <Typography variant="caption" sx={{ fontWeight: 700 }}>{adminContacts.phone}</Typography>
+                    </Link>
+                  )}
+                  {adminContacts.telegramUsername && (
+                    <Link 
+                      href={adminContacts.telegramUsername.startsWith('http') ? adminContacts.telegramUsername : `https://t.me/${adminContacts.telegramUsername.replace('@', '')}`} 
+                      target="_blank"
+                      sx={{ display: 'flex', alignItems: 'center', gap: 1, textDecoration: 'none', color: 'text.primary', '&:hover': { color: 'primary.main' } }}
+                    >
+                       <TelegramIcon sx={{ fontSize: 14 }} />
+                       <Typography variant="caption" sx={{ fontWeight: 700 }}>{adminContacts.telegramUsername.startsWith('@') ? adminContacts.telegramUsername : 'Telegram'}</Typography>
+                    </Link>
+                  )}
+               </Stack>
+            </Paper>
+          )}
+
+          <MuiButton fullWidth color="error" startIcon={<LogoutIcon />} onClick={logout} sx={{ borderRadius: 1.5, justifyContent: 'start', py: 1, fontWeight: 700 }}>{t.logoutUser}</MuiButton>
+        </Stack>
+      </Box>
+    </Box>
   );
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex transition-colors duration-700 selection:bg-blue-100">
-      {/* Mesh Background Effects (More Colorful) */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <motion.div animate={{
-          x: [0, 50, 0],
-          y: [0, 30, 0],
-          scale: [1, 1.1, 1]
+    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
+      {/* Sidebar / Drawer (Flat Style) */}
+      <Drawer
+        variant={isMobile ? 'temporary' : 'permanent'}
+        open={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        sx={{
+          width: SIDEBAR_WIDTH,
+          flexShrink: 0,
+          [`& .MuiDrawer-paper`]: { width: SIDEBAR_WIDTH, boxSizing: 'border-box', borderRight: `1px solid ${theme.palette.divider}`, boxShadow: 'none' },
         }}
-          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-[-5%] left-[-5%] w-[40%] h-[40%] bg-blue-600/15 blur-[120px] rounded-full"
-        />
-        <motion.div animate={{
-          x: [0, -40, 0],
-          y: [0, 50, 0],
-          scale: [1, 1.2, 1]
-        }}
-          transition={{ duration: 18, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-          className="absolute bottom-[-5%] right-[-5%] w-[40%] h-[40%] bg-purple-600/15 blur-[120px] rounded-full"
-        />
-        <motion.div animate={{
-          x: [0, 30, 0],
-          y: [0, -60, 0],
-          scale: [1, 1.15, 1]
-        }}
-          transition={{ duration: 20, repeat: Infinity, ease: "easeInOut", delay: 4 }}
-          className="absolute top-[20%] right-[10%] w-[15%] h-[15%] bg-emerald-500/10 blur-[80px] rounded-full"
-        />
-        <motion.div animate={{
-          x: [0, -30, 0],
-          y: [0, 40, 0],
-          scale: [1, 1.1, 1]
-        }}
-          transition={{ duration: 25, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-          className="absolute bottom-[20%] left-[10%] w-[20%] h-[20%] bg-rose-500/10 blur-[90px] rounded-full"
-        />
-      </div>
-
-      {/* Sidebar Overlay */}
-      <AnimatePresence>
-        {isSidebarOpen && (
-          <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-slate-950/20 backdrop-blur-sm z-40 lg:hidden transition-all duration-300" onClick={() => setIsSidebarOpen(false)}
-          />
-        )}
-      </AnimatePresence>
-
-      {/* Sidebar */}
-      <aside className={`
-        fixed inset-y-0 left-0 w-80 bg-white border-r border-border z-50 transition-all duration-500 ease-in-out
-        ${isSidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'} lg:translate-x-0
-      `}>
-        <div className="h-full flex flex-col p-8">
-          <div className="flex items-center gap-4 mb-12 px-2 text-slate-800">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-blue-500/20">
-              <Database className="w-6 h-6" />
-            </div>
-            <div>
-              <h1 className="text-xl font-black tracking-tight leading-none">{t.appName || 'Qand Nazorati'}</h1>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mt-1">Smart Monitor</p>
-            </div>
-          </div>
-
-          <nav className="flex-1 space-y-2 overflow-y-auto pr-2 pb-4 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
-            <NavLink to="/?tab=journal" icon={ClipboardList} label={getT('dailyJournal')} active={activeTab === 'journal'} />
-            <NavLink to="/?tab=products" icon={Database} label={getT('products')} active={activeTab === 'products'} />
-            <NavLink to="/?tab=stats" icon={BarChart3} label={getT('statistics')} active={activeTab === 'stats'} />
-
-            <div className="pt-6 mt-6 border-t border-slate-100">
-              <label className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-4 block">{t.systemPanel || 'System Panel'}</label>
-              {user?.role === 'superadmin' && (
-                <motion.button whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.02 }} onClick={() => navigate('/admin')} className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all duration-300 ${location.pathname === '/admin' ? 'bg-blue-600 text-white shadow-lg' : 'text-muted-foreground hover:bg-accent'}`}>
-                  <div className="flex items-center gap-3">
-                    <ShieldCheck className="w-5 h-5" /> {getT('adminPanel')}
-                  </div>
-                  {adminUnreadCount > 0 && location.pathname !== '/admin' && (
-                    <span className="w-5 h-5 bg-rose-600 text-white text-[10px] font-black rounded-full flex items-center justify-center animate-pulse">{adminUnreadCount}</span>
-                  )}
-                </motion.button>
-              )}
-              {user?.role === 'doctor' && (
-                <NavLink to="/doctor" icon={Stethoscope} label={getT('doctorPanel')} active={location.pathname === '/doctor'} />
-              )}
-              <motion.button whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.02 }} onClick={openSupport} className="w-full flex items-center justify-between px-4 py-3 rounded-2xl text-muted-foreground hover:bg-accent transition-all font-bold tracking-tight">
-                <div className="flex items-center gap-3">
-                  <MessageSquare className="w-5 h-5" /> {t.supportChat || 'Support Chat'}
-                </div>
-                {unreadSupportCount > 0 && (
-                  <span className="w-5 h-5 bg-rose-600 text-white text-[10px] font-black rounded-full flex items-center justify-center animate-pulse">{unreadSupportCount}</span>
-                )}
-              </motion.button>
-              <motion.button whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.02 }} onClick={() => setIsReminderModalOpen(true)} className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-muted-foreground hover:bg-accent transition-all font-bold tracking-tight">
-                <Clock className="w-5 h-5" /> {t.reminders}
-              </motion.button>
-            </div>
-            
-            {/* Admin Contacts display for users */}
-            {user?.role !== 'superadmin' && (adminContacts.phone || adminContacts.telegramUsername) && (
-              <div className="pt-6 mt-6 border-t border-slate-100">
-                <label className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-4 block">{t.contactLabel || "A'loqa uchun"}</label>
-                <div className="px-4 space-y-3">
-                  {adminContacts.phone && (
-                    <a href={`tel:${adminContacts.phone}`} className="flex items-center gap-3 text-sm font-bold text-slate-600 hover:text-blue-600 transition-colors">
-                      <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">📞</div>
-                      {adminContacts.phone}
-                    </a>
-                  )}
-                  {adminContacts.telegramUsername && (
-                    <a href={`https://t.me/${adminContacts.telegramUsername.replace('@', '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-sm font-bold text-slate-600 hover:text-blue-600 transition-colors">
-                      <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-blue-500">✈️</div>
-                      {adminContacts.telegramUsername}
-                    </a>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Admin Contacts Editor for Superadmin */}
-            {user?.role === 'superadmin' && (
-              <div className="pt-6 mt-6 border-t border-slate-100">
-                <label className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-4 block">{t.contactLabel || "A'loqa uchun"}</label>
-                <div className="px-4 space-y-3">
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px]">📞</span>
-                    <input type="text" value={adminContacts.phone} onChange={e => setAdminContacts({...adminContacts, phone: e.target.value})} placeholder="+998 90 123 45 67" className="w-full text-xs font-bold pl-8 pr-3 h-10 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-blue-500 transition-colors" />
-                  </div>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] text-blue-500">✈️</span>
-                    <input type="text" value={adminContacts.telegramUsername} onChange={e => setAdminContacts({...adminContacts, telegramUsername: e.target.value})} placeholder="@username" className="w-full text-xs font-bold pl-8 pr-3 h-10 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-blue-500 transition-colors" />
-                  </div>
-                  <button onClick={handleSaveContacts} disabled={contactSaving} className="w-full h-10 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">
-                    {contactSaving ? '...' : (t.saveBtn || 'Saqlash')}
-                  </button>
-                </div>
-              </div>
-            )}
-
-          </nav>
-
-          <div className="pt-6 mt-2 border-t border-slate-100 space-y-3 shrink-0">
-            {/* Edit Profile Link */}
-            <button onClick={() => navigate('/complete-profile')} className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-blue-600 hover:bg-blue-50 transition-all font-black text-[10px] uppercase tracking-widest leading-none">
-              <UserCog className="w-5 h-5" /> {t.editProfile || 'Profilni tahrirlash'}
-            </button>
-
-            <motion.button whileTap={{ scale: 0.95 }} onClick={() => setLanguage(language === 'uz' ? 'ru' : language === 'ru' ? 'en' : 'uz')} className="w-full flex items-center justify-center gap-3 h-12 rounded-2xl bg-secondary text-secondary-foreground hover:bg-accent transition-all text-[10px] font-black uppercase tracking-widest leading-none">
-                <Languages className="w-5 h-5" /> {t.changeLanguage || "Tilni o'zgartirish"} ({language.toUpperCase()})
-            </motion.button>
-
-            <motion.button whileTap={{ scale: 0.95 }} onClick={logout} className="w-full h-12 flex items-center gap-3 px-6 rounded-2xl bg-rose-50 text-rose-600 hover:bg-rose-100 transition-all font-bold tracking-tight">
-              <LogOut className="w-4 h-4" /> {t.logoutUser || 'Chiqish'}
-            </motion.button>
-          </div>
-        </div>
-      </aside>
+      >
+        {SidebarContent}
+      </Drawer>
 
       {/* Main Content */}
-      <main className="flex-1 lg:ml-80 flex flex-col min-h-screen relative z-10 text-slate-800">
-        {/* Header */}
-        <header className="h-24 bg-card/50 backdrop-blur-xl border-b border-border flex items-center justify-between px-8 sticky top-0 z-30">
-          <button className="lg:hidden p-2 -ml-2 text-slate-600" onClick={() => setIsSidebarOpen(true)}>
-            <Menu className="w-6 h-6" />
-          </button>
-
-          <div className="flex-1 flex justify-center lg:justify-start px-6">
-            <h2 className="text-xs font-black uppercase tracking-[0.4em] text-slate-400">
+      <Box component="main" sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', minHeight: '100vh', width: { lg: `calc(100% - ${SIDEBAR_WIDTH}px)` } }}>
+        {/* Header (Official & Simple) */}
+        <AppBar position="sticky" elevation={0} sx={{ bgcolor: 'background.paper', borderBottom: `1px solid ${theme.palette.divider}`, color: 'text.primary' }}>
+          <Toolbar sx={{ height: 64, px: { xs: 2, sm: 3 } }}>
+            {isMobile && (
+              <IconButton edge="start" color="inherit" onClick={() => setIsSidebarOpen(true)} sx={{ mr: 2 }}>
+                <MenuIcon />
+              </IconButton>
+            )}
+            
+            <Typography variant="subtitle1" sx={{ flexGrow: 1, fontWeight: 800, color: 'text.primary', textTransform: 'uppercase', letterSpacing: 2 }}>
               {activeTab === 'journal' ? getT('dailyJournal') : activeTab === 'products' ? getT('products') : getT('statistics')}
-            </h2>
-          </div>
+            </Typography>
 
-          <div className="flex items-center gap-4">
-            <div className="h-10 w-px bg-slate-200 mx-1 hidden sm:block" />
-
-            <div className="flex items-center gap-4">
-              <div className="hidden sm:flex flex-col items-end">
-                <span className="text-sm font-black tracking-tight">{user?.firstName}</span>
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-500">{user?.role}</span>
-              </div>
-              <Link to="/complete-profile" className="w-14 h-14 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:border-blue-500 transition-all shadow-sm group relative">
-                <User className="w-6 h-6 group-hover:scale-110 transition-transform" />
-                {((user?.role === 'superadmin' ? adminUnreadCount : unreadSupportCount) > 0) && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-rose-600 text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-white animate-pulse">
-                    {user?.role === 'superadmin' ? adminUnreadCount : unreadSupportCount}
-                  </span>
-                )}
-              </Link>
-            </div>
-          </div>
-        </header>
+            <Stack direction="row" spacing={3} alignItems="center">
+               <Box sx={{ textAlign: 'right', display: { xs: 'none', md: 'block' } }}>
+                  <Typography variant="body2" sx={{ fontWeight: 800, lineHeight: 1 }}>{user?.firstName}</Typography>
+                  <Typography variant="caption" sx={{ fontWeight: 800, color: 'primary.main', textTransform: 'uppercase', fontSize: 9 }}>{user?.role}</Typography>
+               </Box>
+               <IconButton component={RouterLink} to="/complete-profile" sx={{ width: 44, height: 44, bgcolor: alpha(theme.palette.primary.main, 0.05), p: 0, borderRadius: 1.5 }}>
+                  <Badge badgeContent={user?.role === 'superadmin' ? adminUnreadCount : unreadSupportCount} color="error" overlap="circular">
+                    <Avatar sx={{ bgcolor: 'transparent', color: 'primary.main', width: 44, height: 44 }}><PersonIcon /></Avatar>
+                  </Badge>
+               </IconButton>
+            </Stack>
+          </Toolbar>
+        </AppBar>
 
         {/* Page Content */}
-        <div className="p-8 md:p-12 max-w-7xl mx-auto w-full flex-1">
+        <Box sx={{ p: { xs: 3, md: 4 }, flexGrow: 1 }}>
           <Routes>
             <Route path="/" element={
               activeTab === 'journal' ? <DailyJournal /> :
@@ -478,88 +497,159 @@ function App() {
             <Route path="/doctor" element={<DoctorPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-        </div>
+        </Box>
 
-        {/* Support Chat Modal (Enhanced UI) */}
-        <AnimatePresence>
-          {isSupportModalOpen && (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-slate-950/40 backdrop-blur-md" onClick={() => setIsSupportModalOpen(false)} />
-              <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }} className="relative w-full max-w-md bg-card rounded-[2.5rem] shadow-3xl overflow-hidden border border-border flex flex-col h-[500px]">
-                {/* Header */}
-                <div className="p-6 bg-slate-50 flex items-center justify-between border-b border-slate-100">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center text-white shadow-xl shadow-blue-500/20">
-                      <MessageSquare className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-black tracking-tight">{t.supportChat || 'Support Chat'}</h3>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{t.supportChatDesc || 'Super Admin is here to help'}</p>
-                    </div>
-                  </div>
-                  <button onClick={() => setIsSupportModalOpen(false)} className="w-12 h-12 flex items-center justify-center hover:bg-accent rounded-2xl transition-all"><X className="w-6 h-6" /></button>
-                </div>
+        {/* Footer (Simplified) */}
+        <Box sx={{ p: 4, textAlign: 'center', opacity: 0.5, borderTop: `1px solid ${theme.palette.divider}` }}>
+           <Typography variant="overline" sx={{ fontWeight: 800, color: 'text.secondary', letterSpacing: 2, fontSize: 10 }}>
+              © {new Date().getFullYear()} QAND NAZORATI. PROFESSIONAL VERSION.
+           </Typography>
+        </Box>
+      </Box>
 
-                {/* Messages Container */}
-                <div className="flex-1 overflow-y-auto p-10 space-y-6 bg-slate-50/30">
-                  {/* Dummy messages to show structure */}
-                  {user?.supportMessages?.map((msg: any, idx: number) => {
-                    const isAdmin = msg.sender === 'admin';
-                    return (
-                      <div key={idx} className={`flex ${isAdmin ? 'justify-start' : 'justify-end'}`}>
-                        <div className={`max-w-[80%] px-5 py-4 pb-8 rounded-[2rem] shadow-sm text-sm font-bold leading-relaxed relative flex flex-col ${isAdmin ? 'bg-white text-slate-800 rounded-bl-none border border-slate-100 shadow-xl' : 'bg-blue-600 text-white rounded-br-none shadow-lg shadow-blue-500/20'}`}>
-                          <span>{msg.text}</span>
-                          <span className={`absolute bottom-3 right-5 text-[10px] font-black ${isAdmin ? 'text-slate-400' : 'text-blue-200'} flex items-center gap-1`}>
-                            {msg.createdAt ? new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
-                            {!isAdmin && (
-                              <span className="text-sm tracking-tighter ml-1">
-                                {msg.isReadByAdmin ? '✓✓' : '✓'}
-                              </span>
-                            )}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                  <div ref={chatEndRef} />
-                  {(!user?.supportMessages || user?.supportMessages.length === 0) && (
-                    <div className="h-full flex flex-col items-center justify-center text-slate-300 opacity-50 space-y-4">
-                      <MessageSquare className="w-20 h-20" />
-                      <p className="text-xs font-black uppercase tracking-[0.3em]">{t.askQuestion || 'Savol bering'}</p>
-                    </div>
+      {/* Support Chat Dialog */}
+      <Dialog
+        open={isSupportModalOpen}
+        onClose={() => setIsSupportModalOpen(false)}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: 2, height: 600 } }}
+      >
+        <DialogTitle sx={{ 
+          p: 2, px: 3, 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between',
+          background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+          color: 'white'
+        }}>
+          <Stack direction="row" spacing={2} alignItems="center">
+            <ForumIcon sx={{ color: 'white' }} />
+            <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>{t.supportChat}</Typography>
+          </Stack>
+          <IconButton onClick={() => setIsSupportModalOpen(false)} size="small" sx={{ color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent sx={{ p: 0, display: 'flex', flexDirection: 'column', bgcolor: '#f8fafc' }}>
+          {(adminContacts.phone || adminContacts.telegramUsername) && (
+            <Box sx={{ 
+              p: 1.5, px: 3, 
+              bgcolor: 'rgba(255,255,255,0.8)', 
+              backdropFilter: 'blur(8px)',
+              borderBottom: '1px solid #e2e8f0' 
+            }}>
+               <Stack direction="row" spacing={3} justifyContent="center">
+                  {adminContacts.phone && (
+                    <Box component="a" href={`tel:${adminContacts.phone}`} sx={{ 
+                      display: 'flex', alignItems: 'center', gap: 1, 
+                      textDecoration: 'none', color: '#6366f1',
+                      fontWeight: 700, fontSize: '0.75rem',
+                      '&:hover': { color: '#4f46e5' }
+                    }}>
+                       <CallIcon sx={{ fontSize: 16 }} />
+                       <Typography variant="caption" sx={{ fontWeight: 800 }}>{adminContacts.phone}</Typography>
+                    </Box>
                   )}
-                </div>
-
-                {/* Input Area */}
-                <div className="p-8 pb-10 bg-white">
-                  <div className="relative group">
-                    <textarea value={supportText} onChange={e => setSupportText(e.target.value)} placeholder={t.writeMessage || 'Xabaringizni yozing...'} className="w-full h-24 p-6 pr-20 rounded-3xl bg-slate-50 border-none resize-none focus:ring-4 focus:ring-blue-500/10 font-bold transition-all text-sm" />
-                    <button onClick={handleSendSupport} disabled={sendingSupport || !supportText.trim()} className="absolute right-4 bottom-4 w-12 h-12 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30 transition-all active:scale-90">
-                      {sendingSupport ? <div className="w-5 h-5 border-4 border-white/30 border-t-white rounded-full animate-spin" /> : <SendHorizontal className="w-5 h-5" />}
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
-            </div>
+                  {adminContacts.telegramUsername && (
+                    <Box 
+                      component="a" 
+                      href={adminContacts.telegramUsername.startsWith('http') ? adminContacts.telegramUsername : `https://t.me/${adminContacts.telegramUsername.replace('@', '')}`} 
+                      target="_blank"
+                      sx={{ 
+                        display: 'flex', alignItems: 'center', gap: 1, 
+                        textDecoration: 'none', color: '#6366f1',
+                        fontWeight: 700, fontSize: '0.75rem',
+                        '&:hover': { color: '#4f46e5' }
+                      }}
+                    >
+                       <TelegramIcon sx={{ fontSize: 16 }} />
+                       <Typography variant="caption" sx={{ fontWeight: 800 }}>Telegram</Typography>
+                    </Box>
+                  )}
+               </Stack>
+            </Box>
           )}
-        </AnimatePresence>
+          <Box sx={{ flexGrow: 1, p: 3, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+            {user?.supportMessages?.map((msg: any, idx: number) => {
+              const isAdmin = msg.sender === 'admin';
+              return (
+                <Box key={idx} sx={{ display: 'flex', justifyContent: isAdmin ? 'flex-start' : 'flex-end', mb: 2 }}>
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      p: 1.5,
+                      px: 2,
+                      maxWidth: '85%',
+                      background: isAdmin 
+                        ? '#ffffff' 
+                        : 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+                      color: isAdmin ? '#1e293b' : 'white',
+                      borderRadius: isAdmin ? '4px 16px 16px 16px' : '16px 16px 4px 16px',
+                      boxShadow: isAdmin 
+                        ? '0 2px 4px rgba(0,0,0,0.02), 0 1px 2px rgba(0,0,0,0.03)' 
+                        : '0 4px 12px rgba(99, 102, 241, 0.2)',
+                    }}
+                  >
+                    <Typography variant="body2" sx={{ fontWeight: 500, fontSize: '0.875rem' }}>{msg.text}</Typography>
+                    <Typography variant="caption" sx={{ display: 'block', mt: 0.5, opacity: 0.7, textAlign: 'right', fontSize: 10, fontWeight: 700 }}>
+                      {msg.createdAt ? new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                      {!isAdmin && (msg.isReadByAdmin ? ' ✓✓' : ' ✓')}
+                    </Typography>
+                  </Paper>
+                </Box>
+              );
+            })}
+            <div ref={chatEndRef} />
+          </Box>
+          <Box sx={{ p: 2, bgcolor: '#ffffff', borderTop: '1px solid #f1f5f9' }}>
+            <Stack direction="row" spacing={1.5}>
+              <TextField
+                placeholder={t.writeMessage || 'Xabar yozing...'}
+                fullWidth
+                size="medium"
+                multiline
+                maxRows={3}
+                value={supportText}
+                onChange={e => setSupportText(e.target.value)}
+                sx={{ 
+                  '& .MuiOutlinedInput-root': {
+                    bgcolor: '#f8fafc',
+                    border: 'none',
+                    '& fieldset': { border: 'none' },
+                    '&:hover': { bgcolor: '#f1f5f9' },
+                    borderRadius: 3
+                  }
+                }}
+              />
+              <MuiButton
+                variant="contained"
+                disabled={sendingSupport || !supportText.trim()}
+                onClick={handleSendSupport}
+                sx={{ 
+                  minWidth: 54, width: 54, height: 54, p: 0, 
+                  borderRadius: 3,
+                  boxShadow: '0 4px 12px rgba(79, 70, 229, 0.2)',
+                  '&:hover': { transform: 'scale(1.05)' }
+                }}
+              >
+                {sendingSupport ? <CircularProgress size={16} color="inherit" /> : <SendIcon />}
+              </MuiButton>
+            </Stack>
+          </Box>
+        </DialogContent>
+      </Dialog>
 
-        <ReminderModal
-          isOpen={isReminderModalOpen}
-          onClose={() => setIsReminderModalOpen(false)}
-          language={language}
-          t={t}
-          onRefresh={loadReminders}
-        />
+      <ReminderModal
+        isOpen={isReminderModalOpen}
+        onClose={() => setIsReminderModalOpen(false)}
+        language={language}
+        t={t}
+        onRefresh={loadReminders}
+      />
 
-        {/* Footer */}
-        <footer className="p-12 text-center text-[10px] font-black uppercase tracking-[0.4em] text-slate-400">
-          © {new Date().getFullYear()} Qand Nazorati. Smart System.
-        </footer>
-      </main>
-
-      <Toaster position="top-right" richColors closeButton />
-    </div>
+      <Toaster position="top-right" richColors />
+    </Box>
   );
 }
 

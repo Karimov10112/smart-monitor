@@ -10,7 +10,13 @@ export interface Product {
   gi: number; // Glycemic Index
   gl: number; // Glycemic Load
   rise: 'low' | 'medium' | 'high';
-  nutrition: {
+  carbs?: number;
+  calories?: number;
+  protein?: number;
+  fats?: number;
+  sugar?: number;
+  fiber?: number;
+  nutrition?: {
     calories: number;
     carbs: number;
     sugar: number;

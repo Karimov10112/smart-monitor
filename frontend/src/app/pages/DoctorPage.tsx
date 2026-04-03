@@ -1,24 +1,68 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
-import { Users, Search, ChevronRight, Activity, MapPin, LogOut, FileText, HeartPulse } from 'lucide-react';
 import { doctorAPI } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useApp } from '../contexts/AppContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { translations } from '../utils/translations';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 
-type Tab = 'patients' | 'patient-detail';
+// MUI Components
+import {
+  Box,
+  Typography,
+  Grid,
+  Card,
+  CardContent,
+  Button,
+  TextField,
+  Paper,
+  IconButton,
+  Avatar,
+  Stack,
+  Divider,
+  alpha,
+  useTheme,
+  CircularProgress,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  InputAdornment,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow
+} from '@mui/material';
+
+// MUI Icons
+import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
+import SearchIcon from '@mui/icons-material/Search';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import TimelineIcon from '@mui/icons-material/Timeline';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import LogoutIcon from '@mui/icons-material/Logout';
+import DescriptionIcon from '@mui/icons-material/Description';
+import BiotechIcon from '@mui/icons-material/Biotech';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import SaveIcon from '@mui/icons-material/Save';
+
+const SIDEBAR_WIDTH = 280;
+
+type TabType = 'patients' | 'patient-detail';
 
 export default function DoctorPage() {
   const { user, logout } = useAuth();
   const { language } = useApp();
+  const theme = useTheme();
   const t = translations[language];
   const navigate = useNavigate();
 
-  const [tab, setTab] = useState<Tab>('patients');
+  const [currentTab, setCurrentTab] = useState<TabType>('patients');
   const [patients, setPatients] = useState<any[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
   const [records, setRecords] = useState<any[]>([]);
@@ -34,8 +78,8 @@ export default function DoctorPage() {
     try {
       setLoading(true);
       const { data } = await doctorAPI.getPatients({ search });
-      setPatients(data.patients);
-    } catch { toast.error(t.error); }
+      setPatients(data.patients || []);
+    } catch { }
     finally { setLoading(false); }
   };
 
@@ -48,17 +92,16 @@ export default function DoctorPage() {
       setRecords(sortedRecords);
       setSelectedPatient(patient);
       setDoctorNote(patient.doctorNotes || '');
-      setTab('patient-detail');
-    } catch { toast.error(t.error); }
+      setCurrentTab('patient-detail');
+    } catch { }
   };
 
   const handleSaveNote = async () => {
     try {
       await doctorAPI.addNote(selectedPatient._id, doctorNote);
-      toast.success(t.success);
-      // Update local patient data
+      toast.success(t.success || 'Saqlandi');
       setPatients(prev => prev.map(p => p._id === selectedPatient._id ? { ...p, doctorNotes: doctorNote } : p));
-    } catch { toast.error(t.error); }
+    } catch { }
   };
 
   const chartData = records.map(r => ({
@@ -67,204 +110,226 @@ export default function DoctorPage() {
     postMeal: r.postMealLevel || 0,
   }));
 
+  if (loading && patients.length === 0) return (
+    <Box sx={{ display: 'flex', h: '80vh', alignItems: 'center', justifyContent: 'center' }}>
+      <CircularProgress />
+    </Box>
+  );
+
   return (
-    <div className="min-h-screen bg-background flex font-sans text-foreground">
-      {/* Sidebar */}
-      <aside className="w-64 bg-card border-r border-border flex flex-col sticky top-0 h-screen">
-        <div className="p-6 border-b border-border">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-emerald-600 rounded-xl flex items-center justify-center text-xl shadow-lg shadow-blue-500/20">👨‍⚕️</div>
-            <div>
-              <h1 className="font-bold text-foreground text-sm leading-tight">Qand Nazorati</h1>
-              <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-wider">{t.doctorPanel}</p>
-            </div>
-          </div>
-        </div>
-        <nav className="flex-1 p-4 space-y-1">
-          <motion.button whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.02 }} onClick={() => setTab('patients')}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${tab === 'patients' || tab === 'patient-detail' ? 'bg-secondary text-emerald-600' : 'text-muted-foreground hover:bg-accent'}`}>
-            <Users className="w-4 h-4" /> {t.patients}
-          </motion.button>
-        </nav>
-        <div className="p-4 border-t border-border">
-          <div className="flex items-center gap-3 mb-3 px-2">
-            <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center text-white text-xs font-bold border-2 border-background">
-              {user?.firstName?.[0] || 'D'}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-foreground truncate">{user?.firstName} {user?.lastName}</p>
-              <p className="text-[10px] text-muted-foreground truncate">{user?.email}</p>
-            </div>
-          </div>
-          <motion.button whileTap={{ scale: 0.95 }} onClick={async () => { await logout(); navigate('/login'); }}
-            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-red-500 hover:bg-red-50 transition-colors">
-            <LogOut className="w-4 h-4" /> {t.back}
-          </motion.button>
-        </div>
-      </aside>
+    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
+      {/* Sidebar (Formal) */}
+      <Box sx={{ width: SIDEBAR_WIDTH, borderRight: `1px solid ${theme.palette.divider}`, bgcolor: 'background.paper', display: 'flex', flexDirection: 'column', p: 3, position: 'fixed', h: '100vh' }}>
+        <Box sx={{ mb: 4, px: 1 }}>
+          <Stack direction="row" spacing={2} alignItems="center">
+            <Avatar sx={{ bgcolor: 'primary.main', borderRadius: 1.5, width: 40, height: 40 }}>🩺</Avatar>
+            <Box>
+              <Typography variant="subtitle1" sx={{ fontWeight: 900, fontSize: '0.875rem' }}>Qand Nazorati</Typography>
+              <Typography variant="overline" sx={{ fontWeight: 900, color: 'primary.main', fontSize: 9 }}>{t.doctorPanel}</Typography>
+            </Box>
+          </Stack>
+        </Box>
 
-      {/* Main */}
-      <main className="flex-1 overflow-auto p-6 lg:p-10">
-        {tab === 'patients' && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-6xl mx-auto">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-              <h2 className="text-3xl font-bold text-foreground">{t.myPatients}</h2>
-              <div className="relative w-full sm:w-80">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <input type="text" value={search} onChange={e => setSearch(e.target.value)}
+        <Divider sx={{ mb: 3 }} />
+
+        <List sx={{ flexGrow: 1 }}>
+          <ListItem disablePadding>
+            <ListItemButton 
+              selected={currentTab === 'patients' || currentTab === 'patient-detail'} 
+              onClick={() => setCurrentTab('patients')}
+              sx={{ borderRadius: 1.5, py: 1, '&.Mui-selected': { bgcolor: alpha(theme.palette.primary.main, 0.05) } }}
+            >
+              <ListItemIcon sx={{ minWidth: 40 }}><PeopleAltIcon fontSize="small" /></ListItemIcon>
+              <ListItemText primary={t.patients} primaryTypographyProps={{ fontWeight: 700, fontSize: '0.875rem' }} />
+            </ListItemButton>
+          </ListItem>
+        </List>
+
+        <Box sx={{ mt: 'auto' }}>
+           <Divider sx={{ mb: 2 }} />
+           <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2, px: 1 }}>
+              <Avatar sx={{ width: 36, height: 36, borderRadius: 1, bgcolor: alpha(theme.palette.success.main, 0.1), color: 'success.main', fontWeight: 900, fontSize: 14 }}>{user?.firstName?.[0]}</Avatar>
+              <Box sx={{ overflow: 'hidden' }}>
+                 <Typography variant="caption" sx={{ fontWeight: 900, display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.firstName} {user?.lastName}</Typography>
+                 <Typography variant="caption" sx={{ fontSize: 8, color: 'text.secondary', display: 'block' }}>Professional Doctor</Typography>
+              </Box>
+           </Stack>
+           <Button fullWidth color="error" startIcon={<LogoutIcon fontSize="small" />} onClick={logout} sx={{ borderRadius: 1.5, justifyContent: 'start', py: 1, fontSize: '0.75rem', fontWeight: 700 }}>
+             {t.back || 'Logout'}
+           </Button>
+        </Box>
+      </Box>
+
+      {/* Main Content */}
+      <Box component="main" sx={{ flexGrow: 1, ml: `${SIDEBAR_WIDTH}px`, p: { xs: 3, lg: 5 } }}>
+         {currentTab === 'patients' && (
+           <Box>
+              <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 4 }}>
+                 <Typography variant="h5" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 2 }}>{t.myPatients || 'My Patients'}</Typography>
+                 <TextField 
+                  size="small" 
                   placeholder={t.search} 
-                  className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm shadow-sm" />
-              </div>
-            </div>
+                  value={search} 
+                  onChange={e => setSearch(e.target.value)}
+                  sx={{ width: 300 }}
+                  InputProps={{ startAdornment: <SearchIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} /> }}
+                 />
+              </Stack>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {patients.length > 0 ? patients.map(p => (
-                <motion.div key={p._id} whileHover={{ y: -5 }} onClick={() => openPatient(p)}
-                  className="bg-card rounded-3xl border border-border p-6 shadow-sm cursor-pointer group transition-all hover:shadow-xl hover:shadow-emerald-500/5">
-                  <div className="flex items-center gap-4 mb-5">
-                    <div className="w-12 h-12 bg-secondary rounded-2xl flex items-center justify-center text-emerald-600 text-xl font-bold group-hover:bg-emerald-600 group-hover:text-white transition-all">
-                      {p.firstName?.[0] || 'P'}
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-bold text-foreground group-hover:text-emerald-600 transition-colors">{p.firstName} {p.lastName}</h3>
-                      <p className="text-xs text-muted-foreground">{p.diabetesType || '—'}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between text-[11px] text-muted-foreground font-bold uppercase tracking-wider pt-4 border-t border-border">
-                    <div className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {p.region || '—'}</div>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground opacity-50 group-hover:text-emerald-500 transition-all" />
-                  </div>
-                </motion.div>
-              )) : (
-                <div className="col-span-full py-20 text-center">
-                   <Users className="w-16 h-16 text-muted-foreground opacity-20 mx-auto mb-4" />
-                   <p className="text-muted-foreground font-medium">{t.noPatients}</p>
-                </div>
-              )}
-            </div>
-          </motion.div>
-        )}
+              <Grid container spacing={3}>
+                 {patients.map(p => (
+                   <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={p._id}>
+                      <Card elevation={0} onClick={() => openPatient(p)} sx={{ cursor: 'pointer', transition: 'all 0.2s', '&:hover': { border: `1px solid ${theme.palette.primary.main}`, bgcolor: alpha(theme.palette.primary.main, 0.01) } }}>
+                         <CardContent sx={{ p: 3 }}>
+                            <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 3 }}>
+                               <Avatar sx={{ borderRadius: 2, width: 48, height: 48, bgcolor: alpha(theme.palette.primary.main, 0.1), color: 'primary.main', fontWeight: 900 }}>{p.firstName?.[0]}</Avatar>
+                               <Box>
+                                  <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>{p.firstName} {p.lastName}</Typography>
+                                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800, textTransform: 'uppercase', fontSize: 10 }}>{p.diabetesType || '—'}</Typography>
+                               </Box>
+                            </Stack>
+                            <Divider sx={{ my: 1.5, opacity: 0.5 }} />
+                            <Stack direction="row" justifyContent="space-between" alignItems="center">
+                               <Typography variant="caption" sx={{ fontWeight: 800, color: 'text.secondary', display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                  <LocationOnIcon sx={{ fontSize: 14 }} /> {p.region || '—'}
+                               </Typography>
+                               <ChevronRightIcon sx={{ color: 'divider' }} />
+                            </Stack>
+                         </CardContent>
+                      </Card>
+                   </Grid>
+                 ))}
+                 {patients.length === 0 && (
+                   <Box sx={{ width: '100%', py: 10, textAlign: 'center', opacity: 0.3 }}>
+                      <PeopleAltIcon sx={{ fontSize: 60, mb: 2 }} />
+                      <Typography variant="h6" sx={{ fontWeight: 800 }}>{t.noPatients || 'Bemorlar topilmadi'}</Typography>
+                   </Box>
+                 )}
+              </Grid>
+           </Box>
+         )}
 
-        {tab === 'patient-detail' && selectedPatient && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="max-w-6xl mx-auto pb-10">
-            <div className="flex items-center gap-4 mb-8">
-              <motion.button whileTap={{ scale: 0.9 }} onClick={() => setTab('patients')} className="p-2 bg-secondary hover:bg-accent rounded-xl transition-all shadow-sm border border-transparent hover:border-border">
-                <ChevronRight className="w-6 h-6 rotate-180 text-muted-foreground" />
-              </motion.button>
-              <h2 className="text-2xl font-black text-foreground">{t.patientDetail}</h2>
-            </div>
+         {currentTab === 'patient-detail' && selectedPatient && (
+           <Box>
+              <Button startIcon={<ArrowBackIcon />} onClick={() => setCurrentTab('patients')} sx={{ mb: 4, fontWeight: 800 }}>{t.back || 'Bemorlar ro\'yxati'}</Button>
+              
+              <Grid container spacing={3}>
+                 <Grid size={{ xs: 12, lg: 8 }}>
+                    {/* Patient Profile */}
+                    <Card elevation={0} sx={{ mb: 3 }}>
+                       <CardContent sx={{ p: 4 }}>
+                          <Stack direction="row" spacing={3} alignItems="center">
+                             <Avatar sx={{ width: 64, height: 64, borderRadius: 2, bgcolor: 'primary.main', fontWeight: 900, fontSize: 24 }}>{selectedPatient.firstName?.[0]}</Avatar>
+                             <Box>
+                                <Typography variant="h5" sx={{ fontWeight: 900 }}>{selectedPatient.firstName} {selectedPatient.lastName}</Typography>
+                                <Typography variant="subtitle2" color="primary" sx={{ fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1 }}>{selectedPatient.diabetesType}</Typography>
+                             </Box>
+                          </Stack>
+                          <Grid container spacing={2} sx={{ mt: 3 }}>
+                             {[
+                               { label: 'Region', val: selectedPatient.region, icon: LocationOnIcon },
+                               { label: 'Gender', val: selectedPatient.gender, icon: TimelineIcon },
+                               { label: 'Age', val: `${selectedPatient.age || '—'} y.o`, icon: BiotechIcon },
+                             ].map((item, idx) => (
+                               <Grid size={{ xs: 4 }} key={idx}>
+                                  <Paper variant="outlined" sx={{ p: 1.5, textAlign: 'center', borderRadius: 1.5 }}>
+                                     <Typography variant="caption" sx={{ fontWeight: 800, color: 'text.secondary', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5, mb: 0.5 }}>
+                                        <item.icon fontSize="inherit" /> {item.label}
+                                     </Typography>
+                                     <Typography variant="body2" sx={{ fontWeight: 800 }}>{item.val}</Typography>
+                                  </Paper>
+                               </Grid>
+                             ))}
+                          </Grid>
+                       </CardContent>
+                    </Card>
 
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-               <div className="xl:col-span-2 space-y-8">
-                {/* Profile */}
-                <div className="bg-card rounded-3xl border border-border p-8 shadow-sm">
-                   <div className="flex items-center gap-6">
-                      <div className="w-20 h-20 bg-gradient-to-br from-emerald-500 to-blue-600 rounded-3xl flex items-center justify-center text-white text-3xl font-black shadow-xl shadow-emerald-500/20">
-                        {selectedPatient.firstName?.[0]}
-                       </div>
-                      <div className="flex-1">
-                        <h3 className="text-2xl font-black text-foreground">{selectedPatient.firstName} {selectedPatient.lastName}</h3>
-                        <p className="text-emerald-600 font-bold text-sm">{selectedPatient.diabetesType}</p>
-                        <div className="flex gap-4 mt-3 text-xs text-muted-foreground font-medium">
-                          <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {selectedPatient.region}</span>
-                          <span className="flex items-center gap-1"><Activity className="w-3 h-3" /> {selectedPatient.gender}</span>
-                          <span className="flex items-center gap-1"><HeartPulse className="w-3 h-3" /> {selectedPatient.age || '—'} y.o</span>
-                        </div>
-                      </div>
-                   </div>
-                </div>
+                    {/* Chart Card */}
+                    <Card elevation={0} sx={{ mb: 3 }}>
+                       <Box sx={{ p: 2, px: 3, borderBottom: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.primary.main, 0.01) }}>
+                          <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5 }}>GLUCOSE MONITORING TRENDS</Typography>
+                       </Box>
+                       <CardContent sx={{ p: 4 }}>
+                          <Box sx={{ h: 300 }}>
+                             {records.length > 0 ? (
+                               <ResponsiveContainer width="100%" height={300}>
+                                  <AreaChart data={chartData}>
+                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme.palette.divider} />
+                                     <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700 }} />
+                                     <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700 }} />
+                                     <Tooltip contentStyle={{ borderRadius: 4, border: `1px solid ${theme.palette.divider}` }} />
+                                     <Area type="monotone" dataKey="fasting" stroke={theme.palette.primary.main} strokeWidth={2.5} fill={alpha(theme.palette.primary.main, 0.05)} />
+                                     <Area type="monotone" dataKey="postMeal" stroke={theme.palette.secondary.main} strokeWidth={2.5} fill={alpha(theme.palette.secondary.main, 0.05)} />
+                                  </AreaChart>
+                               </ResponsiveContainer>
+                             ) : (
+                               <Box sx={{ py: 10, textAlign: 'center', opacity: 0.3 }}>
+                                  <TimelineIcon sx={{ fontSize:40, mb: 1 }} />
+                                  <Typography variant="caption" sx={{ display: 'block', fontWeight: 800 }}>{t.noRecords}</Typography>
+                               </Box>
+                             )}
+                          </Box>
+                       </CardContent>
+                    </Card>
 
-                {/* Trend Chart */}
-                <div className="bg-card rounded-3xl border border-border p-8 shadow-sm">
-                   <div className="flex items-center justify-between mb-8">
-                      <h4 className="font-black text-foreground flex items-center gap-2">
-                        <Activity className="w-5 h-5 text-emerald-500" /> {t.monitoring} {t.trends}
-                      </h4>
-                      <div className="flex gap-4">
-                        <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500" /><span className="text-[10px] font-bold text-muted-foreground uppercase">{t.fasting}</span></div>
-                        <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-blue-500" /><span className="text-[10px] font-bold text-muted-foreground uppercase">{t.postMeal}</span></div>
-                      </div>
-                   </div>
-                   <div className="h-72 w-full">
-                      {records.length > 0 ? (
-                        <ResponsiveContainer width="100%" height="100%">
-                          <AreaChart data={chartData}>
-                            <defs>
-                              <linearGradient id="colorEmerald" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#10b981" stopOpacity={0.1}/>
-                                <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-                              </linearGradient>
-                            </defs>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
-                             <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: 'var(--muted-foreground)' }} />
-                            <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: 'var(--muted-foreground)' }} domain={[0, 'dataMax + 2']} />
-                            <Tooltip 
-                              contentStyle={{ 
-                                borderRadius: '12px', 
-                                border: '1px solid var(--border)', 
-                                backgroundColor: 'var(--card)',
-                                color: 'var(--foreground)',
-                                boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' 
-                              }} 
-                            />
-                            <Area type="monotone" dataKey="fasting" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorEmerald)" />
-                            <Area type="monotone" dataKey="postMeal" stroke="#3b82f6" strokeWidth={3} fillOpacity={0} />
-                          </AreaChart>
-                        </ResponsiveContainer>
-                      ) : (
-                        <div className="h-full border-2 border-dashed border-border rounded-3xl flex flex-col items-center justify-center text-muted-foreground/30">
-                          <Activity className="w-12 h-12 opacity-20" />
-                          <p className="text-sm font-bold uppercase tracking-widest opacity-50">{t.noRecords}</p>
-                        </div>
-                      )}
-                   </div>
-                </div>
+                    {/* Note Card */}
+                    <Card elevation={0}>
+                       <Box sx={{ p: 2, px: 3, borderBottom: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.primary.main, 0.01) }}>
+                          <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5 }}>MEDICAL CONCLUSION</Typography>
+                       </Box>
+                       <CardContent sx={{ p: 3 }}>
+                          <TextField
+                            fullWidth
+                            multiline
+                            rows={6}
+                            placeholder={t.writeNote + '...'}
+                            value={doctorNote}
+                            onChange={e => setDoctorNote(e.target.value)}
+                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                          />
+                          <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
+                             <Button variant="contained" startIcon={<SaveIcon />} onClick={handleSaveNote} sx={{ fontWeight: 800, borderRadius: 1.5 }}>{t.save}</Button>
+                          </Box>
+                       </CardContent>
+                    </Card>
+                 </Grid>
 
-                {/* Doctor Note */}
-                <div className="bg-card rounded-3xl border border-border p-8 shadow-sm">
-                  <h4 className="text-lg font-black text-foreground mb-6 flex items-center gap-2">
-                    <FileText className="w-5 h-5 text-emerald-500" /> {t.medicalConclusion}
-                  </h4>
-                  <textarea value={doctorNote} onChange={e => setDoctorNote(e.target.value)} rows={5} 
-                    className="w-full px-4 py-3 rounded-2xl border border-border bg-secondary text-foreground text-sm focus:outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all resize-none" 
-                    placeholder={t.writeNote + '...'} />
-                  <div className="flex justify-end mt-4">
-                    <motion.button whileTap={{ scale: 0.95 }} onClick={handleSaveNote} className="px-8 py-3 bg-emerald-600 text-white text-sm font-bold rounded-2xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-500/20">
-                      {t.save}
-                    </motion.button>
-                  </div>
-                </div>
-              </div>
+                 {/* Side Summary */}
+                 <Grid size={{ xs: 12, lg: 4 }}>
+                    <Card elevation={0} sx={{ bgcolor: alpha(theme.palette.primary.main, 0.02), mb: 3 }}>
+                       <CardContent sx={{ p: 4 }}>
+                          <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5, color: 'text.secondary', display: 'block', mb: 1 }}>{t.totalRecords}</Typography>
+                          <Typography variant="h3" sx={{ fontWeight: 900, color: 'primary.main' }}>{records.length}</Typography>
+                          <Divider sx={{ my: 3, opacity: 0.5 }} />
+                          <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5, color: 'text.secondary', display: 'block', mb: 1 }}>{t.avgSugar}</Typography>
+                          <Typography variant="h4" sx={{ fontWeight: 900 }}>
+                            {(records.reduce((acc, curr) => acc + curr.fastingLevel, 0) / (records.length || 1)).toFixed(1)} <Typography component="span" variant="caption">mmol/l</Typography>
+                          </Typography>
+                       </CardContent>
+                    </Card>
 
-              {/* Side Stats */}
-              <div className="space-y-6">
-                 <div className="bg-gradient-to-br from-emerald-600 to-blue-600 rounded-3xl p-8 text-white shadow-xl shadow-emerald-500/20">
-                    <p className="text-[10px] font-bold uppercase tracking-widest opacity-70 mb-2">{t.totalRecords}</p>
-                    <p className="text-4xl font-black">{records.length}</p>
-                    <div className="mt-8 pt-8 border-t border-white/10">
-                       <p className="text-[10px] font-bold uppercase tracking-widest opacity-70 mb-2">{t.avgSugar}</p>
-                       <p className="text-2xl font-black">
-                         {(records.reduce((acc, curr) => acc + curr.fastingLevel, 0) / (records.length || 1)).toFixed(1)} mmol/l
-                       </p>
-                    </div>
-                 </div>
-
-                  <div className="bg-card rounded-3xl border border-border p-8 shadow-sm">
-                    <h5 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-4">{t.lastActivity}</h5>
-                    <div className="space-y-4">
-                       {records.slice(-3).reverse().map(r => (
-                         <div key={r._id} className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-muted-foreground">{format(new Date(r.date), 'dd MMM')}</span>
-                            <span className="text-sm font-black text-foreground">{r.fastingLevel} mmol/l</span>
-                         </div>
-                       ))}
-                    </div>
-                  </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </main>
-    </div>
+                    <Card elevation={0}>
+                       <Box sx={{ p: 2, px: 3, borderBottom: `1px solid ${theme.palette.divider}` }}>
+                          <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1 }}>RECENT ACTIVITY</Typography>
+                       </Box>
+                       <TableContainer>
+                          <Table size="small">
+                             <TableBody>
+                                {records.slice(-5).reverse().map(r => (
+                                  <TableRow key={r._id}>
+                                     <TableCell sx={{ fontSize: 10, fontWeight: 700, color: 'text.secondary' }}>{format(new Date(r.date), 'dd MMM')}</TableCell>
+                                     <TableCell align="right" sx={{ fontWeight: 900 }}>{r.fastingLevel} <Typography component="span" variant="caption" sx={{ fontSize: 8 }}>mmol/l</Typography></TableCell>
+                                  </TableRow>
+                                ))}
+                             </TableBody>
+                          </Table>
+                       </TableContainer>
+                    </Card>
+                 </Grid>
+              </Grid>
+           </Box>
+         )}
+      </Box>
+    </Box>
   );
 }

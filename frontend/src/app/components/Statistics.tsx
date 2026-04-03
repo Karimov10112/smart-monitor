@@ -1,15 +1,40 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { useApp } from '../contexts/AppContext';
 import { translations } from '../utils/translations';
-import { Card } from './ui/card';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Activity, Calendar, Zap, TrendingUp } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
-import { ScrollArea } from './ui/scroll-area';
+
+// MUI Components
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  Grid,
+  Stack,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Avatar,
+  Tab,
+  Tabs,
+  alpha,
+  useTheme
+} from '@mui/material';
+
+// MUI Icons
+import TimelineIcon from '@mui/icons-material/Timeline';
+import SpeedIcon from '@mui/icons-material/Speed';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import AssignmentIcon from '@mui/icons-material/Assignment';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 
 export function Statistics() {
   const { language, records } = useApp();
+  const theme = useTheme();
   const t = translations[language];
 
   const stats = useMemo(() => {
@@ -17,7 +42,6 @@ export function Statistics() {
     const recentRecords = [...records].sort((a, b) => {
       const timeDiff = new Date(a.date).getTime() - new Date(b.date).getTime();
       if (timeDiff !== 0) return timeDiff;
-      // Agar sana bir xil bo'lsa, yaratilgan vaqtiga qarab o'ngga qo'shadi
       const createA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
       const createB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
       return createA - createB;
@@ -32,7 +56,7 @@ export function Statistics() {
     const avgDiff = (parseFloat(avgPostMeal) - parseFloat(avgFasting)).toFixed(1);
 
     const chartData = recentRecords.map(record => ({
-      date: new Date(record.date).toLocaleDateString(language === 'uz' ? 'uz-UZ' : 'ru-RU', { month: 'short', day: 'numeric' }),
+      date: new Date(record.date).toLocaleDateString(language === 'uz' ? 'uz' : 'ru', { month: 'short', day: 'numeric' }),
       fasting: record.fastingLevel,
       postMeal: record.postMealLevel || null,
     }));
@@ -42,94 +66,116 @@ export function Statistics() {
 
   if (!stats) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 px-6 border-2 border-dashed border-border rounded-3xl">
-        <Activity className="w-12 h-12 text-muted-foreground opacity-30 mb-4" />
-        <p className="text-lg font-bold text-foreground opacity-80">{t.noRecords}</p>
-      </div>
+      <Box sx={{ py: 10, textAlign: 'center', opacity: 0.5 }}>
+        <TimelineIcon sx={{ fontSize: 60, mb: 2 }} />
+        <Typography variant="h6" sx={{ fontWeight: 800 }}>{t.noRecords}</Typography>
+      </Box>
     );
   }
 
   const StatCard = ({ icon: Icon, label, value, color }: any) => (
-    <Card className="p-6 bg-card border border-border shadow-sm hover:shadow-md transition-shadow">
-      <div className="flex items-center gap-4">
-        <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${color} bg-opacity-10 text-xl`}>
-          <Icon className={`w-6 h-6 ${color.replace('bg-', 'text-')}`} />
-        </div>
-        <div>
-          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">{label}</p>
-          <div className="flex items-baseline gap-1">
-            <span className="text-2xl font-bold">{value}</span>
-            <span className="text-xs text-muted-foreground font-medium">mmol/l</span>
-          </div>
-        </div>
-      </div>
+    <Card elevation={0} sx={{ border: `1px solid ${theme.palette.divider}` }}>
+      <CardContent sx={{ p: 2.5 }}>
+        <Stack direction="row" spacing={2} alignItems="center">
+          <Avatar sx={{ bgcolor: alpha(color, 0.08), color: color, borderRadius: 1.5 }}>
+            <Icon fontSize="small" />
+          </Avatar>
+          <Box>
+            <Typography variant="caption" sx={{ fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</Typography>
+            <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.5 }}>
+              <Typography variant="h5" sx={{ fontWeight: 900 }}>{value}</Typography>
+              <Typography variant="caption" sx={{ fontWeight: 800, color: 'text.secondary', fontSize: 9 }}>mmol/l</Typography>
+            </Box>
+          </Box>
+        </Stack>
+      </CardContent>
     </Card>
   );
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <StatCard icon={Zap} label={t.averageFasting} value={stats.avgFasting} color="bg-blue-500" />
-        <StatCard icon={Activity} label={t.averagePostMeal} value={stats.avgPostMeal} color="bg-purple-500" />
-        <StatCard icon={TrendingUp} label={t.averageDifference} value={stats.avgDiff} color="bg-emerald-500" />
-      </div>
+    <Box sx={{ spaceY: 4 }}>
+      {/* Overview Stats */}
+      <Grid container spacing={2} sx={{ mb: 4 }}>
+        <Grid size={{ xs: 12, md: 4 }}>
+          <StatCard icon={SpeedIcon} label={t.averageFasting} value={stats.avgFasting} color={theme.palette.primary.main} />
+        </Grid>
+        <Grid size={{ xs: 12, md: 4 }}>
+          <StatCard icon={TimelineIcon} label={t.averagePostMeal} value={stats.avgPostMeal} color={theme.palette.secondary.main} />
+        </Grid>
+        <Grid size={{ xs: 12, md: 4 }}>
+          <StatCard icon={TrendingUpIcon} label={t.averageDifference} value={stats.avgDiff} color="#10b981" />
+        </Grid>
+      </Grid>
 
-      <Card className="p-6 bg-card border border-border shadow-sm">
-        <h3 className="text-lg font-bold mb-6">{t.last14Days}</h3>
-        <div className="h-[300px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={stats.chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" opacity={0.5} />
-              <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: 'var(--muted-foreground)' }} />
-              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: 'var(--muted-foreground)' }} />
-              <Tooltip 
-                contentStyle={{ 
-                  borderRadius: '16px', 
-                  border: '1px solid var(--border)', 
-                  backgroundColor: 'var(--card)',
-                  color: 'var(--foreground)',
-                  boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' 
-                }} 
-                itemStyle={{ fontWeight: 'bold' }}
-              />
-              <Area type="monotone" dataKey="fasting" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.1} strokeWidth={3} connectNulls={true} />
-              <Area type="monotone" dataKey="postMeal" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.1} strokeWidth={3} connectNulls={true} />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
+      {/* Chart Section */}
+      <Card elevation={0} sx={{ border: `1px solid ${theme.palette.divider}`, mb: 4 }}>
+        <Box sx={{ p: 2.5, px: 3, borderBottom: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.primary.main, 0.01) }}>
+          <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5 }}>
+            <TimelineIcon sx={{ fontSize: 16, mr: 1, verticalAlign: 'middle' }} /> {t.last14Days}
+          </Typography>
+        </Box>
+        <CardContent sx={{ p: 4, pt: 6 }}>
+          <Box sx={{ h: 300, w: '100%' }}>
+            <ResponsiveContainer width="100%" height={300}>
+              <AreaChart data={stats.chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme.palette.divider} />
+                <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: theme.palette.text.secondary }} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: theme.palette.text.secondary }} />
+                <Tooltip 
+                  contentStyle={{ 
+                    borderRadius: 4, 
+                    border: `1px solid ${theme.palette.divider}`, 
+                    backgroundColor: theme.palette.background.paper,
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.05)' 
+                  }} 
+                  labelStyle={{ fontWeight: 900, marginBottom: 8, fontSize: 11 }}
+                />
+                <Area type="monotone" dataKey="fasting" stroke={theme.palette.primary.main} fill={theme.palette.primary.main} fillOpacity={0.05} strokeWidth={2.5} connectNulls={true} />
+                <Area type="monotone" dataKey="postMeal" stroke={theme.palette.secondary.main} fill={theme.palette.secondary.main} fillOpacity={0.05} strokeWidth={2.5} connectNulls={true} />
+              </AreaChart>
+            </ResponsiveContainer>
+          </Box>
+        </CardContent>
       </Card>
 
-      <Card className="bg-card border border-border overflow-hidden shadow-sm">
-        <div className="p-6 border-b border-border bg-muted/30">
-          <h3 className="text-lg font-bold">{t.allRecords}</h3>
-        </div>
-        <ScrollArea className="h-[400px]">
-          <Table>
-            <TableHeader className="bg-secondary sticky top-0 z-10">
+      {/* Records Table */}
+      <Card elevation={0} sx={{ border: `1px solid ${theme.palette.divider}`, overflow: 'hidden' }}>
+        <Box sx={{ p: 2.5, px: 3, borderBottom: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.primary.main, 0.01) }}>
+          <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5 }}>
+            <AssignmentIcon sx={{ fontSize: 16, mr: 1, verticalAlign: 'middle' }} /> {t.allRecords}
+          </Typography>
+        </Box>
+        <TableContainer sx={{ maxHeight: 400 }}>
+          <Table stickyHeader size="small">
+            <TableHead>
               <TableRow>
-                <TableHead className="w-32">{t.date}</TableHead>
-                <TableHead>{t.fasting}</TableHead>
-                <TableHead>{t.postMeal}</TableHead>
-                <TableHead>{t.notes}</TableHead>
+                <TableCell sx={{ fontWeight: 900, textTransform: 'uppercase', fontSize: 10, letterSpacing: 1, color: 'text.secondary', bgcolor: 'background.paper' }}>{t.date}</TableCell>
+                <TableCell sx={{ fontWeight: 900, textTransform: 'uppercase', fontSize: 10, letterSpacing: 1, color: 'text.secondary', bgcolor: 'background.paper' }}>{t.fasting}</TableCell>
+                <TableCell sx={{ fontWeight: 900, textTransform: 'uppercase', fontSize: 10, letterSpacing: 1, color: 'text.secondary', bgcolor: 'background.paper' }}>{t.postMeal}</TableCell>
+                <TableCell sx={{ fontWeight: 900, textTransform: 'uppercase', fontSize: 10, letterSpacing: 1, color: 'text.secondary', bgcolor: 'background.paper' }}>{t.notes}</TableCell>
               </TableRow>
-            </TableHeader>
+            </TableHead>
             <TableBody>
               {[...records].reverse().map((record) => (
-                <TableRow key={record._id || record.id}>
-                  <TableCell className="font-medium text-muted-foreground">
-                    {new Date(record.date).toLocaleDateString(language === 'uz' ? 'uz-UZ' : 'ru-RU')}
+                <TableRow key={record._id || record.id} sx={{ '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.01) } }}>
+                  <TableCell sx={{ fontWeight: 700, py: 1.5 }}>
+                    {new Date(record.date).toLocaleDateString(language === 'uz' ? 'uz' : 'ru')}
                   </TableCell>
-                  <TableCell className="font-bold text-blue-600">{record.fastingLevel.toFixed(1)}</TableCell>
-                  <TableCell className="font-bold text-purple-600">
-                    {record.postMealLevel != null ? record.postMealLevel.toFixed(1) : '-'}
+                  <TableCell sx={{ fontWeight: 900, color: 'primary.main' }}>
+                    {record.fastingLevel.toFixed(1)}
                   </TableCell>
-                  <TableCell className="text-muted-foreground text-sm italic">{record.notes || '—'}</TableCell>
+                  <TableCell sx={{ fontWeight: 900, color: 'secondary.main' }}>
+                    {record.postMealLevel != null ? record.postMealLevel.toFixed(1) : '—'}
+                  </TableCell>
+                  <TableCell sx={{ color: 'text.secondary', fontSize: '0.8125rem' }}>
+                    {record.notes || '—'}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
-        </ScrollArea>
+        </TableContainer>
       </Card>
-    </div>
+    </Box>
   );
 }

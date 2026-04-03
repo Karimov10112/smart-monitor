@@ -1,12 +1,34 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { authAPI } from '../utils/api';
 import { useApp } from '../contexts/AppContext';
 import { translations } from '../utils/translations';
-import { motion, AnimatePresence } from 'motion/react';
-import { Loader2, Mail, Lock, LogIn, Database, ChevronRight, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
+
+// MUI Components
+import {
+  Container,
+  Box,
+  Typography,
+  TextField,
+  Button,
+  Paper,
+  InputAdornment,
+  Link,
+  CircularProgress,
+  Stack,
+  useTheme,
+  alpha
+} from '@mui/material';
+
+// MUI Icons
+import EmailIcon from '@mui/icons-material/EmailOutlined';
+import LockIcon from '@mui/icons-material/LockOutlined';
+import LoginIcon from '@mui/icons-material/Login';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import StorageIcon from '@mui/icons-material/Storage';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -15,6 +37,7 @@ export default function LoginPage() {
   const { login } = useAuth();
   const { language } = useApp();
   const navigate = useNavigate();
+  const theme = useTheme();
   const t = translations[language];
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -34,138 +57,147 @@ export default function LoginPage() {
     }
   };
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2
-      }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: { y: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut" as any } }
-  };
-
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 relative overflow-hidden transition-colors duration-700">
-      
-      {/* Background Blobs (Colorful) */}
-      <div className="absolute inset-0 pointer-events-none">
-        <motion.div 
-          animate={{ x: [-20, 20, -20], y: [-20, 20, -20], scale: [1, 1.1, 1] }}
-          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-600/20 blur-[120px] rounded-full" 
-        />
-        <motion.div 
-          animate={{ x: [20, -20, 20], y: [20, -20, 20], scale: [1, 1.2, 1] }}
-          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-          className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-purple-600/20 blur-[120px] rounded-full" 
-        />
-        <motion.div 
-          animate={{ opacity: [0.3, 0.6, 0.3] }}
-          transition={{ duration: 5, repeat: Infinity }}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[30%] h-[30%] bg-emerald-500/10 blur-[100px] rounded-full" 
-        />
-      </div>
+    <Box
+      sx={{
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        p: 3,
+        bgcolor: 'background.default',
+        position: 'relative'
+      }}
+    >
+      <Container maxWidth="sm">
+        <Box sx={{ textAlign: 'center', mb: 4 }}>
+          <Box
+            sx={{
+              width: 64,
+              height: 64,
+              background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+              borderRadius: 2,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'white',
+              mx: 'auto',
+              mb: 2,
+              boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.1)}`
+            }}
+          >
+            <StorageIcon sx={{ fontSize: 32 }} />
+          </Box>
+          <Typography variant="h4" sx={{ fontWeight: 800, mb: 1 }}>
+            Qand <Box component="span" sx={{ color: 'primary.main' }}>Nazorati</Box>
+          </Typography>
+          <Typography variant="overline" sx={{ fontWeight: 800, letterSpacing: 2, color: 'text.secondary', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+             <AutoAwesomeIcon sx={{ fontSize: 14, color: 'primary.main' }} /> {t.appName || 'Smart Monitor System'}
+          </Typography>
+        </Box>
 
-      <motion.div 
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-        className="w-full max-w-lg z-10"
-      >
-        <motion.div variants={itemVariants} className="text-center mb-10">
-           <div className="w-24 h-24 bg-gradient-to-br from-blue-600 via-indigo-600 to-blue-700 rounded-[2.5rem] flex items-center justify-center text-white mx-auto mb-8 shadow-3xl shadow-blue-500/40 transform rotate-3 hover:rotate-0 transition-transform duration-500">
-              <Database className="w-10 h-10" />
-           </div>
-           <h1 className="text-5xl font-black text-foreground tracking-tighter leading-none mb-3">
-              Qand <span className="text-blue-600 underline decoration-blue-500/20 underline-offset-8">Nazorati</span>
-           </h1>
-           <p className="text-muted-foreground font-black uppercase tracking-[0.3em] text-[10px] mt-4 flex items-center justify-center gap-2">
-              <Sparkles className="w-3 h-3 text-blue-500" /> Smart Monitoring System
-           </p>
-        </motion.div>
-
-        <motion.div 
-          variants={itemVariants}
-          className="bg-card/80 backdrop-blur-2xl p-1 rounded-[3.5rem] shadow-3xl border border-border"
+        <Paper
+          elevation={0}
+          sx={{
+            borderRadius: 2,
+            border: `1px solid ${theme.palette.divider}`,
+            boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+          }}
         >
-          {/* New User Banner */}
-          <div className="bg-gradient-to-r from-blue-600/10 to-indigo-600/10 p-8 rounded-t-[3.5rem] border-b border-border text-center">
-            <p className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-3">{t.noAccount}</p>
-            <Link 
-              to="/register" 
-              className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all active:scale-95 shadow-lg shadow-blue-500/30"
+          {/* Official Banner */}
+          <Box sx={{ bgcolor: alpha(theme.palette.primary.main, 0.02), p: 3, textAlign: 'center', borderBottom: `1px solid ${theme.palette.divider}` }}>
+            <Typography variant="caption" sx={{ display: 'block', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1, mb: 2, color: 'text.secondary' }}>
+              {t.noAccount || "Akkauntingiz yo'qmi?"}
+            </Typography>
+            <Button
+              component={RouterLink}
+              to="/register"
+              variant="outlined"
+              size="small"
+              color="primary"
+              endIcon={<ArrowForwardIcon />}
+              sx={{ borderRadius: 1.5, px: 3 }}
             >
-              {t.signUp} <ChevronRight className="w-4 h-4" />
-            </Link>
-          </div>
+              {t.signUp || "Ro'yxatdan o'tish"}
+            </Button>
+          </Box>
 
-          <form onSubmit={handleSubmit} className="p-10 md:p-14 space-y-10 pt-6">
-            <div className="space-y-6">
-               <div className="space-y-2">
-                  <label className="block text-[10px] uppercase tracking-[0.2em] font-black text-muted-foreground mb-4 ml-4">Email Address</label>
-                  <div className="relative group">
-                    <Mail className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-blue-600 transition-colors" />
-                    <input 
-                      type="text" 
-                      required 
-                      value={email} 
-                      onChange={e => setEmail(e.target.value)}
-                      placeholder="admin yoki email@mail.com"
-                      className="w-full h-16 pl-14 pr-6 rounded-[1.5rem] bg-secondary border-none text-foreground font-bold text-sm focus:ring-4 focus:ring-blue-500/10 transition-all outline-none"
-                    />
-                  </div>
-               </div>
+          <Box component="form" onSubmit={handleSubmit} sx={{ p: { xs: 4, md: 6 } }}>
+            <Stack spacing={3}>
+              <TextField
+                label="Email Address"
+                placeholder="admin yoki email@mail.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <EmailIcon color="action" fontSize="small" />
+                    </InputAdornment>
+                  ),
+                }}
+              />
 
-               <div className="space-y-2">
-                  <label className="block text-[10px] uppercase tracking-[0.2em] font-black text-muted-foreground mb-4 ml-4">Password</label>
-                  <div className="relative group">
-                    <Lock className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-blue-600 transition-colors" />
-                    <input 
-                      type="password" 
-                      required 
-                      value={password} 
-                      onChange={e => setPassword(e.target.value)}
-                      placeholder="••••••••"
-                      className="w-full h-16 pl-14 pr-6 rounded-[1.5rem] bg-secondary border-none text-foreground font-bold text-sm focus:ring-4 focus:ring-blue-500/10 transition-all outline-none"
-                    />
-                  </div>
-               </div>
-            </div>
+              <TextField
+                label="Password"
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <LockIcon color="action" fontSize="small" />
+                    </InputAdornment>
+                  ),
+                }}
+              />
 
-            <div className="flex items-center justify-end px-2">
-               <Link to="/forgot-password" className="text-[10px] font-black uppercase tracking-widest text-blue-600 hover:text-blue-700 transition-all">{t.forgotPassword}</Link>
-            </div>
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <Link
+                  component={RouterLink}
+                  to="/forgot-password"
+                  variant="caption"
+                  sx={{ fontWeight: 800, textTransform: 'uppercase', textDecoration: 'none' }}
+                >
+                  {t.forgotPassword}
+                </Link>
+              </Box>
 
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              whileHover={{ scale: 1.02 }}
-              type="submit"
-              disabled={loading}
-              className="w-full h-18 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 text-white font-black uppercase tracking-widest rounded-3xl shadow-2xl shadow-blue-500/30 transition-all flex items-center justify-center gap-3 text-sm"
-            >
-              {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : <>{t.login} <ChevronRight className="w-5 h-5" /></>}
-            </motion.button>
-            
-            <div className="text-center pt-2">
-               <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                  {t.noAccount} <Link to="/register" className="text-blue-600 hover:underline underline-offset-4 ml-2">{t.register}</Link>
-               </p>
-            </div>
-          </form>
-        </motion.div>
+              <Button
+                type="submit"
+                variant="contained"
+                size="large"
+                fullWidth
+                disabled={loading}
+                endIcon={!loading && <LoginIcon />}
+                sx={{
+                  py: 1.5,
+                  height: 54,
+                  fontWeight: 800,
+                  boxShadow: 'none',
+                  '&:hover': { boxShadow: 'none' }
+                }}
+              >
+                {loading ? <CircularProgress size={24} color="inherit" /> : t.login}
+              </Button>
 
-        <motion.div variants={itemVariants} className="mt-12 text-center">
-           <p className="text-[9px] font-black uppercase tracking-[0.5em] text-muted-foreground opacity-50">
-              © {new Date().getFullYear()} QAND NAZORATI. ALL RIGHTS RESERVED.
-           </p>
-        </motion.div>
-      </motion.div>
-    </div>
+              <Typography variant="caption" align="center" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+                {t.noAccount} <Link component={RouterLink} to="/register" sx={{ color: 'primary.main', ml: 1, textDecoration: 'none', fontWeight: 800 }}>{t.register}</Link>
+              </Typography>
+            </Stack>
+          </Box>
+        </Paper>
+
+        <Box sx={{ mt: 4, textAlign: 'center', opacity: 0.5 }}>
+          <Typography variant="caption" sx={{ fontWeight: 800, color: 'text.secondary', letterSpacing: 2 }}>
+            © {new Date().getFullYear()} QAND NAZORATI. PROFESSIONAL VERSION.
+          </Typography>
+        </Box>
+      </Container>
+    </Box>
   );
 }

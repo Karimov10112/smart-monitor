@@ -11,8 +11,12 @@ const productSchema = new mongoose.Schema(
     emoji: { type: String, default: '🍎' },
     gi: { type: Number, required: true }, // Glycemic Index
     gl: { type: Number, required: true }, // Glycemic Load
-    carbs: { type: Number },
-    calories: { type: Number },
+    carbs: { type: Number, default: 0 },
+    calories: { type: Number, default: 0 },
+    protein: { type: Number, default: 0 },
+    fats: { type: Number, default: 0 },
+    sugar: { type: Number, default: 0 },
+    fiber: { type: Number, default: 0 },
     advice: {
       uz: { type: String, trim: true },
       ru: { type: String, trim: true },

@@ -1,27 +1,40 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../contexts/AppContext';
 import { translations } from '../utils/translations';
-import { Card } from './ui/card';
-import { Input } from './ui/input';
-import { Button } from './ui/button';
-import { Label } from './ui/label';
-import { Textarea } from './ui/textarea';
 import { toast } from 'sonner';
-import { Plus, Loader2, Calendar, Coffee, Utensils, MessageSquare, Info, Star, ChevronRight } from 'lucide-react';
-import { motion } from 'motion/react';
 import { productAPI } from '../utils/api';
 
-const InputWrapper = ({ label, icon: Icon, children, isRequired = false }: any) => (
-  <div className="space-y-2">
-    <Label className="text-xs font-bold text-muted-foreground flex items-center gap-2 uppercase tracking-widest px-1">
-      <Icon className="w-4 h-4 text-muted-foreground opacity-50" /> {label} {isRequired && <span className="text-destructive">*</span>}
-    </Label>
-    {children}
-  </div>
-);
+// MUI Components
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  TextField,
+  Button,
+  Grid,
+  Stack,
+  Avatar,
+  Chip,
+  Paper,
+  alpha,
+  useTheme,
+  CircularProgress
+} from '@mui/material';
+
+// MUI Icons
+import AddIcon from '@mui/icons-material/Add';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import CoffeeIcon from '@mui/icons-material/Coffee';
+import RestaurantIcon from '@mui/icons-material/Restaurant';
+import ForumIcon from '@mui/icons-material/Forum';
+import InfoIcon from '@mui/icons-material/Info';
+import StarIcon from '@mui/icons-material/Star';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 
 export function DailyJournal() {
   const { language, addRecord } = useApp();
+  const theme = useTheme();
   const t = translations[language];
   const [loading, setLoading] = useState(false);
   const [recommendedProducts, setRecommendedProducts] = useState<any[]>([]);
@@ -39,11 +52,10 @@ export function DailyJournal() {
   const loadRecommended = async () => {
     try {
       const { data } = await productAPI.getAll({ category: 'all' });
-      // Filter the safest foods (GI < 30)
       const safe = data.products
         .filter((p: any) => p.gi <= 30)
-        .sort(() => 0.5 - Math.random()) // Shuffle
-        .slice(0, 3); // Take 3 random ones
+        .sort(() => 0.5 - Math.random())
+        .slice(0, 3);
       setRecommendedProducts(safe);
     } catch (err) {
       console.error('Error loading recommendations', err);
@@ -78,124 +90,177 @@ export function DailyJournal() {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
-      <Card className="p-8 bg-card border border-border shadow-sm rounded-3xl">
-        <div className="mb-8">
-           <h2 className="text-2xl font-bold flex items-center gap-3">
-             <div className="w-10 h-10 bg-secondary rounded-xl flex items-center justify-center text-blue-600">
-               <Plus className="w-6 h-6" />
-             </div>
-             {t.addRecord}
-           </h2>
-        </div>
+    <Grid container spacing={3} sx={{ maxWidth: 1000, mx: 'auto' }}>
+      {/* Journal Form */}
+      <Grid size={{ xs: 12, md: 7 }}>
+        <Card elevation={0} sx={{ border: `1px solid ${theme.palette.divider}` }}>
+          <CardContent sx={{ p: 4 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 4 }}>
+              <Avatar
+                sx={{
+                  bgcolor: alpha(theme.palette.primary.main, 0.05),
+                  color: 'primary.main',
+                  width: 44,
+                  height: 44,
+                  borderRadius: 1.5
+                }}
+              >
+                <AddIcon fontSize="small" />
+              </Avatar>
+              <Typography variant="subtitle1" sx={{ fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1 }}>{t.addRecord}</Typography>
+            </Box>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <InputWrapper label={t.date} icon={Calendar} isRequired>
-            <Input 
-              type="date" 
-              value={formData.date} 
-              onChange={e => setFormData({...formData, date: e.target.value})}
-              className="h-12 rounded-xl bg-background border-border"
-            />
-          </InputWrapper>
+            <Box component="form" onSubmit={handleSubmit}>
+              <Stack spacing={3}>
+                <TextField
+                  label={t.date}
+                  type="date"
+                  size="small"
+                  value={formData.date}
+                  onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                  fullWidth
+                  required
+                  InputProps={{
+                    startAdornment: <CalendarMonthIcon sx={{ mr: 1, color: 'text.secondary', fontSize: 18 }} />,
+                  }}
+                  InputLabelProps={{ shrink: true }}
+                />
 
-          <div className="grid grid-cols-2 gap-4">
-            <InputWrapper label={`${t.fasting} (mmol/l)`} icon={Coffee} isRequired>
-              <Input 
-                type="number" 
-                step="0.1" 
-                placeholder="5.5"
-                value={formData.fastingLevel} 
-                onChange={e => setFormData({...formData, fastingLevel: e.target.value})}
-                className="h-12 rounded-xl bg-background border-border font-bold"
-              />
-            </InputWrapper>
+                <Grid container spacing={2}>
+                  <Grid size={{ xs: 6 }}>
+                    <TextField
+                      label={`${t.fasting} (mmol/l)`}
+                      type="number"
+                      size="small"
+                      inputProps={{ step: 0.1 }}
+                      placeholder="5.5"
+                      value={formData.fastingLevel}
+                      onChange={(e) => setFormData({ ...formData, fastingLevel: e.target.value })}
+                      required
+                      fullWidth
+                      InputProps={{
+                        startAdornment: <CoffeeIcon sx={{ mr: 1, color: 'text.secondary', fontSize: 18 }} />,
+                      }}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 6 }}>
+                    <TextField
+                      label={`${t.postMeal} (mmol/l)`}
+                      type="number"
+                      size="small"
+                      inputProps={{ step: 0.1 }}
+                      placeholder="7.2"
+                      value={formData.postMealLevel}
+                      onChange={(e) => setFormData({ ...formData, postMealLevel: e.target.value })}
+                      fullWidth
+                      InputProps={{
+                        startAdornment: <RestaurantIcon sx={{ mr: 1, color: 'text.secondary', fontSize: 18 }} />,
+                      }}
+                    />
+                  </Grid>
+                </Grid>
 
-            <InputWrapper label={`${t.postMeal} (mmol/l)`} icon={Utensils}>
-              <Input 
-                type="number" 
-                step="0.1" 
-                placeholder="7.2"
-                value={formData.postMealLevel} 
-                onChange={e => setFormData({...formData, postMealLevel: e.target.value})}
-                className="h-12 rounded-xl bg-background border-border font-bold"
-              />
-            </InputWrapper>
-          </div>
+                <TextField
+                  label={t.notes}
+                  placeholder={t.notes + '...'}
+                  size="small"
+                  multiline
+                  rows={4}
+                  value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  fullWidth
+                  InputProps={{
+                    startAdornment: <ForumIcon sx={{ mr: 1, mt: 0.5, color: 'text.secondary', alignSelf: 'flex-start', fontSize: 18 }} />,
+                  }}
+                />
 
-          <InputWrapper label={t.notes} icon={MessageSquare}>
-            <Textarea 
-              placeholder={t.notes + '...'}
-              value={formData.notes} 
-              onChange={e => setFormData({...formData, notes: e.target.value})}
-              className="rounded-xl bg-background border-border min-h-[100px] resize-none"
-            />
-          </InputWrapper>
-
-          <Button 
-            type="submit" 
-            disabled={loading} 
-            className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl active:scale-[0.98] transition-all shadow-lg shadow-blue-500/20"
-          >
-            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : t.save}
-          </Button>
-        </form>
-      </Card>
-
-      <div className="space-y-6">
-        <Card className="p-8 bg-blue-50 border-none rounded-3xl">
-          <div className="flex items-start gap-4">
-             <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 flex-shrink-0">
-                <Info className="w-6 h-6" />
-             </div>
-             <div>
-                <h3 className="text-lg font-bold text-blue-900 mb-2">Qand darajasi normasi</h3>
-                <div className="space-y-3 mt-4">
-                   <div className="flex justify-between items-center bg-card p-3 rounded-lg shadow-sm border border-border">
-                      <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{t.fasting}</span>
-                      <span className="font-bold text-blue-600">3.9 — 5.5 <span className="text-[10px] text-muted-foreground">mmol/l</span></span>
-                   </div>
-                   <div className="flex justify-between items-center bg-card p-3 rounded-lg shadow-sm border border-border">
-                      <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{t.postMeal}</span>
-                      <span className="font-bold text-purple-600">&lt; 7.8 <span className="text-[10px] text-muted-foreground">mmol/l</span></span>
-                   </div>
-                </div>
-             </div>
-          </div>
-        </Card>
-
-        {recommendedProducts.length > 0 && (
-          <Card className="p-8 bg-emerald-50 border-none rounded-3xl relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-              <Star className="w-16 h-16 text-emerald-600" />
-            </div>
-            
-            <h3 className="text-lg font-bold text-emerald-900 mb-4 flex items-center gap-2">
-              <Star className="w-5 h-5 fill-emerald-500 text-emerald-500" /> 
-              {language === 'uz' ? 'Tavsiya etilgan yeguliklar' : 'Рекомендуемые продукты'}
-            </h3>
-            
-            <div className="space-y-3">
-              {recommendedProducts.map((p) => (
-                <motion.div 
-                  key={p._id}
-                  whileHover={{ x: 5 }}
-                  className="flex items-center gap-3 bg-card p-3 rounded-xl shadow-sm border border-border cursor-pointer"
+                <Button
+                  type="submit"
+                  variant="contained"
+                  disabled={loading}
+                  sx={{
+                    height: 48,
+                    borderRadius: 1.5,
+                    fontWeight: 800,
+                    boxShadow: 'none',
+                    '&:hover': { boxShadow: 'none' }
+                  }}
                 >
-                  <span className="text-2xl">{p.emoji}</span>
-                  <div className="flex-1">
-                    <p className="text-sm font-bold text-foreground lowercase first-letter:uppercase">
-                      {p.name[language] || p.name['uz']}
-                    </p>
-                    <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">GI: {p.gi}</p>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-emerald-200" />
-                </motion.div>
-              ))}
-            </div>
+                  {loading ? <CircularProgress size={20} color="inherit" /> : t.save}
+                </Button>
+              </Stack>
+            </Box>
+          </CardContent>
+        </Card>
+      </Grid>
+
+      {/* Info & Recommendations */}
+      <Grid size={{ xs: 12, md: 5 }}>
+        <Stack spacing={3}>
+          {/* Norm Info Card */}
+          <Card elevation={0} sx={{ bgcolor: alpha(theme.palette.primary.main, 0.02), border: `1px solid ${theme.palette.divider}` }}>
+            <CardContent sx={{ p: 3 }}>
+              <Box sx={{ display: 'flex', gap: 2 }}>
+                <InfoIcon sx={{ color: 'primary.main', fontSize: 20 }} />
+                <Box sx={{ width: '100%' }}>
+                  <Typography variant="caption" sx={{ fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1, display: 'block', mb: 2 }}>Qand darajasi normasi</Typography>
+                  <Stack spacing={1.5}>
+                    <Paper elevation={0} sx={{ p: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center', bgcolor: 'background.paper', borderRadius: 1 }}>
+                      <Typography variant="caption" sx={{ fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase' }}>{t.fasting}</Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 800, color: 'primary.main' }}>3.9 — 5.5 <Typography component="span" variant="caption" sx={{ fontSize: 9 }}>mmol/l</Typography></Typography>
+                    </Paper>
+                    <Paper elevation={0} sx={{ p: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center', bgcolor: 'background.paper', borderRadius: 1 }}>
+                      <Typography variant="caption" sx={{ fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase' }}>{t.postMeal}</Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 800, color: 'primary.main' }}>&lt; 7.8 <Typography component="span" variant="caption" sx={{ fontSize: 9 }}>mmol/l</Typography></Typography>
+                    </Paper>
+                  </Stack>
+                </Box>
+              </Box>
+            </CardContent>
           </Card>
-        )}
-      </div>
-    </div>
+
+          {/* Recommendations Card */}
+          {recommendedProducts.length > 0 && (
+            <Card elevation={0} sx={{ border: `1px solid ${theme.palette.divider}` }}>
+              <CardContent sx={{ p: 3 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                  <StarIcon sx={{ color: '#fbbf24', fontSize: 18 }} />
+                  <Typography variant="caption" sx={{ fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1 }}>
+                    {language === 'uz' ? 'Tavsiya etilganlar' : 'Рекомендуемые'}
+                  </Typography>
+                </Box>
+                
+                <Stack spacing={1}>
+                  {recommendedProducts.map((p) => (
+                    <Paper
+                      key={p._id}
+                      elevation={0}
+                      sx={{
+                        p: 1.5,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1.5,
+                        border: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
+                        cursor: 'default',
+                        bgcolor: alpha(theme.palette.success.main, 0.02)
+                      }}
+                    >
+                      <Typography variant="h6" sx={{ fontSize: 20 }}>{p.emoji}</Typography>
+                      <Box sx={{ flexGrow: 1 }}>
+                        <Typography variant="caption" sx={{ fontWeight: 800, lineHeight: 1.2, display: 'block', textTransform: 'lowercase', '&:first-letter': { textTransform: 'uppercase' } }}>
+                          {p.name[language] || p.name['uz']}
+                        </Typography>
+                        <Typography variant="caption" sx={{ fontSize: 8, fontWeight: 800, color: 'success.main', textTransform: 'uppercase' }}>GI: {p.gi}</Typography>
+                      </Box>
+                      <ChevronRightIcon sx={{ color: 'divider', fontSize: 14 }} />
+                    </Paper>
+                  ))}
+                </Stack>
+              </CardContent>
+            </Card>
+          )}
+        </Stack>
+      </Grid>
+    </Grid>
   );
 }
