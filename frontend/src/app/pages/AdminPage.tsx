@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
   Users, 
   BarChart3, 
@@ -283,6 +283,11 @@ export default function AdminPage() {
       
       {/* Main Content (Merged with tabs header) */}
       <main className="flex-1 p-8 lg:p-12 relative z-10 w-full overflow-y-auto">
+          {/* Debug Indicator */}
+          <div className="fixed top-4 left-4 z-[9999] px-4 py-2 bg-rose-600 text-white font-black text-[10px] uppercase tracking-widest rounded-full shadow-2xl animate-bounce">
+            ADMIN PANEL v1.1 - ACTIVE
+          </div>
+
          {/* Background Blobs */}
          <div className="fixed inset-0 pointer-events-none">
             <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-600/5 blur-[120px] rounded-full animate-pulse" />
