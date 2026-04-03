@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useSearchParams } from 'react-router-dom';
 import { 
   Users, 
   BarChart3, 
@@ -48,13 +49,39 @@ export default function AdminPage() {
   const t = translations[language];
   const navigate = useNavigate();
 
-  const [tab, setTab] = useState<Tab>('dashboard');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tab = (searchParams.get('tab') as Tab) || 'dashboard';
+  const selectedUserId = searchParams.get('userId');
+  const searchFilter = searchParams.get('search') || '';
+  const roleFilter = searchParams.get('role') || '';
+
+  const updateFilters = (newParams: Record<string, string | null>) => {
+    const params = new URLSearchParams(searchParams);
+    Object.entries(newParams).forEach(([key, value]) => {
+      if (value === null || value === '') {
+        params.delete(key);
+      } else {
+        params.set(key, value);
+      }
+    });
+    setSearchParams(params);
+  };
+
+  const setTab = (newTab: Tab) => {
+    // When switching tabs, we usually want to clear detail views but keep filters?
+    // Let's at least keep it clean.
+    const params = new URLSearchParams();
+    params.set('tab', newTab);
+    setSearchParams(params);
+  };
+
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   
   // Users State
   const [users, setUsers] = useState<any[]>([]);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(searchFilter);
+  const [role, setRole] = useState(roleFilter);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [selectedUserRecords, setSelectedUserRecords] = useState<any[]>([]);
   const [showUserGraphs, setShowUserGraphs] = useState(false);
@@ -114,6 +141,14 @@ export default function AdminPage() {
     loadAll();
   }, []);
 
+  useEffect(() => {
+    if (tab === 'user-detail' && selectedUserId) {
+      loadSpecificUser(selectedUserId);
+    } else {
+      setSelectedUser(null);
+    }
+  }, [tab, selectedUserId]);
+
   const loadAll = async () => {
     setLoading(true);
     try {
@@ -136,9 +171,30 @@ export default function AdminPage() {
   };
 
   const loadUsers = async () => {
-    const { data } = await adminAPI.getUsers({ search, limit: 20 });
-    setUsers(data.users);
+    try {
+      const { data } = await adminAPI.getUsers({ search: searchFilter, role: roleFilter, limit: 100 });
+      setUsers(data.users);
+    } catch (err) {
+      toast.error('Foydalanuvchilarni yuklashda xato');
+    }
   };
+
+  // Debounced search effect
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (search !== searchFilter) {
+        updateFilters({ search: search });
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  // Load users when filters change
+  useEffect(() => {
+    if (tab === 'users') {
+      loadUsers();
+    }
+  }, [tab, searchFilter, roleFilter]);
 
   const loadProducts = async () => {
     const { data } = await productAPI.getAll();
@@ -151,20 +207,31 @@ export default function AdminPage() {
     setSupportUsers(withUnread);
   };
 
-  const handleOpenUser = async (userId: string) => {
-    // Xat chatini ochish bilan darhol xabarlar o'qildi signalini backendga jo'natamiz
-    await adminAPI.markMessagesAsRead(userId).catch(() => {});
-
-    // Keyin foydalanuvchini yangilangan ma'lumotlari bian yuklab olamiz
-    const { data } = await adminAPI.getUser(userId);
-    setSelectedUser(data.user);
-    setSelectedUserRecords(data.records ? [...data.records].reverse() : []);
-    setShowUserGraphs(false);
-    setTab('user-detail');
+  const handleOpenUser = (userId: string) => {
+    const params = new URLSearchParams();
+    params.set('tab', 'user-detail');
+    params.set('userId', userId);
+    setSearchParams(params);
     setIsNotificationsOpen(false);
-    
-    // Qong'iroqchani tozalab qo'yamiz
-    loadSupportNotifications();
+  };
+
+  const loadSpecificUser = async (userId: string) => {
+    try {
+      // Xabarlar o'qildi deb belgilash
+      await adminAPI.markMessagesAsRead(userId).catch(() => {});
+      
+      const { data } = await adminAPI.getUser(userId);
+      setSelectedUser(data.user);
+      setSelectedUserRecords(data.records ? [...data.records].reverse() : []);
+      setShowUserGraphs(false);
+      
+      // Qong'iroqchani va statistikalarni tozalab qo'yamiz
+      loadSupportNotifications();
+      loadStats();
+    } catch (err) {
+      toast.error('Foydalanuvchi ma\'lumotlarini yuklashda xato');
+      setTab('users');
+    }
   };
 
   const handleReply = async () => {
@@ -362,7 +429,23 @@ export default function AdminPage() {
                       <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 text-muted-foreground group-focus-within:text-blue-600 transition-colors" />
                       <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Username or email search..." className="w-full h-16 pl-16 pr-8 bg-card border border-border rounded-3xl font-bold tracking-tight focus:ring-4 focus:ring-blue-600/10 transition-all outline-none" />
                    </div>
-                   <motion.button whileTap={{ scale: 0.95 }} onClick={loadUsers} className="px-10 h-16 bg-foreground text-background font-black uppercase tracking-widest text-[10px] rounded-3xl shadow-2xl transition-all">Apply Filter</motion.button>
+                   <div className="w-full md:w-64">
+                      <select 
+                        value={role} 
+                        onChange={e => {
+                          const val = e.target.value;
+                          setRole(val);
+                          updateFilters({ role: val });
+                        }}
+                        className="w-full h-16 px-8 bg-card border border-border rounded-3xl font-black uppercase tracking-widest text-[10px] outline-none focus:ring-4 focus:ring-blue-600/10 transition-all"
+                      >
+                        <option value="">All Roles</option>
+                        <option value="user">User</option>
+                        <option value="doctor">Doctor</option>
+                        <option value="superadmin">SuperAdmin</option>
+                      </select>
+                   </div>
+                   <motion.button whileTap={{ scale: 0.95 }} onClick={loadUsers} className="px-10 h-16 bg-blue-600 text-white font-black uppercase tracking-widest text-[10px] rounded-3xl shadow-xl hover:shadow-2xl transition-all">Apply</motion.button>
                 </div>
 
                 <div className="bg-card rounded-[3.5rem] border border-border overflow-hidden shadow-3xl">
