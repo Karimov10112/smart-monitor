@@ -48,11 +48,28 @@ const getAllUsers = async (req, res) => {
 
     const query = {};
     if (search) {
-      query.$or = [
-        { firstName: { $regex: search, $options: 'i' } },
-        { lastName: { $regex: search, $options: 'i' } },
-        { email: { $regex: search, $options: 'i' } },
-      ];
+      const searchRegex = { $regex: search, $options: 'i' };
+      const searchTerms = search.split(/\s+/).filter(Boolean);
+      
+      if (searchTerms.length > 1) {
+        // If multiple words, try matching them across firstName and lastName
+        query.$or = [
+          { $and: searchTerms.map(term => ({
+            $or: [
+              { firstName: { $regex: term, $options: 'i' } },
+              { lastName: { $regex: term, $options: 'i' } },
+              { email: { $regex: term, $options: 'i' } }
+            ]
+          }))},
+          { email: searchRegex }
+        ];
+      } else {
+        query.$or = [
+          { firstName: searchRegex },
+          { lastName: searchRegex },
+          { email: searchRegex },
+        ];
+      }
     }
     if (role) query.role = role;
     if (isBanned !== undefined) query.isBanned = isBanned === 'true';
