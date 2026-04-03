@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { useSearchParams } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Users, 
   BarChart3, 
@@ -49,30 +48,12 @@ export default function AdminPage() {
   const t = translations[language];
   const navigate = useNavigate();
 
-  const [searchParams, setSearchParams] = useSearchParams();
-  const tab = (searchParams.get('tab') as Tab) || 'dashboard';
-  const selectedUserId = searchParams.get('userId');
-  const searchFilter = searchParams.get('search') || '';
-  const roleFilter = searchParams.get('role') || '';
-
-  const updateFilters = (newParams: Record<string, string | null>) => {
-    const params = new URLSearchParams(searchParams);
-    Object.entries(newParams).forEach(([key, value]) => {
-      if (value === null || value === '') {
-        params.delete(key);
-      } else {
-        params.set(key, value);
-      }
-    });
-    setSearchParams(params);
-  };
+  const [tab, setTabState] = useState<Tab>('dashboard');
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
   const setTab = (newTab: Tab) => {
-    // When switching tabs, we usually want to clear detail views but keep filters?
-    // Let's at least keep it clean.
-    const params = new URLSearchParams();
-    params.set('tab', newTab);
-    setSearchParams(params);
+    setTabState(newTab);
+    if (newTab !== 'user-detail') setSelectedUserId(null);
   };
 
   const [stats, setStats] = useState<any>(null);
@@ -80,8 +61,8 @@ export default function AdminPage() {
   
   // Users State
   const [users, setUsers] = useState<any[]>([]);
-  const [search, setSearch] = useState(searchFilter);
-  const [role, setRole] = useState(roleFilter);
+  const [search, setSearch] = useState("");
+  const [role, setRole] = useState("");
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [selectedUserRecords, setSelectedUserRecords] = useState<any[]>([]);
   const [showUserGraphs, setShowUserGraphs] = useState(false);
@@ -186,28 +167,12 @@ export default function AdminPage() {
     }
   };
 
-  // Sync local UI state when filters in URL change (e.g. from back button)
-  useEffect(() => {
-    setSearch(searchFilter);
-    setRole(roleFilter);
-  }, [searchFilter, roleFilter]);
-
-  // Handle URL updates from local state with debounce
-  useEffect(() => {
-    if (search === searchFilter && role === roleFilter) return;
-
-    const timer = setTimeout(() => {
-      updateFilters({ search, role });
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [search, role, searchFilter, roleFilter]);
-
-  // The definitive data loader on filter change (URL-driven)
+  // Sync users when tab or role changes
   useEffect(() => {
     if (tab === 'users') {
-      loadUsers(searchFilter, roleFilter);
+      loadUsers(search, role);
     }
-  }, [tab, searchFilter, roleFilter]);
+  }, [tab, role]);
 
   const loadProducts = async () => {
     const { data } = await productAPI.getAll();
@@ -221,10 +186,8 @@ export default function AdminPage() {
   };
 
   const handleOpenUser = (userId: string) => {
-    const params = new URLSearchParams();
-    params.set('tab', 'user-detail');
-    params.set('userId', userId);
-    setSearchParams(params);
+    setSelectedUserId(userId);
+    setTab('user-detail');
     setIsNotificationsOpen(false);
   };
 
@@ -446,10 +409,10 @@ export default function AdminPage() {
                       <select 
                         value={role} 
                         onChange={e => {
-                          const val = e.target.value;
-                          setRole(val);
-                          updateFilters({ role: val });
-                        }}
+                           const val = e.target.value;
+                           setRole(val);
+                           loadUsers(search, val);
+                         }}
                         className="w-full h-16 px-8 bg-card border border-border rounded-3xl font-black uppercase tracking-widest text-[10px] outline-none focus:ring-4 focus:ring-blue-600/10 transition-all"
                       >
                         <option value="">All Roles</option>
@@ -461,9 +424,8 @@ export default function AdminPage() {
                    <motion.button 
                      whileTap={{ scale: 0.95 }} 
                      onClick={() => {
-                        updateFilters({ search, role });
-                        loadUsers(search, role);
-                     }} 
+                         loadUsers(search, role);
+                      }} 
                      className="px-10 h-16 bg-blue-600 text-white font-black uppercase tracking-widest text-[10px] rounded-3xl shadow-xl hover:shadow-2xl transition-all"
                    >
                      Apply
