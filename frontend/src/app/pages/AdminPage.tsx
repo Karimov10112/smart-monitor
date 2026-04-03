@@ -285,7 +285,7 @@ export default function AdminPage() {
       <main className="flex-1 p-8 lg:p-12 relative z-10 w-full overflow-y-auto">
           {/* Debug Indicator */}
           <div className="fixed top-4 left-4 z-[9999] px-4 py-2 bg-rose-600 text-white font-black text-[10px] uppercase tracking-widest rounded-full shadow-2xl animate-bounce">
-            ADMIN PANEL v1.1 - ACTIVE
+            ADMIN PANEL v1.2 - STABLE
           </div>
 
          {/* Background Blobs */}
