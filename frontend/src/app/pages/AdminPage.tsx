@@ -170,37 +170,42 @@ export default function AdminPage() {
     setStats(data.stats);
   };
 
-  const loadUsers = async (customSearch?: string, customRole?: string) => {
+  const loadUsers = async (s?: string, r?: string) => {
     try {
-      const s = customSearch !== undefined ? customSearch : searchFilter;
-      const r = customRole !== undefined ? customRole : roleFilter;
-      const { data } = await adminAPI.getUsers({ search: s, role: r, limit: 100 });
-      setUsers(data.users);
+      // Use provided params or fallback to current search/role state
+      const search_val = s !== undefined ? s : search;
+      const role_val = r !== undefined ? r : role;
+      
+      const { data } = await adminAPI.getUsers({ search: search_val, role: role_val, limit: 100 });
+      if (data && data.users) {
+        setUsers(data.users);
+      }
     } catch (err) {
+      console.error("Load users error:", err);
       toast.error('Foydalanuvchilarni yuklashda xato');
     }
   };
 
-  // Keep local state in sync with URL (for back/forward buttons)
+  // Sync local UI state when filters in URL change (e.g. from back button)
   useEffect(() => {
     setSearch(searchFilter);
     setRole(roleFilter);
   }, [searchFilter, roleFilter]);
 
-  // Debounced search effect
+  // Handle URL updates from local state with debounce
   useEffect(() => {
+    if (search === searchFilter && role === roleFilter) return;
+
     const timer = setTimeout(() => {
-      if (search !== searchFilter) {
-        updateFilters({ search: search });
-      }
+      updateFilters({ search, role });
     }, 500);
     return () => clearTimeout(timer);
-  }, [search, searchFilter]);
+  }, [search, role, searchFilter, roleFilter]);
 
-  // Load users when filters in URL change
+  // The definitive data loader on filter change (URL-driven)
   useEffect(() => {
     if (tab === 'users') {
-      loadUsers();
+      loadUsers(searchFilter, roleFilter);
     }
   }, [tab, searchFilter, roleFilter]);
 
