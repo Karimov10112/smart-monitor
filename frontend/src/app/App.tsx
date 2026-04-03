@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, Navigate, Link, useLocation, useNavigate } from 'react-router-dom';
+import { Routes, Route, Navigate, Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 import { useApp } from './contexts/AppContext';
 import { translations } from './utils/translations';
@@ -215,7 +215,8 @@ function App() {
     );
   }
 
-  const activeTab = new URLSearchParams(location.search).get('tab') || 'journal';
+  const [searchParams] = useSearchParams();
+  const activeTab = searchParams.get('tab') || 'journal';
 
   const handleSendSupport = async () => {
     if (!supportText.trim()) return;
