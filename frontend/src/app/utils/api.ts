@@ -83,7 +83,7 @@ export const productAPI = {
   getAll: (params?: any) => api.get('/products', { params }),
   create: (data: any) => api.post('/products', data),
   update: (id: string, data: any) => api.patch(`/products/${id}`, data),
-  delete: (id: string) => api.delete(`/admin/products/${id}`),
+  delete: (id: string) => api.delete(`/products/${id}`),
 };
 
 export const reminderAPI = {
