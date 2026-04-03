@@ -480,7 +480,7 @@ export default function AdminPage() {
                          </div>
                       </div>
 
-                      <div className="bg-card rounded-[4rem] border border-border p-8 lg:p-10 shadow-3xl h-[470px] flex flex-col">
+                      <div className="bg-card rounded-[4rem] border border-border p-8 lg:p-10 shadow-3xl h-[380px] flex flex-col">
                          <div className="flex items-center justify-between mb-10">
                             <h3 className="text-2xl font-black uppercase tracking-tighter flex items-center gap-5 leading-none">
                                <div className="w-3 h-10 bg-indigo-500 rounded-full" /> Live Support Session
@@ -520,42 +520,45 @@ export default function AdminPage() {
                    </div>
 
                    <div className="space-y-12">
-                      <div className="bg-card rounded-[3.5rem] border border-border p-8 md:p-10 shadow-3xl sticky top-8">
-                         <div className="flex items-center justify-between mb-8">
-                           <h4 className="text-xl font-black uppercase tracking-tighter flex items-center gap-3">
-                              <Shield className="w-6 h-6 text-blue-500" /> Security Controls
-                           </h4>
-                         </div>
-
-                         <div className="mb-8">
-                            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground block mb-4">Privilege Level</label>
-                            <div className="bg-secondary/50 p-2 rounded-[2rem] flex flex-col xl:flex-row gap-2 shadow-inner">
-                               {['user', 'doctor', 'superadmin'].map(r => (
-                                  <button key={r} onClick={() => {
-                                    setSelectedUser({ ...selectedUser, role: r });
-                                    adminAPI.updateRole(selectedUser._id, r).catch(() => toast.error("Role o'zgartirishda xato"));
-                                  }} className={`flex-1 py-5 px-3 rounded-3xl text-[10px] font-black uppercase tracking-wider transition-all !border-none ${selectedUser.role === r ? 'bg-blue-600 text-white shadow-xl shadow-blue-500/30' : 'text-muted-foreground hover:bg-black/5 dark:hover:bg-white/5 opacity-70 hover:opacity-100'}`}>{r}</button>
-                               ))}
+                      <div className="bg-white dark:bg-card rounded-[3.5rem] p-8 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] border border-slate-100 sticky top-8">
+                         <div className="flex items-center gap-4 mb-8">
+                            <div className="w-12 h-12 bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-600"><ShieldAlert className="w-6 h-6" /></div>
+                            <div>
+                               <h4 className="text-xl font-black uppercase tracking-tighter leading-none">Security</h4>
+                               <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mt-1">Manage user access</p>
                             </div>
                          </div>
-
-                         <div className="border border-rose-500/20 bg-rose-500/5 rounded-[2.5rem] p-6 md:p-8">
-                            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-rose-500 mb-6 flex items-center gap-2"><ShieldAlert className="w-4 h-4" /> Danger Zone</p>
-                            <div className="flex flex-col gap-4">
-                               <button onClick={() => {
-                                  setSelectedUser({ ...selectedUser, isBanned: !selectedUser.isBanned });
-                                  adminAPI.toggleBan(selectedUser._id).catch(() => toast.error("Xatolik"));
-                               }} className={`w-full py-5 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] transition-all shadow-md active:scale-95 flex items-center justify-center gap-3 ${selectedUser.isBanned ? 'bg-emerald-500 text-white shadow-emerald-500/30' : 'bg-orange-500 text-white shadow-orange-500/30 hover:bg-orange-600'}`}>
-                                  <Ban className="w-4 h-4" /> {selectedUser.isBanned ? 'Unban Account' : 'Restrict Access'}
+                         
+                         <label className="text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground block mb-4 ml-2">Appoint Role</label>
+                         <div className="space-y-3 mb-10">
+                            {['user', 'doctor', 'superadmin'].map(r => (
+                               <button key={r} onClick={() => {
+                                 setSelectedUser({ ...selectedUser, role: r });
+                                 adminAPI.updateRole(selectedUser._id, r).catch(() => toast.error("Role o'zgartirishda xato"));
+                               }} className={`w-full p-5 rounded-3xl flex items-center justify-between transition-all group !border-none ${selectedUser.role === r ? 'bg-foreground text-background shadow-xl scale-[1.02]' : 'bg-secondary/50 text-muted-foreground hover:bg-secondary active:scale-95 text-opacity-60 hover:text-opacity-100 shadow-sm'}`}>
+                                  <span className="font-black uppercase tracking-widest text-[10px]">{r}</span>
+                                  {selectedUser.role === r ? <CheckCircle2 className="w-5 h-5 text-blue-500" /> : <div className="w-5 h-5 rounded-full border-2 border-muted-foreground/20 group-hover:border-foreground/30 transition-colors" />}
                                </button>
-                               <button onClick={() => handleDeleteUser(selectedUser._id)} className="w-full py-5 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] transition-all shadow-md active:scale-95 bg-rose-600 text-white shadow-rose-600/30 hover:bg-rose-700 flex items-center justify-center gap-3">
-                                  <Trash2 className="w-4 h-4" /> Delete Forever
-                               </button>
-                            </div>
+                            ))}
                          </div>
-                      </div>
-                      <div className="bg-gradient-to-br from-indigo-600 to-blue-800 rounded-[3.5rem] p-10 text-white shadow-3xl shadow-blue-500/30 group overflow-hidden relative">
-                         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 blur-3xl rounded-full group-hover:scale-150 transition-transform duration-1000" />
+
+                         <label className="text-[9px] font-black uppercase tracking-[0.3em] text-rose-500 block mb-4 ml-2">Danger Actions</label>
+                         <div className="grid grid-cols-2 gap-4">
+                            <button onClick={() => {
+                               setSelectedUser({ ...selectedUser, isBanned: !selectedUser.isBanned });
+                               adminAPI.toggleBan(selectedUser._id).catch(() => toast.error("Xatolik"));
+                            }} className={`p-6 rounded-[2rem] flex flex-col items-center justify-center gap-4 transition-all active:scale-95 shadow-sm ${selectedUser.isBanned ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white hover:shadow-xl hover:shadow-emerald-500/20' : 'bg-orange-50 text-orange-600 hover:bg-orange-500 hover:text-white hover:shadow-xl hover:shadow-orange-500/20'}`}>
+                               <Ban className="w-6 h-6" />
+                               <span className="text-[9px] font-black uppercase tracking-[0.2em] text-center leading-relaxed">{selectedUser.isBanned ? 'Lift Ban' : 'Restrict Addon'}</span>
+                            </button>
+                            <button onClick={() => handleDeleteUser(selectedUser._id)} className="p-6 rounded-[2rem] border border-rose-100 flex flex-col items-center justify-center gap-4 transition-all bg-white text-rose-500 hover:bg-rose-600 hover:text-white active:scale-95 shadow-sm hover:shadow-xl hover:shadow-rose-500/20">
+                               <Trash2 className="w-6 h-6" />
+                               <span className="text-[9px] font-black uppercase tracking-[0.2em] text-center leading-relaxed">Delete Forever</span>
+                            </button>
+                             </div>
+                          </div>
+                          <div className="bg-gradient-to-br from-indigo-600 to-blue-800 rounded-[3.5rem] p-10 text-white shadow-3xl shadow-blue-500/30 group overflow-hidden relative">
+                             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 blur-3xl rounded-full group-hover:scale-150 transition-transform duration-1000" />
                          <div className="flex items-center justify-between mb-8 relative z-10">
                             <div>
                                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/50 mb-2">Health Analytics</p>
