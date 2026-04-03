@@ -63,6 +63,7 @@ function App() {
   const [supportText, setSupportText] = useState('');
   const [sendingSupport, setSendingSupport] = useState(false);
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const chatEndRef = React.useRef<HTMLDivElement>(null);
 
   const unreadSupportCount = user?.supportMessages?.filter((m: any) => m.sender === 'admin' && m.isReadByUser === false).length || 0;
@@ -215,7 +216,6 @@ function App() {
     );
   }
 
-  const [searchParams] = useSearchParams();
   const activeTab = searchParams.get('tab') || 'journal';
 
   const handleSendSupport = async () => {
