@@ -133,7 +133,16 @@
     font-size: var(--text-base);
     font-weight: var(--font-weight-medium);
     line-height: 1.5;
-    @apply shadow-[0_4px_12px_rgba(0,0,0,0.15)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.2)] border border-slate-200/80 hover:-translate-y-[3px] active:translate-y-0 active:shadow-sm transition-all duration-300;
+    @apply shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1),0_8px_10px_-6px_rgba(0,0,0,0.1)] 
+           hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.2)] 
+           border border-slate-200/80 
+           hover:-translate-y-[4px] 
+           hover:scale-[1.02]
+           active:scale-[0.97] 
+           active:translate-y-0 
+           active:shadow-inner 
+           transition-all duration-300 
+           cursor-pointer;
   }
 
   input {

@@ -381,7 +381,7 @@ export default function AdminPage() {
                       { icon: Shield, label: 'Unread Support', val: supportUsers.length, color: 'text-amber-500 bg-amber-500/10' },
                       { icon: Package, label: 'Total Products', val: products.length, color: 'text-purple-500 bg-purple-500/10' },
                     ].map((s, idx) => (
-                      <div key={idx} className="bg-card p-8 rounded-[2.5rem] border border-border shadow-sm hover:shadow-2xl transition-all group">
+                      <div key={idx} className="bg-card p-8 rounded-[2.5rem] border border-border shadow-sm card-interactive group">
                          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 transition-transform group-hover:scale-110 ${s.color}`}>
                             <s.icon className="w-7 h-7" />
                          </div>
