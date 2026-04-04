@@ -214,7 +214,7 @@ function App() {
             <ListItemButton
               component={RouterLink}
               to={item.path}
-              selected={location.pathname === '/' && activeTab === item.id}
+              selected={!isReminderModalOpen && location.pathname === '/' && activeTab === item.id}
               onClick={() => setIsSidebarOpen(false)}
               sx={{
                 borderRadius: 1.5,
@@ -233,7 +233,7 @@ function App() {
             <ListItemButton 
               component={RouterLink} 
               to="/admin" 
-              selected={location.pathname === '/admin'}
+              selected={!isReminderModalOpen && location.pathname === '/admin'}
               onClick={() => setIsSidebarOpen(false)} 
               sx={{ 
                 borderRadius: 1.5, 
@@ -250,7 +250,12 @@ function App() {
         <ListItem disablePadding sx={{ mt: 0.5 }}>
           <ListItemButton 
             onClick={openReminders} 
-            sx={{ borderRadius: 1.5, py: 1 }}
+            selected={isReminderModalOpen}
+            sx={{ 
+              borderRadius: 1.5, 
+              py: 1,
+              '&.Mui-selected': { bgcolor: alpha(theme.palette.primary.main, 0.08), color: 'primary.main', '& .MuiListItemIcon-root': { color: 'primary.main' } },
+            }}
           >
             <ListItemIcon sx={{ minWidth: 40 }}><AccessTimeIcon fontSize="small" /></ListItemIcon>
             <ListItemText primary={getT('reminders')} primaryTypographyProps={{ fontWeight: 700, fontSize: '0.875rem' }} />
