@@ -18,6 +18,8 @@ const getAdminContacts = async (req, res) => {
 
 const updateAdminContacts = async (req, res) => {
   try {
+    const { phone, telegramUsername } = req.body;
+    
     const admin = await User.findOneAndUpdate(
        { role: 'superadmin' }, 
        { phone, telegramUsername },
@@ -217,8 +219,15 @@ const getDashboardStats = async (req, res) => {
     res.status(500).json({ success: false, message: 'Server xatosi' });
   }
 };
-
-
+const getUserRecords = async (req, res) => {
+  try {
+    const records = await BloodSugar.find({ user: req.params.id })
+      .sort({ date: -1 });
+    res.json({ success: true, records });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Server xatosi' });
+  }
+};
 
 module.exports = {
   getAllUsers,
