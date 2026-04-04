@@ -170,6 +170,18 @@ export default function AdminPage() {
     } catch { }
   };
 
+  const handleSaveAdminNotes = async (userId: string, notes: string) => {
+    try {
+      const { data } = await adminAPI.addNote(userId, notes);
+      if (data.success) {
+        toast.success(t.success || 'Saqlandi');
+        loadSpecificUser(userId);
+      }
+    } catch {
+      toast.error(t.error || 'Xato yuz berdi');
+    }
+  };
+
   const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -430,152 +442,221 @@ export default function AdminPage() {
 
         {/* User Detail View */}
         {selectedUserId && selectedUser && (
-          <Grid container spacing={4}>
-            <Grid size={{ xs: 12, md: 7 }}>
-              <Card elevation={0} sx={{ mb: 4 }}>
-                <CardContent sx={{ p: 4 }}>
-                  <Stack direction="row" spacing={3} alignItems="center" sx={{ mb: 4 }}>
-                    <Avatar sx={{ width: 64, height: 64, borderRadius: 2, bgcolor: 'primary.main', fontSize: 24, fontWeight: 900 }}>
-                      {selectedUser.firstName?.[0]}
-                    </Avatar>
-                    <Box>
+          <Box>
+            {/* Top Profile Header Card */}
+            <Card elevation={0} sx={{ mb: 3, border: `1px solid ${theme.palette.divider}` }}>
+              <CardContent sx={{ p: 3 }}>
+                <Stack direction={{ xs: 'column', md: 'row' }} spacing={3} alignItems={{ xs: 'start', md: 'center' }}>
+                  <Avatar sx={{ width: 80, height: 80, borderRadius: 3, bgcolor: 'primary.main', fontSize: 32, fontWeight: 900, boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.2)}` }}>
+                    {selectedUser.firstName?.[0]}
+                  </Avatar>
+                  <Box sx={{ flexGrow: 1 }}>
+                    <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
                       <Typography variant="h5" sx={{ fontWeight: 900 }}>{selectedUser.firstName} {selectedUser.lastName}</Typography>
-                      <Typography variant="body2" color="text.secondary">{selectedUser.email}</Typography>
-                    </Box>
-                  </Stack>
-                  <Grid container spacing={2}>
-                    <Grid size={{ xs: 6, md: 3 }}>
-                      <Paper variant="outlined" sx={{ p: 2, textAlign: 'center' }}>
-                        <Typography variant="caption" sx={{ fontWeight: 800, textTransform: 'uppercase', fontSize: 8, color: 'text.secondary' }}>Region</Typography>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 900 }}>{selectedUser.region || '—'}</Typography>
-                      </Paper>
-                    </Grid>
-                    <Grid size={{ xs: 6, md: 3 }}>
-                      <Paper variant="outlined" sx={{ p: 2, textAlign: 'center' }}>
-                        <Typography variant="caption" sx={{ fontWeight: 800, textTransform: 'uppercase', fontSize: 8, color: 'text.secondary' }}>Type</Typography>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 900 }}>{selectedUser.diabetesType || '—'}</Typography>
-                      </Paper>
-                    </Grid>
-                  </Grid>
-                </CardContent>
-              </Card>
-
-              {/* Full-width Glucose Analytics */}
-              <Card elevation={0}>
-                <Box sx={{ p: 2, px: 3, borderBottom: `1px solid ${theme.palette.divider}` }}>
-                  <Typography variant="caption" sx={{ fontWeight: 900 }}>GLUCOSE ANALYTICS</Typography>
-                </Box>
-                <CardContent sx={{ p: 4, pt: 4 }}>
-                  {selectedUserRecords.length > 0 ? (
-                    <Grid container spacing={4}>
-                      <Grid size={{ xs: 12, lg: 6 }}>
-                        <Typography variant="overline" sx={{ fontWeight: 800, color: 'primary.main', display: 'block', mb: 2, letterSpacing: 1.5 }}>
-                          Och qoringa
-                        </Typography>
-                        <Box sx={{ height: 260, width: '100%' }}>
-                          <ResponsiveContainer width="100%" height={260}>
-                            <AreaChart 
-                              data={selectedUserRecords.map(r => ({
-                                date: format(new Date(r.date), 'dd/MM HH:mm'),
-                                fasting: r.fastingLevel ?? (r.category === 'fasting' ? r.level : 0) ?? 0
-                              })).reverse()}
-                              margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-                            >
-                              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme.palette.divider} />
-                              <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: theme.palette.text.secondary }} />
-                              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: theme.palette.text.secondary }} />
-                              <Tooltip contentStyle={{ borderRadius: 8, border: `none`, backgroundColor: theme.palette.background.paper, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }} labelStyle={{ fontWeight: 900, marginBottom: 8, fontSize: 11 }} />
-                              <Area type="monotone" dataKey="fasting" name="Och qoringa" stroke={theme.palette.primary.main} fill={theme.palette.primary.main} fillOpacity={0.1} strokeWidth={3} connectNulls={true} />
-                            </AreaChart>
-                          </ResponsiveContainer>
-                        </Box>
-                      </Grid>
-
-                      <Grid size={{ xs: 12, lg: 6 }}>
-                        <Typography variant="overline" sx={{ fontWeight: 800, color: 'secondary.main', display: 'block', mb: 2, letterSpacing: 1.5 }}>
-                          Ovqatdan keyin
-                        </Typography>
-                        <Box sx={{ height: 260, width: '100%' }}>
-                          <ResponsiveContainer width="100%" height={260}>
-                            <AreaChart 
-                              data={selectedUserRecords
-                                .filter(r => r.postMealLevel != null || (r.category === 'post-meal' && r.level != null))
-                                .map(r => ({
-                                  date: format(new Date(r.date), 'dd/MM HH:mm'),
-                                  postMeal: r.postMealLevel ?? (r.category === 'post-meal' ? r.level : null) ?? null
-                                })).reverse()}
-                              margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-                            >
-                              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme.palette.divider} />
-                              <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: theme.palette.text.secondary }} />
-                              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: theme.palette.text.secondary }} />
-                              <Tooltip contentStyle={{ borderRadius: 8, border: `none`, backgroundColor: theme.palette.background.paper, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }} labelStyle={{ fontWeight: 900, marginBottom: 8, fontSize: 11 }} />
-                              <Area type="monotone" dataKey="postMeal" name="Ovqatdan keyin" stroke={theme.palette.secondary.main} fill={theme.palette.secondary.main} fillOpacity={0.1} strokeWidth={3} connectNulls={true} />
-                            </AreaChart>
-                          </ResponsiveContainer>
-                        </Box>
-                      </Grid>
-                    </Grid>
-                  ) : (
-                    <Box sx={{ py: 6, textAlign: 'center', opacity: 0.3 }}>
-                      <TimelineIcon sx={{ fontSize: 40, mb: 1 }} />
-                      <Typography variant="caption" sx={{ display: 'block', fontWeight: 800 }}>No record data</Typography>
-                    </Box>
-                  )}
-                </CardContent>
-              </Card>
-            </Grid>
-
-            <Grid size={{ xs: 12, md: 5 }}>
-              <Card elevation={0}>
-                <Box sx={{ p: 2, px: 3, borderBottom: `1px solid ${theme.palette.divider}` }}>
-                  <Typography variant="caption" sx={{ fontWeight: 900 }}>USER ACTIONS</Typography>
-                </Box>
-                <CardContent sx={{ p: 3 }}>
-                  <FormControl fullWidth size="small" sx={{ mb: 4 }}>
-                    <InputLabel>Update Role</InputLabel>
-                    <Select
-                      value={selectedUser.role}
-                      label="Update Role"
-                      onChange={e => adminAPI.updateRole(selectedUser._id, e.target.value as string).then(() => loadSpecificUser(selectedUser._id))}
-                    >
-                      <MenuItem value="user">User</MenuItem>
-                      <MenuItem value="doctor">Doctor</MenuItem>
-                      <MenuItem value="superadmin">SuperAdmin</MenuItem>
-                    </Select>
-                  </FormControl>
+                      {selectedUser.isBanned && <Chip label="BANNED" size="small" color="error" sx={{ height: 20, fontSize: 9, fontWeight: 900 }} />}
+                    </Stack>
+                    <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 700, mb: 1.5 }}>{selectedUser.email}</Typography>
+                    <Stack direction="row" spacing={1}>
+                       <Chip label={selectedUser.role} size="small" variant="outlined" sx={{ fontWeight: 800, textTransform: 'uppercase', fontSize: 10 }} />
+                       <Chip label={`Joined ${format(new Date(selectedUser.createdAt), 'MMM yyyy')}`} size="small" sx={{ fontWeight: 800, fontSize: 10, bgcolor: alpha(theme.palette.divider, 0.5) }} />
+                    </Stack>
+                  </Box>
                   <Stack direction="row" spacing={2}>
-                    <Button
-                      fullWidth
-                      variant="outlined"
-                      color={selectedUser.isBanned ? 'success' : 'warning'}
-                      startIcon={<BlockIcon />}
-                      onClick={() => adminAPI.toggleBan(selectedUser._id).then(() => loadSpecificUser(selectedUser._id))}
-                    >
-                      {selectedUser.isBanned ? 'Unban' : 'Ban User'}
-                    </Button>
-                    <Button
-                      fullWidth
-                      variant="outlined"
-                      color="error"
-                      startIcon={<DeleteIcon />}
-                      onClick={() => {
-                        if (confirm("Butkul o'chirilsinmi?"))
-                          adminAPI.deleteUser(selectedUser._id).then(() => {
-                            setCurrentTab('users');
-                            setSelectedUserId(null);
-                            setSelectedUser(null);
-                            loadUsers();
-                          });
-                      }}
-                    >
-                      Delete
-                    </Button>
+                     <FormControl size="small" sx={{ minWidth: 160 }}>
+                        <InputLabel>Update Role</InputLabel>
+                        <Select
+                          value={selectedUser.role} label="Update Role"
+                          onChange={e => adminAPI.updateRole(selectedUser._id, e.target.value as string).then(() => loadSpecificUser(selectedUser._id))}
+                          sx={{ fontWeight: 800, fontSize: 13 }}
+                        >
+                          <MenuItem value="user">User</MenuItem>
+                          <MenuItem value="doctor">Doctor</MenuItem>
+                          <MenuItem value="superadmin">SuperAdmin</MenuItem>
+                        </Select>
+                     </FormControl>
+                     <Button 
+                       variant="outlined" 
+                       color={selectedUser.isBanned ? 'success' : 'warning'} 
+                       onClick={() => adminAPI.toggleBan(selectedUser._id).then(() => loadSpecificUser(selectedUser._id))}
+                       sx={{ fontWeight: 800, minWidth: 100 }}
+                     >
+                       {selectedUser.isBanned ? 'Unban' : 'Ban'}
+                     </Button>
                   </Stack>
-                </CardContent>
-              </Card>
+                </Stack>
+              </CardContent>
+            </Card>
+
+            <Grid container spacing={3}>
+              {/* Detailed Personal & Medical Info */}
+              <Grid size={{ xs: 12, lg: 8 }}>
+                 <Card elevation={0} sx={{ border: `1px solid ${theme.palette.divider}`, mb: 3 }}>
+                    <Box sx={{ p: 2, px: 3, borderBottom: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.primary.main, 0.01) }}>
+                        <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5 }}>Full User Profile</Typography>
+                    </Box>
+                    <CardContent sx={{ p: 4 }}>
+                       <Grid container spacing={4}>
+                          {/* Medical Section */}
+                          <Grid size={{ xs: 12, md: 4 }}>
+                             <Typography variant="overline" sx={{ fontWeight: 900, color: 'primary.main', display: 'block', mb: 2, letterSpacing: 1 }}>Medical Status</Typography>
+                             <Stack spacing={2.5}>
+                                <Box>
+                                   <Typography variant="caption" sx={{ display: 'block', fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', fontSize: 9 }}>Diabetes Type</Typography>
+                                   <Typography variant="body2" sx={{ fontWeight: 900, color: 'primary.main' }}>{selectedUser.diabetesType?.toUpperCase() || '—'}</Typography>
+                                </Box>
+                                <Box>
+                                   <Typography variant="caption" sx={{ display: 'block', fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', fontSize: 9 }}>Gender & Age</Typography>
+                                   <Typography variant="body2" sx={{ fontWeight: 900 }}>
+                                      {selectedUser.gender === 'male' ? 'Erkak' : selectedUser.gender === 'female' ? 'Ayol' : '—'}
+                                      {selectedUser.dateOfBirth && ` • ${new Date().getFullYear() - new Date(selectedUser.dateOfBirth).getFullYear()} yosh`}
+                                   </Typography>
+                                </Box>
+                                <Box>
+                                   <Typography variant="caption" sx={{ display: 'block', fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', fontSize: 9 }}>Doctor Name</Typography>
+                                   <Typography variant="body2" sx={{ fontWeight: 900 }}>{selectedUser.doctorName || '—'}</Typography>
+                                </Box>
+                             </Stack>
+                          </Grid>
+
+                          {/* Location Section */}
+                          <Grid size={{ xs: 12, md: 4 }}>
+                             <Typography variant="overline" sx={{ fontWeight: 900, color: 'primary.main', display: 'block', mb: 2, letterSpacing: 1 }}>Location Details</Typography>
+                             <Stack spacing={2.5}>
+                                <Box>
+                                   <Typography variant="caption" sx={{ display: 'block', fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', fontSize: 9 }}>Viloyat / Region</Typography>
+                                   <Typography variant="body2" sx={{ fontWeight: 900 }}>{selectedUser.region || '—'}</Typography>
+                                </Box>
+                                <Box>
+                                   <Typography variant="caption" sx={{ display: 'block', fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', fontSize: 9 }}>Tuman / District</Typography>
+                                   <Typography variant="body2" sx={{ fontWeight: 900 }}>{selectedUser.district || '—'}</Typography>
+                                </Box>
+                                <Box>
+                                   <Typography variant="caption" sx={{ display: 'block', fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', fontSize: 9 }}>Mahalla / MFY</Typography>
+                                   <Typography variant="body2" sx={{ fontWeight: 900 }}>{selectedUser.mfy || '—'}</Typography>
+                                </Box>
+                             </Stack>
+                          </Grid>
+
+                          {/* Contact Section */}
+                          <Grid size={{ xs: 12, md: 4 }}>
+                             <Typography variant="overline" sx={{ fontWeight: 900, color: 'primary.main', display: 'block', mb: 2, letterSpacing: 1 }}>Contact Info</Typography>
+                             <Stack spacing={2.5}>
+                                <Box>
+                                   <Typography variant="caption" sx={{ display: 'block', fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', fontSize: 9 }}>Phone Number</Typography>
+                                   <Typography variant="body2" sx={{ fontWeight: 900, color: 'primary.main' }}>{selectedUser.phone || '—'}</Typography>
+                                </Box>
+                                <Box>
+                                   <Typography variant="caption" sx={{ display: 'block', fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', fontSize: 9 }}>Telegram</Typography>
+                                   <Typography variant="body2" sx={{ fontWeight: 900, color: 'info.main' }}>
+                                      {selectedUser.telegramUsername ? (
+                                        <a href={selectedUser.telegramUsername.startsWith('@') ? `https://t.me/${selectedUser.telegramUsername.substring(1)}` : selectedUser.telegramUsername} target="_blank" rel="noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>
+                                          {selectedUser.telegramUsername}
+                                        </a>
+                                      ) : '—'}
+                                   </Typography>
+                                </Box>
+                             </Stack>
+                          </Grid>
+                       </Grid>
+                    </CardContent>
+                 </Card>
+
+                 {/* Glucose Analytics Section */}
+                 <Card elevation={0} sx={{ border: `1px solid ${theme.palette.divider}` }}>
+                    <Box sx={{ p: 2, px: 3, borderBottom: `1px solid ${theme.palette.divider}` }}>
+                      <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5 }}>Glucose Analytics</Typography>
+                    </Box>
+                    <CardContent sx={{ p: 4 }}>
+                      {selectedUserRecords.length > 0 ? (
+                        <Grid container spacing={4}>
+                          <Grid size={{ xs: 12, lg: 6 }}>
+                             <Typography variant="overline" sx={{ fontWeight: 800, color: 'primary.main', display: 'block', mb: 2 }}>Och qoringa</Typography>
+                             <Box sx={{ height: 260, width: '100%' }}>
+                                <ResponsiveContainer width="100%" height={260}>
+                                  <AreaChart data={selectedUserRecords.map(r => ({ date: format(new Date(r.date), 'dd/MM HH:mm'), fasting: r.fastingLevel ?? (r.category === 'fasting' ? r.level : 0) ?? 0 })).reverse()}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme.palette.divider} />
+                                    <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: theme.palette.text.secondary }} />
+                                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: theme.palette.text.secondary }} />
+                                    <Tooltip contentStyle={{ borderRadius: 8, border: `none`, backgroundColor: theme.palette.background.paper, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }} />
+                                    <Area type="monotone" dataKey="fasting" stroke={theme.palette.primary.main} fill={theme.palette.primary.main} fillOpacity={0.1} strokeWidth={3} connectNulls={true} />
+                                  </AreaChart>
+                                </ResponsiveContainer>
+                             </Box>
+                          </Grid>
+                          <Grid size={{ xs: 12, lg: 6 }}>
+                             <Typography variant="overline" sx={{ fontWeight: 800, color: 'secondary.main', display: 'block', mb: 2 }}>Ovqatdan keyin</Typography>
+                             <Box sx={{ height: 260, width: '100%' }}>
+                                <ResponsiveContainer width="100%" height={260}>
+                                  <AreaChart data={selectedUserRecords.filter(r => r.postMealLevel != null || (r.category === 'post-meal' && r.level != null)).map(r => ({ date: format(new Date(r.date), 'dd/MM HH:mm'), postMeal: r.postMealLevel ?? (r.category === 'post-meal' ? r.level : null) ?? null })).reverse()}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme.palette.divider} />
+                                    <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: theme.palette.text.secondary }} />
+                                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: theme.palette.text.secondary }} />
+                                    <Tooltip contentStyle={{ borderRadius: 8, border: `none`, backgroundColor: theme.palette.background.paper, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }} />
+                                    <Area type="monotone" dataKey="postMeal" stroke={theme.palette.secondary.main} fill={theme.palette.secondary.main} fillOpacity={0.1} strokeWidth={3} connectNulls={true} />
+                                  </AreaChart>
+                                </ResponsiveContainer>
+                             </Box>
+                          </Grid>
+                        </Grid>
+                      ) : (
+                        <Box sx={{ py: 6, textAlign: 'center', opacity: 0.3 }}>
+                          <TimelineIcon sx={{ fontSize: 40, mb: 1 }} />
+                          <Typography variant="caption" sx={{ display: 'block', fontWeight: 800 }}>No record data</Typography>
+                        </Box>
+                      )}
+                    </CardContent>
+                 </Card>
+              </Grid>
+
+              {/* Administrative Section */}
+              <Grid size={{ xs: 12, lg: 4 }}>
+                 <Stack spacing={3}>
+                    {/* Admin Notes */}
+                    <Card elevation={0} sx={{ border: `1px solid ${theme.palette.divider}` }}>
+                       <Box sx={{ p: 2, px: 3, borderBottom: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.warning.main, 0.02) }}>
+                          <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5 }}>Administrative Notes</Typography>
+                       </Box>
+                       <CardContent sx={{ p: 3 }}>
+                          <TextField 
+                            fullWidth multiline rows={6} 
+                            placeholder="Foydalanuvchi haqida izohlar qoldiring..." 
+                            value={selectedUser.adminNotes || ''} 
+                            onChange={e => setSelectedUser({...selectedUser, adminNotes: e.target.value})}
+                            sx={{ mb: 2, '& .MuiOutlinedInput-root': { fontWeight: 600, fontSize: 13 } }}
+                          />
+                          <Button 
+                            fullWidth variant="contained" 
+                            color="primary" startIcon={<SaveIcon />}
+                            onClick={() => handleSaveAdminNotes(selectedUser._id, selectedUser.adminNotes)}
+                            sx={{ fontWeight: 900 }}
+                          >
+                            Save Notes
+                          </Button>
+                       </CardContent>
+                    </Card>
+
+                    {/* Danger Zone */}
+                    <Card elevation={0} sx={{ border: `1px solid ${alpha(theme.palette.error.main, 0.2)}`, bgcolor: alpha(theme.palette.error.main, 0.01) }}>
+                       <Box sx={{ p: 2, px: 3, borderBottom: `1px solid ${alpha(theme.palette.error.main, 0.1)}` }}>
+                          <Typography variant="caption" sx={{ fontWeight: 900, color: 'error.main', textTransform: 'uppercase', letterSpacing: 1.5 }}>Danger Zone</Typography>
+                       </Box>
+                       <CardContent sx={{ p: 3 }}>
+                          <Typography variant="caption" sx={{ fontWeight: 800, color: 'text.secondary', display: 'block', mb: 2 }}>
+                             Foydalanuvchini o'chirish barcha unga bog'liq ma'lumotlarni (tahlillar, eslatmalar) butkul yo'q qiladi.
+                          </Typography>
+                          <Button 
+                            fullWidth variant="outlined" color="error" startIcon={<DeleteIcon />}
+                            onClick={() => { if (confirm("Butkul o'chirilsinmi?")) adminAPI.deleteUser(selectedUser._id).then(() => { setCurrentTab('users'); setSelectedUserId(null); loadUsers(); }); }}
+                            sx={{ fontWeight: 900 }}
+                          >
+                            Delete Account
+                          </Button>
+                       </CardContent>
+                    </Card>
+                 </Stack>
+              </Grid>
             </Grid>
-          </Grid>
+          </Box>
         )}
 
         {/* Settings Tab */}
