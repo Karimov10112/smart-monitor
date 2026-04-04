@@ -91,7 +91,13 @@ export default function CompleteProfilePage() {
   const handleChange = (key: string, value: string) => {
     setForm(prev => {
       const next = { ...prev, [key]: value };
-      if (key === 'region') next.district = '';
+      if (key === 'region') {
+        next.district = '';
+        next.mfy = '';
+      }
+      if (key === 'district') {
+        next.mfy = '';
+      }
       return next;
     });
   };
@@ -199,6 +205,7 @@ export default function CompleteProfilePage() {
                     value={form.region}
                     onChange={(_, val) => handleChange('region', val || '')}
                     renderInput={(params) => <TextField {...params} label={t.region} size="small" required />}
+                    openOnFocus
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 4 }}>
@@ -208,6 +215,7 @@ export default function CompleteProfilePage() {
                     onChange={(_, val) => handleChange('district', val || '')}
                     disabled={!form.region}
                     renderInput={(params) => <TextField {...params} label={t.districtCity} size="small" required />}
+                    openOnFocus
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 4 }}>
@@ -215,9 +223,19 @@ export default function CompleteProfilePage() {
                     freeSolo
                     options={form.district ? UZ_MAHALLAS[form.district] || [] : []}
                     value={form.mfy}
+                    onChange={(_, val) => handleChange('mfy', val || '')}
                     onInputChange={(_, val) => handleChange('mfy', val)}
                     disabled={!form.district}
-                    renderInput={(params) => <TextField {...params} label={t.mfy} size="small" required />}
+                    renderInput={(params) => (
+                      <TextField 
+                        {...params} 
+                        label={t.mfy} 
+                        size="small" 
+                        required 
+                        placeholder={form.district && !UZ_MAHALLAS[form.district] ? "Mahalla nomini yozing..." : "Tanlang yoki yozing..."}
+                      />
+                    )}
+                    openOnFocus
                   />
                 </Grid>
               </Grid>
