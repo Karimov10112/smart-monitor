@@ -265,27 +265,9 @@ export default function AdminPage() {
                 </Card>
               </Grid>
             ))}
-
-            <Grid size={{ xs: 12 }}>
-              <Card elevation={0}>
-                <Box sx={{ p: 2.5, px: 3, borderBottom: `1px solid ${theme.palette.divider}` }}>
-                  <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5 }}>User Activity (Last 7 Days)</Typography>
-                </Box>
-                <CardContent sx={{ p: 4 }}>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <AreaChart data={[{n:'Mon',v:20},{n:'Tue',v:45},{n:'Wed',v:35},{n:'Thu',v:70},{n:'Fri',v:55},{n:'Sat',v:90},{n:'Sun',v:85}]}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme.palette.divider} />
-                      <XAxis dataKey="n" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: theme.palette.text.secondary }} />
-                      <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: theme.palette.text.secondary }} />
-                      <Tooltip contentStyle={{ borderRadius: 4, border: `1px solid ${theme.palette.divider}`, boxShadow: 'none' }} labelStyle={{ fontWeight: 900, marginBottom: 8, fontSize: 11 }} />
-                      <Area type="monotone" dataKey="v" stroke={theme.palette.primary.main} strokeWidth={2.5} fill={alpha(theme.palette.primary.main, 0.05)} />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-            </Grid>
           </Grid>
         )}
+
 
         {/* Users Tab */}
         {currentTab === 'users' && !selectedUserId && (
