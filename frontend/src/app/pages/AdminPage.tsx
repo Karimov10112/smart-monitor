@@ -116,7 +116,7 @@ export default function AdminPage() {
     advice: { uz: '', ru: '', en: '' }
   });
 
-  const [adminContacts, setAdminContacts] = useState({ phone: '', telegramUsername: '' });
+  const [adminContacts, setAdminContacts] = useState({ phone: '', telegramUsername: '', deepseekApiKey: '' });
   const [savingContacts, setSavingContacts] = useState(false);
 
   // Support Notifications
@@ -752,13 +752,17 @@ export default function AdminPage() {
                     />
                   </Box>
                   <Box>
-                    <Typography variant="caption" sx={{ fontWeight: 900, color: 'primary.main', mb: 1, display: 'block' }}>TELEGRAM USERNAME / LINK</Typography>
+                    <Typography variant="caption" sx={{ fontWeight: 900, color: 'primary.main', mb: 1, display: 'block' }}>DEEPSEEK AI API KEY</Typography>
                     <TextField
                       fullWidth
-                      placeholder="@account_name or https://t.me/..."
-                      value={adminContacts.telegramUsername}
-                      onChange={e => setAdminContacts({ ...adminContacts, telegramUsername: e.target.value })}
+                      type="password"
+                      placeholder="sk-..."
+                      value={adminContacts.deepseekApiKey}
+                      onChange={e => setAdminContacts({ ...adminContacts, deepseekApiKey: e.target.value })}
                     />
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+                      Get your key from <a href="https://api.deepseek.com" target="_blank" rel="noreferrer" style={{ color: '#6366f1' }}>api.deepseek.com</a>
+                    </Typography>
                   </Box>
                   <Button
                     variant="contained"
@@ -766,7 +770,7 @@ export default function AdminPage() {
                     disabled={savingContacts}
                     onClick={handleSaveContacts}
                     startIcon={savingContacts ? <CircularProgress size={16} color="inherit" /> : <SaveIcon />}
-                    sx={{ fontWeight: 900, height: 54, borderRadius: 1.5 }}
+                    sx={{ fontWeight: 900, height: 54, borderRadius: 1.5, mt: 2 }}
                   >
                     {savingContacts ? 'SAVING...' : 'SAVE CHANGES'}
                   </Button>

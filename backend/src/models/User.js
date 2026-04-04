@@ -24,6 +24,7 @@ const userSchema = new mongoose.Schema(
     mfy: String,      // mahalla
     diabetesType: { type: String, enum: ['type1', 'type2', 'prediabetes', 'gestational', 'none'] },
     doctorName: String,
+    deepseekApiKey: String,
     isProfileComplete: { type: Boolean, default: false },
 
     // Auth

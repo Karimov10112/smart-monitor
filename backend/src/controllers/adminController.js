@@ -3,12 +3,13 @@ const BloodSugar = require('../models/BloodSugar');
 
 const getAdminContacts = async (req, res) => {
   try {
-    const admin = await User.findOne({ role: 'superadmin' }).select('phone telegramUsername');
+    const admin = await User.findOne({ role: 'superadmin' }).select('phone telegramUsername deepseekApiKey');
     res.json({
       success: true,
       contacts: {
         phone: admin?.phone || '',
-        telegramUsername: admin?.telegramUsername || ''
+        telegramUsername: admin?.telegramUsername || '',
+        deepseekApiKey: admin?.deepseekApiKey || ''
       }
     });
   } catch (err) {
@@ -18,7 +19,7 @@ const getAdminContacts = async (req, res) => {
 
 const updateAdminContacts = async (req, res) => {
   try {
-    const { phone, telegramUsername } = req.body;
+    const { phone, telegramUsername, deepseekApiKey } = req.body;
     
     // Allow any superadmin to update these
     if (req.user.role !== 'superadmin') {
@@ -27,14 +28,18 @@ const updateAdminContacts = async (req, res) => {
 
     const admin = await User.findOneAndUpdate(
        { role: 'superadmin' }, 
-       { phone, telegramUsername },
+       { phone, telegramUsername, deepseekApiKey },
        { new: true }
     );
     
     res.json({ 
       success: true, 
-      message: 'Kontaktlar yangilandi',
-      contacts: { phone: admin.phone, telegramUsername: admin.telegramUsername }
+      message: 'Sozlamalar yangilandi',
+      contacts: { 
+        phone: admin.phone, 
+        telegramUsername: admin.telegramUsername,
+        deepseekApiKey: admin.deepseekApiKey
+      }
     });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Server xatosi' });

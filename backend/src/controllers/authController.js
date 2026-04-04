@@ -285,6 +285,7 @@ const sendMessageToAdmin = async (req, res) => {
     const { text } = req.body;
     if (!text) return res.status(400).json({ success: false, message: 'Xabar matni bo\'sh' });
 
+    // 1. Save User's Message
     const user = await User.findByIdAndUpdate(
       req.user._id,
       { $push: { supportMessages: { text, sender: 'user', isReadByAdmin: false } } },
@@ -293,7 +294,7 @@ const sendMessageToAdmin = async (req, res) => {
 
     if (!user) return res.status(404).json({ success: false, message: 'Foydalanuvchi topilmadi' });
 
-    // Real-time: Emit to admins
+    // 2. Real-time: Emit user's message to admins
     const io = req.app.get('io');
     if (io) {
       io.emit('admin-new-message', { 
@@ -309,10 +310,46 @@ const sendMessageToAdmin = async (req, res) => {
       });
     }
 
+    // 3. Respond to User HTTP Request (Non-blocking AI part)
     res.json({ success: true, message: 'Xabar yuborildi' });
+
+    // 4. Trigger AI Response in the background
+    const { getAIResponse } = require('../services/aiService');
+    const aiResponseText = await getAIResponse({
+      userId: user._id,
+      role: user.role,
+      message: text,
+      language: 'uz' // Defaulting to uz for now, can be dynamic
+    });
+
+    // 5. Save AI's response
+    const aiMessage = {
+      text: aiResponseText,
+      sender: 'admin',
+      isReadByAdmin: true,
+      isReadByUser: false,
+      createdAt: new Date()
+    };
+
+    const updatedUser = await User.findByIdAndUpdate(
+      user._id,
+      { $push: { supportMessages: aiMessage } },
+      { new: true }
+    );
+
+    // 6. Real-time: Emit AI message to user and admins
+    if (io) {
+      // To User
+      io.to(user._id.toString()).emit('new-message', aiMessage);
+      // To sync Admins
+      io.emit('admin-message-all', { ...aiMessage, userId: user._id });
+    }
+
   } catch (err) {
     console.error('Send message error:', err);
-    res.status(500).json({ success: false, message: 'Server xatosi' });
+    if (!res.headersSent) {
+      res.status(500).json({ success: false, message: 'Server xatosi' });
+    }
   }
 };
 
