@@ -31,7 +31,9 @@ import {
   alpha,
   useMediaQuery,
   CircularProgress,
-  Link
+  Link,
+  Menu,
+  MenuItem
 } from '@mui/material';
 
 // MUI Icons
@@ -88,6 +90,8 @@ function App() {
   const [isReminderModalOpen, setIsReminderModalOpen] = useState(false);
   const [reminders, setReminders] = useState<any[]>([]);
   const [adminContacts, setAdminContacts] = useState({ phone: '', telegramUsername: '' });
+  const [languageAnchorEl, setLanguageAnchorEl] = useState<null | HTMLElement>(null);
+  const [themeAnchorEl, setThemeAnchorEl] = useState<null | HTMLElement>(null);
   const location = useLocation();
   const [searchParams] = useSearchParams();
 
@@ -154,6 +158,25 @@ function App() {
   const openReminders = () => {
     setIsSidebarOpen(false);
     setIsReminderModalOpen(true);
+  };
+
+  const handleLanguageClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setLanguageAnchorEl(event.currentTarget);
+  };
+  const handleLanguageClose = (lang?: string) => {
+    if (lang) setLanguage(lang as any);
+    setLanguageAnchorEl(null);
+  };
+
+  const handleThemeClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setThemeAnchorEl(event.currentTarget);
+  };
+  const handleThemeClose = (mode?: 'light' | 'dark') => {
+    if (mode) {
+      if (mode === 'light' && isDarkMode) toggleDarkMode();
+      if (mode === 'dark' && !isDarkMode) toggleDarkMode();
+    }
+    setThemeAnchorEl(null);
   };
 
   if (loading) {
@@ -267,10 +290,38 @@ function App() {
       <Box sx={{ mt: 'auto', pt: 3 }}>
         <Stack spacing={1}>
           <MuiButton fullWidth startIcon={<ManageAccountsIcon />} onClick={() => navigate('/complete-profile')} sx={{ borderRadius: 1.5, justifyContent: 'start', py: 1, color: 'text.secondary', fontWeight: 700 }}>{t.editProfile}</MuiButton>
-          <MuiButton fullWidth startIcon={<LanguageIcon />} onClick={() => setLanguage(language === 'uz' ? 'ru' : language === 'ru' ? 'en' : 'uz')} sx={{ borderRadius: 1.5, justifyContent: 'start', py: 1, color: 'text.secondary', fontWeight: 700 }}>UZ / RU / EN ({language.toUpperCase()})</MuiButton>
-          <MuiButton fullWidth startIcon={isDarkMode ? <LightModeIcon /> : <DarkModeIcon />} onClick={toggleDarkMode} sx={{ borderRadius: 1.5, justifyContent: 'start', py: 1, color: 'text.secondary', fontWeight: 700 }}>
-            {isDarkMode ? t.lightMode : t.darkMode}
+          
+          <MuiButton 
+            fullWidth 
+            startIcon={<LanguageIcon />} 
+            onClick={handleLanguageClick}
+            sx={{ borderRadius: 1.5, justifyContent: 'start', py: 1, color: 'text.secondary', fontWeight: 700 }}
+          >
+            {language.toUpperCase()}
           </MuiButton>
+          <Menu anchorEl={languageAnchorEl} open={Boolean(languageAnchorEl)} onClose={() => handleLanguageClose()} PaperProps={{ sx: { borderRadius: 2, minWidth: 150, mt: 1, boxShadow: '0 4px 20px rgba(0,0,0,0.1)' } }}>
+             <MenuItem onClick={() => handleLanguageClose('uz')} selected={language === 'uz'} sx={{ fontWeight: 700, fontSize: 13 }}>🇺🇿 O'zbekcha</MenuItem>
+             <MenuItem onClick={() => handleLanguageClose('ru')} selected={language === 'ru'} sx={{ fontWeight: 700, fontSize: 13 }}>🇷🇺 Русский</MenuItem>
+             <MenuItem onClick={() => handleLanguageClose('en')} selected={language === 'en'} sx={{ fontWeight: 700, fontSize: 13 }}>🇺🇸 English</MenuItem>
+          </Menu>
+
+          <MuiButton 
+            fullWidth 
+            startIcon={isDarkMode ? <LightModeIcon /> : <DarkModeIcon />} 
+            onClick={handleThemeClick}
+            sx={{ borderRadius: 1.5, justifyContent: 'start', py: 1, color: 'text.secondary', fontWeight: 700 }}
+          >
+            {isDarkMode ? t.darkMode : t.lightMode}
+          </MuiButton>
+          <Menu 
+            anchorEl={themeAnchorEl} 
+            open={Boolean(themeAnchorEl)} 
+            onClose={() => handleThemeClose()} 
+            PaperProps={{ sx: { borderRadius: 2, minWidth: 150, mt: 1, boxShadow: '0 4px 20px rgba(0,0,0,0.1)' } }}
+          >
+             <MenuItem onClick={() => handleThemeClose('light')} selected={!isDarkMode} sx={{ fontWeight: 700, fontSize: 13 }}>☀️ {t.lightMode}</MenuItem>
+             <MenuItem onClick={() => handleThemeClose('dark')} selected={isDarkMode} sx={{ fontWeight: 700, fontSize: 13 }}>🌙 {t.darkMode}</MenuItem>
+          </Menu>
           
           {(adminContacts.phone || adminContacts.telegramUsername) && (
             <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1.5, bgcolor: alpha(theme.palette.primary.main, 0.02), borderStyle: 'dashed' }}>

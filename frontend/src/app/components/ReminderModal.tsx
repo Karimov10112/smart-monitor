@@ -29,7 +29,7 @@ export const ReminderModal: React.FC<ReminderModalProps> = ({ isOpen, onClose, l
     setLoading(true);
     try {
       await reminderAPI.create(form);
-      toast.success(language === 'uz' ? 'Eslatma saqlandi' : 'Напоминание сохранено');
+      toast.success(t.reminderSaved || 'Reminder saved');
       onRefresh();
       onClose();
       setForm({ type: 'medication', name: '', dose: '', time: '', repeatDaily: true, notes: '' });
@@ -94,11 +94,11 @@ export const ReminderModal: React.FC<ReminderModalProps> = ({ isOpen, onClose, l
               <div className="grid grid-cols-1 gap-6">
                  <div className="space-y-2">
                     <label className={labelClass}>{t.reminderName}</label>
-                    <input value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder="masalan, Metformin" required className={inputClass} />
+                    <input value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder={t.reminderNamePlaceholder} required className={inputClass} />
                  </div>
                  <div className="space-y-2">
                     <label className={labelClass}>{t.dose}</label>
-                    <input value={form.dose} onChange={e => setForm({...form, dose: e.target.value})} placeholder="masalan, 500mg" required className={inputClass} />
+                    <input value={form.dose} onChange={e => setForm({...form, dose: e.target.value})} placeholder={t.dosePlaceholder} required className={inputClass} />
                  </div>
               </div>
 
@@ -109,12 +109,12 @@ export const ReminderModal: React.FC<ReminderModalProps> = ({ isOpen, onClose, l
                      <div className="relative">
                         <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                        <input type="time" value={form.time} onChange={e => setForm({...form, time: e.target.value})} required className={inputClass + " pl-12 uppercase"} />
-                    </div>
+                     </div>
                  </div>
                  <div className="bg-white dark:bg-slate-900/50 p-4 rounded-2xl flex items-center justify-between border border-slate-200 dark:border-slate-800 shadow-sm">
                      <div>
                         <p className="font-black text-sm tracking-tight text-slate-800 dark:text-slate-200">{t.dailyRepeat}</p>
-                        <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mt-1">Every single day at the same time</p>
+                        <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mt-1">{t.dailyRepeatHint}</p>
                      </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input type="checkbox" checked={form.repeatDaily} onChange={e => setForm({...form, repeatDaily: e.target.checked})} className="sr-only peer" />
@@ -126,7 +126,7 @@ export const ReminderModal: React.FC<ReminderModalProps> = ({ isOpen, onClose, l
               {/* Notes */}
               <div className="space-y-2">
                  <label className={labelClass}>{t.reminderNotes}</label>
-                 <textarea value={form.notes} onChange={e => setForm({...form, notes: e.target.value})} placeholder="Qo'shimcha izohlar..." className="w-full h-20 p-4 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-2xl font-bold resize-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500/50 text-sm text-slate-800 dark:text-slate-200" />
+                 <textarea value={form.notes} onChange={e => setForm({...form, notes: e.target.value})} placeholder={t.reminderNotesHint} className="w-full h-20 p-4 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-2xl font-bold resize-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500/50 text-sm text-slate-800 dark:text-slate-200" />
               </div>
 
               {/* Actions */}
