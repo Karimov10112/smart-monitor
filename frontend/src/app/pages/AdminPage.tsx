@@ -292,7 +292,7 @@ export default function AdminPage() {
           <Box>
             <Stack direction="row" spacing={2} sx={{ mb: 4 }}>
               <TextField
-                placeholder="Search users..."
+                placeholder={t.searchUsers}
                 size="small"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
@@ -300,16 +300,16 @@ export default function AdminPage() {
                 InputProps={{ startAdornment: <SearchIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} /> }}
               />
               <FormControl size="small" sx={{ minWidth: 150 }}>
-                <InputLabel>Role</InputLabel>
-                <Select value={role} label="Role" onChange={e => { setRole(e.target.value); loadUsers(search, e.target.value); }}>
-                  <MenuItem value="">All</MenuItem>
+                <InputLabel>{t.role}</InputLabel>
+                <Select value={role} label={t.role} onChange={e => { setRole(e.target.value); loadUsers(search, e.target.value); }}>
+                  <MenuItem value="">{t.allStatuses || 'All'}</MenuItem>
                   <MenuItem value="user">User</MenuItem>
                   <MenuItem value="doctor">Doctor</MenuItem>
                   <MenuItem value="superadmin">SuperAdmin</MenuItem>
                 </Select>
               </FormControl>
-              <Button variant="contained" onClick={() => loadUsers(search, role)} sx={{ fontWeight: 800 }}>Apply</Button>
-              <Button variant="outlined" onClick={() => { setSearch(''); setRole(''); loadUsers('', ''); }} sx={{ fontWeight: 800 }}>Refresh</Button>
+              <Button variant="contained" onClick={() => loadUsers(search, role)} sx={{ fontWeight: 800 }}>{t.apply}</Button>
+              <Button variant="outlined" onClick={() => { setSearch(''); setRole(''); loadUsers('', ''); }} sx={{ fontWeight: 800 }}>{t.refresh}</Button>
             </Stack>
 
             <TableContainer component={Paper} elevation={0} sx={{ border: `1px solid ${theme.palette.divider}`, maxHeight: 600, overflowY: 'auto' }}>
@@ -341,12 +341,13 @@ export default function AdminPage() {
                           </Box>
                         </Stack>
                       </TableCell>
+                      <TableCell sx={{ fontWeight: 700, fontSize: 12, textTransform: 'uppercase' }}>{u.role}</TableCell>
                       <TableCell><Typography variant="caption" sx={{ fontWeight: 800 }}>{u.region || '—'}</Typography></TableCell>
                       <TableCell>
                         <Chip
-                          label={u.role}
+                          label={u.isBanned ? (t.bannedUsers || 'Banned') : (t.activeToday || 'Active')}
                           size="small"
-                          color={u.role === 'superadmin' ? 'error' : 'default'}
+                          color={u.isBanned ? 'error' : 'success'}
                           sx={{ fontWeight: 900, fontSize: 9, borderRadius: 1 }}
                         />
                       </TableCell>
@@ -374,7 +375,7 @@ export default function AdminPage() {
         {currentTab === 'products' && (
           <Box>
             <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 4 }}>
-              <Typography variant="h6" sx={{ fontWeight: 900 }}>Product Catalog ({products.length})</Typography>
+              <Typography variant="h6" sx={{ fontWeight: 900 }}>{t.productCatalog} ({products.length})</Typography>
               <Button
                 variant="contained"
                 startIcon={<AddIcon />}
@@ -385,7 +386,7 @@ export default function AdminPage() {
                 }}
                 sx={{ fontWeight: 800 }}
               >
-                Add Product
+                {t.addProduct}
               </Button>
             </Stack>
             <Grid container spacing={2}>
@@ -498,21 +499,21 @@ export default function AdminPage() {
                        <Grid container spacing={4}>
                           {/* Medical Section */}
                           <Grid size={{ xs: 12, md: 4 }}>
-                             <Typography variant="overline" sx={{ fontWeight: 900, color: 'primary.main', display: 'block', mb: 2, letterSpacing: 1 }}>Medical Status</Typography>
+                             <Typography variant="overline" sx={{ fontWeight: 900, color: 'primary.main', display: 'block', mb: 2, letterSpacing: 1 }}>{t.medicalStatus}</Typography>
                              <Stack spacing={2.5}>
                                 <Box>
-                                   <Typography variant="caption" sx={{ display: 'block', fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', fontSize: 9 }}>Diabetes Type</Typography>
+                                   <Typography variant="caption" sx={{ display: 'block', fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', fontSize: 9 }}>{t.diabetesTypeLabel}</Typography>
                                    <Typography variant="body2" sx={{ fontWeight: 900, color: 'primary.main' }}>{selectedUser.diabetesType?.toUpperCase() || '—'}</Typography>
                                 </Box>
                                 <Box>
-                                   <Typography variant="caption" sx={{ display: 'block', fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', fontSize: 9 }}>Gender & Age</Typography>
+                                   <Typography variant="caption" sx={{ display: 'block', fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', fontSize: 9 }}>{t.genderAndAge}</Typography>
                                    <Typography variant="body2" sx={{ fontWeight: 900 }}>
-                                      {selectedUser.gender === 'male' ? 'Erkak' : selectedUser.gender === 'female' ? 'Ayol' : '—'}
-                                      {selectedUser.dateOfBirth && ` • ${new Date().getFullYear() - new Date(selectedUser.dateOfBirth).getFullYear()} yosh`}
+                                      {selectedUser.gender === 'male' ? (language === 'uz' ? 'Erkak' : language === 'ru' ? 'Мужчина' : 'Male') : selectedUser.gender === 'female' ? (language === 'uz' ? 'Ayol' : language === 'ru' ? 'Женщина' : 'Female') : '—'}
+                                      {selectedUser.dateOfBirth && ` • ${new Date().getFullYear() - new Date(selectedUser.dateOfBirth).getFullYear()} ${language === 'uz' ? 'yosh' : language === 'ru' ? 'лет' : 'years'}`}
                                    </Typography>
                                 </Box>
                                 <Box>
-                                   <Typography variant="caption" sx={{ display: 'block', fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', fontSize: 9 }}>Doctor Name</Typography>
+                                   <Typography variant="caption" sx={{ display: 'block', fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', fontSize: 9 }}>{t.doctorNameLabel}</Typography>
                                    <Typography variant="body2" sx={{ fontWeight: 900 }}>{selectedUser.doctorName || '—'}</Typography>
                                 </Box>
                              </Stack>
@@ -520,18 +521,18 @@ export default function AdminPage() {
 
                           {/* Location Section */}
                           <Grid size={{ xs: 12, md: 4 }}>
-                             <Typography variant="overline" sx={{ fontWeight: 900, color: 'primary.main', display: 'block', mb: 2, letterSpacing: 1 }}>Location Details</Typography>
+                             <Typography variant="overline" sx={{ fontWeight: 900, color: 'primary.main', display: 'block', mb: 2, letterSpacing: 1 }}>{t.locationDetails}</Typography>
                              <Stack spacing={2.5}>
                                 <Box>
-                                   <Typography variant="caption" sx={{ display: 'block', fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', fontSize: 9 }}>Viloyat / Region</Typography>
+                                   <Typography variant="caption" sx={{ display: 'block', fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', fontSize: 9 }}>{t.regionLabel}</Typography>
                                    <Typography variant="body2" sx={{ fontWeight: 900 }}>{selectedUser.region || '—'}</Typography>
                                 </Box>
                                 <Box>
-                                   <Typography variant="caption" sx={{ display: 'block', fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', fontSize: 9 }}>Tuman / District</Typography>
+                                   <Typography variant="caption" sx={{ display: 'block', fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', fontSize: 9 }}>{t.districtLabel}</Typography>
                                    <Typography variant="body2" sx={{ fontWeight: 900 }}>{selectedUser.district || '—'}</Typography>
                                 </Box>
                                 <Box>
-                                   <Typography variant="caption" sx={{ display: 'block', fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', fontSize: 9 }}>Mahalla / MFY</Typography>
+                                   <Typography variant="caption" sx={{ display: 'block', fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', fontSize: 9 }}>{t.mfyLabel}</Typography>
                                    <Typography variant="body2" sx={{ fontWeight: 900 }}>{selectedUser.mfy || '—'}</Typography>
                                 </Box>
                              </Stack>
@@ -539,14 +540,14 @@ export default function AdminPage() {
 
                           {/* Contact Section */}
                           <Grid size={{ xs: 12, md: 4 }}>
-                             <Typography variant="overline" sx={{ fontWeight: 900, color: 'primary.main', display: 'block', mb: 2, letterSpacing: 1 }}>Contact Info</Typography>
+                             <Typography variant="overline" sx={{ fontWeight: 900, color: 'primary.main', display: 'block', mb: 2, letterSpacing: 1 }}>{t.contactInfo}</Typography>
                              <Stack spacing={2.5}>
                                 <Box>
-                                   <Typography variant="caption" sx={{ display: 'block', fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', fontSize: 9 }}>Phone Number</Typography>
+                                   <Typography variant="caption" sx={{ display: 'block', fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', fontSize: 9 }}>{t.phoneNumberLabel}</Typography>
                                    <Typography variant="body2" sx={{ fontWeight: 900, color: 'primary.main' }}>{selectedUser.phone || '—'}</Typography>
                                 </Box>
                                 <Box>
-                                   <Typography variant="caption" sx={{ display: 'block', fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', fontSize: 9 }}>Telegram</Typography>
+                                   <Typography variant="caption" sx={{ display: 'block', fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', fontSize: 9 }}>{t.telegramLabel}</Typography>
                                    <Typography variant="body2" sx={{ fontWeight: 900, color: 'info.main' }}>
                                       {selectedUser.telegramUsername ? (
                                         <a href={selectedUser.telegramUsername.startsWith('@') ? `https://t.me/${selectedUser.telegramUsername.substring(1)}` : selectedUser.telegramUsername} target="_blank" rel="noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>
@@ -564,13 +565,13 @@ export default function AdminPage() {
                  {/* Glucose Analytics Section */}
                  <Card elevation={0} sx={{ border: `1px solid ${theme.palette.divider}` }}>
                     <Box sx={{ p: 2, px: 3, borderBottom: `1px solid ${theme.palette.divider}` }}>
-                      <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5 }}>Glucose Analytics</Typography>
+                      <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5 }}>{t.glucoseAnalytics}</Typography>
                     </Box>
                     <CardContent sx={{ p: 4 }}>
                       {selectedUserRecords.length > 0 ? (
                         <Grid container spacing={4}>
                           <Grid size={{ xs: 12, lg: 6 }}>
-                             <Typography variant="overline" sx={{ fontWeight: 800, color: 'primary.main', display: 'block', mb: 2 }}>Och qoringa</Typography>
+                             <Typography variant="overline" sx={{ fontWeight: 800, color: 'primary.main', display: 'block', mb: 2 }}>{t.fastingChart}</Typography>
                              <Box sx={{ height: 260, width: '100%' }}>
                                 <ResponsiveContainer width="100%" height={260}>
                                   <AreaChart data={selectedUserRecords.map(r => ({ date: format(new Date(r.date), 'dd/MM HH:mm'), fasting: r.fastingLevel ?? (r.category === 'fasting' ? r.level : 0) ?? 0 })).reverse()}>
@@ -584,7 +585,7 @@ export default function AdminPage() {
                              </Box>
                           </Grid>
                           <Grid size={{ xs: 12, lg: 6 }}>
-                             <Typography variant="overline" sx={{ fontWeight: 800, color: 'secondary.main', display: 'block', mb: 2 }}>Ovqatdan keyin</Typography>
+                             <Typography variant="overline" sx={{ fontWeight: 800, color: 'secondary.main', display: 'block', mb: 2 }}>{t.postMealChart}</Typography>
                              <Box sx={{ height: 260, width: '100%' }}>
                                 <ResponsiveContainer width="100%" height={260}>
                                   <AreaChart data={selectedUserRecords.filter(r => r.postMealLevel != null || (r.category === 'post-meal' && r.level != null)).map(r => ({ date: format(new Date(r.date), 'dd/MM HH:mm'), postMeal: r.postMealLevel ?? (r.category === 'post-meal' ? r.level : null) ?? null })).reverse()}>
@@ -601,7 +602,7 @@ export default function AdminPage() {
                       ) : (
                         <Box sx={{ py: 6, textAlign: 'center', opacity: 0.3 }}>
                           <TimelineIcon sx={{ fontSize: 40, mb: 1 }} />
-                          <Typography variant="caption" sx={{ display: 'block', fontWeight: 800 }}>No record data</Typography>
+                          <Typography variant="caption" sx={{ display: 'block', fontWeight: 800 }}>{t.noRecords}</Typography>
                         </Box>
                       )}
                     </CardContent>
@@ -614,12 +615,12 @@ export default function AdminPage() {
                     {/* Admin Notes */}
                     <Card elevation={0} sx={{ border: `1px solid ${theme.palette.divider}` }}>
                        <Box sx={{ p: 2, px: 3, borderBottom: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.warning.main, 0.02) }}>
-                          <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5 }}>Administrative Notes</Typography>
+                          <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5 }}>{t.administrativeNotes}</Typography>
                        </Box>
                        <CardContent sx={{ p: 3 }}>
                           <TextField 
                             fullWidth multiline rows={6} 
-                            placeholder="Foydalanuvchi haqida izohlar qoldiring..." 
+                            placeholder={t.notesPlaceholder} 
                             value={selectedUser.adminNotes || ''} 
                             onChange={e => setSelectedUser({...selectedUser, adminNotes: e.target.value})}
                             sx={{ mb: 2, '& .MuiOutlinedInput-root': { fontWeight: 600, fontSize: 13 } }}
@@ -630,7 +631,7 @@ export default function AdminPage() {
                             onClick={() => handleSaveAdminNotes(selectedUser._id, selectedUser.adminNotes)}
                             sx={{ fontWeight: 900 }}
                           >
-                            Save Notes
+                            {t.saveNotes}
                           </Button>
                        </CardContent>
                     </Card>
@@ -638,18 +639,16 @@ export default function AdminPage() {
                     {/* Danger Zone */}
                     <Card elevation={0} sx={{ border: `1px solid ${alpha(theme.palette.error.main, 0.2)}`, bgcolor: alpha(theme.palette.error.main, 0.01) }}>
                        <Box sx={{ p: 2, px: 3, borderBottom: `1px solid ${alpha(theme.palette.error.main, 0.1)}` }}>
-                          <Typography variant="caption" sx={{ fontWeight: 900, color: 'error.main', textTransform: 'uppercase', letterSpacing: 1.5 }}>Danger Zone</Typography>
+                          <Typography variant="caption" sx={{ fontWeight: 900, color: 'error.main', textTransform: 'uppercase', letterSpacing: 1.5 }}>{t.dangerZone}</Typography>
                        </Box>
                        <CardContent sx={{ p: 3 }}>
-                          <Typography variant="caption" sx={{ fontWeight: 800, color: 'text.secondary', display: 'block', mb: 2 }}>
-                             Foydalanuvchini o'chirish barcha unga bog'liq ma'lumotlarni (tahlillar, eslatmalar) butkul yo'q qiladi.
-                          </Typography>
+                          <Typography variant="caption" sx={{ fontWeight: 800, color: 'text.secondary', display: 'block', mb: 2 }}>{t.deleteWarning}</Typography>
                           <Button 
                             fullWidth variant="outlined" color="error" startIcon={<DeleteIcon />}
-                            onClick={() => { if (confirm("Butkul o'chirilsinmi?")) adminAPI.deleteUser(selectedUser._id).then(() => { setCurrentTab('users'); setSelectedUserId(null); loadUsers(); }); }}
+                            onClick={() => { if (confirm(t.deleteWarning)) adminAPI.deleteUser(selectedUser._id).then(() => { setCurrentTab('users'); setSelectedUserId(null); loadUsers(); }); }}
                             sx={{ fontWeight: 900 }}
                           >
-                            Delete Account
+                            {t.deleteAccountLabel}
                           </Button>
                        </CardContent>
                     </Card>
@@ -724,49 +723,49 @@ export default function AdminPage() {
               {/* Left Column - Basic Info */}
               <Grid size={{ xs: 12, md: 6 }}>
                 <Stack spacing={2}>
-                  <TextField size="small" label="Name (UZ)" value={productForm.name.uz} onChange={e => setProductForm({ ...productForm, name: { ...productForm.name, uz: e.target.value } })} required />
-                  <TextField size="small" label="Name (RU)" value={productForm.name.ru} onChange={e => setProductForm({ ...productForm, name: { ...productForm.name, ru: e.target.value } })} required />
-                  <TextField size="small" label="Name (EN)" value={productForm.name.en} onChange={e => setProductForm({ ...productForm, name: { ...productForm.name, en: e.target.value } })} />
+                  <TextField size="small" label={`${t.firstName} (UZ)`} value={productForm.name.uz} onChange={e => setProductForm({ ...productForm, name: { ...productForm.name, uz: e.target.value } })} required />
+                  <TextField size="small" label={`${t.firstName} (RU)`} value={productForm.name.ru} onChange={e => setProductForm({ ...productForm, name: { ...productForm.name, ru: e.target.value } })} required />
+                  <TextField size="small" label={`${t.firstName} (EN)`} value={productForm.name.en} onChange={e => setProductForm({ ...productForm, name: { ...productForm.name, en: e.target.value } })} />
                   <TextField size="small" label="Emoji" value={productForm.emoji} onChange={e => setProductForm({ ...productForm, emoji: e.target.value })} sx={{ width: 100 }} />
                   <FormControl size="small" fullWidth>
-                    <InputLabel>Category</InputLabel>
-                    <Select value={productForm.category} label="Category" onChange={e => setProductForm({ ...productForm, category: e.target.value })}>
-                      {categories.map(c => <MenuItem key={c.id} value={c.id}>{c.emoji} {c.id}</MenuItem>)}
+                    <InputLabel>{t.category}</InputLabel>
+                    <Select value={productForm.category} label={t.category} onChange={e => setProductForm({ ...productForm, category: e.target.value })}>
+                      {categories.map(c => <MenuItem key={c.id} value={c.id}>{c.emoji} {t[c.id] || c.id}</MenuItem>)}
                     </Select>
                   </FormControl>
-                  <TextField size="small" multiline rows={3} label="Advice (UZ)" value={productForm.advice.uz} onChange={e => setProductForm({ ...productForm, advice: { ...productForm.advice, uz: e.target.value } })} />
-                  <TextField size="small" multiline rows={3} label="Advice (RU)" value={productForm.advice.ru} onChange={e => setProductForm({ ...productForm, advice: { ...productForm.advice, ru: e.target.value } })} />
+                  <TextField size="small" multiline rows={3} label={`${t.advice} (UZ)`} value={productForm.advice.uz} onChange={e => setProductForm({ ...productForm, advice: { ...productForm.advice, uz: e.target.value } })} />
+                  <TextField size="small" multiline rows={3} label={`${t.advice} (RU)`} value={productForm.advice.ru} onChange={e => setProductForm({ ...productForm, advice: { ...productForm.advice, ru: e.target.value } })} />
                 </Stack>
               </Grid>
 
               {/* Right Column - Nutrition */}
               <Grid size={{ xs: 12, md: 6 }}>
                 <Stack spacing={2}>
-                  <Typography variant="caption" sx={{ fontWeight: 900, color: 'primary.main', textTransform: 'uppercase' }}>Nutritional Data</Typography>
+                  <Typography variant="caption" sx={{ fontWeight: 900, color: 'primary.main', textTransform: 'uppercase' }}>{t.nutritionalData}</Typography>
                   <Grid container spacing={2}>
                     <Grid size={{ xs: 6 }}>
-                      <TextField fullWidth size="small" type="number" label="GI Index" value={productForm.gi} onChange={e => setProductForm({ ...productForm, gi: Number(e.target.value) })} />
+                      <TextField fullWidth size="small" type="number" label={t.giIndex} value={productForm.gi} onChange={e => setProductForm({ ...productForm, gi: Number(e.target.value) })} />
                     </Grid>
                     <Grid size={{ xs: 6 }}>
-                      <TextField fullWidth size="small" type="number" label="GL Load" value={productForm.gl} onChange={e => setProductForm({ ...productForm, gl: Number(e.target.value) })} />
+                      <TextField fullWidth size="small" type="number" label={t.glLoad} value={productForm.gl} onChange={e => setProductForm({ ...productForm, gl: Number(e.target.value) })} />
                     </Grid>
                     <Grid size={{ xs: 6 }}>
-                      <TextField fullWidth size="small" type="number" label="Calories (kcal)" value={productForm.calories} onChange={e => setProductForm({ ...productForm, calories: Number(e.target.value) })} />
+                      <TextField fullWidth size="small" type="number" label={t.caloriesLabel} value={productForm.calories} onChange={e => setProductForm({ ...productForm, calories: Number(e.target.value) })} />
                     </Grid>
                     <Grid size={{ xs: 6 }}>
-                      <TextField fullWidth size="small" type="number" label="Carbs (g)" value={productForm.carbs} onChange={e => setProductForm({ ...productForm, carbs: Number(e.target.value) })} />
+                      <TextField fullWidth size="small" type="number" label={t.carbsLabel} value={productForm.carbs} onChange={e => setProductForm({ ...productForm, carbs: Number(e.target.value) })} />
                     </Grid>
                     <Grid size={{ xs: 6 }}>
-                      <TextField fullWidth size="small" type="number" label="Protein (g)" value={productForm.protein} onChange={e => setProductForm({ ...productForm, protein: Number(e.target.value) })} />
+                      <TextField fullWidth size="small" type="number" label={t.proteinLabel} value={productForm.protein} onChange={e => setProductForm({ ...productForm, protein: Number(e.target.value) })} />
                     </Grid>
                     <Grid size={{ xs: 6 }}>
-                      <TextField fullWidth size="small" type="number" label="Fats (g)" value={productForm.fats} onChange={e => setProductForm({ ...productForm, fats: Number(e.target.value) })} />
+                      <TextField fullWidth size="small" type="number" label={t.fatsLabel} value={productForm.fats} onChange={e => setProductForm({ ...productForm, fats: Number(e.target.value) })} />
                     </Grid>
                     <Grid size={{ xs: 6 }}>
-                      <TextField fullWidth size="small" type="number" label="Sugar (g)" value={productForm.sugar} onChange={e => setProductForm({ ...productForm, sugar: Number(e.target.value) })} />
+                      <TextField fullWidth size="small" type="number" label={t.sugarLabel} value={productForm.sugar} onChange={e => setProductForm({ ...productForm, sugar: Number(e.target.value) })} />
                     </Grid>
                     <Grid size={{ xs: 6 }}>
-                      <TextField fullWidth size="small" type="number" label="Fiber (g)" value={productForm.fiber} onChange={e => setProductForm({ ...productForm, fiber: Number(e.target.value) })} />
+                      <TextField fullWidth size="small" type="number" label={t.fiberLabel} value={productForm.fiber} onChange={e => setProductForm({ ...productForm, fiber: Number(e.target.value) })} />
                     </Grid>
                   </Grid>
                 </Stack>
@@ -774,8 +773,8 @@ export default function AdminPage() {
             </Grid>
           </DialogContent>
           <DialogActions sx={{ p: 3, borderTop: `1px solid ${theme.palette.divider}` }}>
-            <Button onClick={() => setIsProductModalOpen(false)} sx={{ fontWeight: 800 }}>Cancel</Button>
-            <Button type="submit" variant="contained" sx={{ fontWeight: 800, px: 4 }}>Save Product</Button>
+            <Button onClick={() => setIsProductModalOpen(false)} sx={{ fontWeight: 800 }}>{t.reminderCancel}</Button>
+            <Button type="submit" variant="contained" sx={{ fontWeight: 800, px: 4 }}>{t.save}</Button>
           </DialogActions>
         </form>
       </Dialog>

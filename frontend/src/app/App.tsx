@@ -199,7 +199,7 @@ function App() {
             {user?.firstName}
           </Typography>
           <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
-            {user?.role === 'superadmin' ? 'Administrator' : t.user}
+            {user?.role === 'superadmin' ? 'Administrator' : (t.user || 'User')}
           </Typography>
         </Box>
       </Stack>
@@ -242,7 +242,7 @@ function App() {
               }}
             >
               <ListItemIcon sx={{ minWidth: 40 }}><AdminPanelSettingsIcon fontSize="small" /></ListItemIcon>
-              <ListItemText primary="Admin Panel" primaryTypographyProps={{ fontWeight: 700, fontSize: '0.875rem' }} />
+              <ListItemText primary={t.adminPanel} primaryTypographyProps={{ fontWeight: 700, fontSize: '0.875rem' }} />
             </ListItemButton>
           </ListItem>
         )}
@@ -267,14 +267,14 @@ function App() {
       <Box sx={{ mt: 'auto', pt: 3 }}>
         <Stack spacing={1}>
           <MuiButton fullWidth startIcon={<ManageAccountsIcon />} onClick={() => navigate('/complete-profile')} sx={{ borderRadius: 1.5, justifyContent: 'start', py: 1, color: 'text.secondary', fontWeight: 700 }}>{t.editProfile}</MuiButton>
-          <MuiButton fullWidth startIcon={<LanguageIcon />} onClick={() => setLanguage(language === 'uz' ? 'ru' : language === 'ru' ? 'en' : 'uz')} sx={{ borderRadius: 1.5, justifyContent: 'start', py: 1, color: 'text.secondary', fontWeight: 700 }}>{t.changeLanguage} ({language.toUpperCase()})</MuiButton>
+          <MuiButton fullWidth startIcon={<LanguageIcon />} onClick={() => setLanguage(language === 'uz' ? 'ru' : language === 'ru' ? 'en' : 'uz')} sx={{ borderRadius: 1.5, justifyContent: 'start', py: 1, color: 'text.secondary', fontWeight: 700 }}>UZ / RU / EN ({language.toUpperCase()})</MuiButton>
           <MuiButton fullWidth startIcon={isDarkMode ? <LightModeIcon /> : <DarkModeIcon />} onClick={toggleDarkMode} sx={{ borderRadius: 1.5, justifyContent: 'start', py: 1, color: 'text.secondary', fontWeight: 700 }}>
-            {isDarkMode ? (language === 'uz' ? 'Yorug\' rejim' : 'Light Mode') : (language === 'uz' ? 'Tungi rejim' : 'Dark Mode')}
+            {isDarkMode ? t.lightMode : t.darkMode}
           </MuiButton>
           
           {(adminContacts.phone || adminContacts.telegramUsername) && (
             <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1.5, bgcolor: alpha(theme.palette.primary.main, 0.02), borderStyle: 'dashed' }}>
-               <Typography variant="caption" sx={{ fontWeight: 900, color: 'primary.main', display: 'block', mb: 1, textTransform: 'uppercase', fontSize: 8 }}>{t.contactSupport || 'Support'}</Typography>
+               <Typography variant="caption" sx={{ fontWeight: 900, color: 'primary.main', display: 'block', mb: 1, textTransform: 'uppercase', fontSize: 8 }}>SUPPORT</Typography>
                <Stack spacing={1}>
                   {adminContacts.phone && (
                     <Link href={`tel:${adminContacts.phone}`} sx={{ display: 'flex', alignItems: 'center', gap: 1, textDecoration: 'none', color: 'text.primary', '&:hover': { color: 'primary.main' } }}>
