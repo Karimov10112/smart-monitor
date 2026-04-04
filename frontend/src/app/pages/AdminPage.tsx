@@ -574,7 +574,7 @@ export default function AdminPage() {
                                 <Box>
                                    <Typography variant="caption" sx={{ display: 'block', fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', fontSize: 9 }}>{t.genderAndAge}</Typography>
                                    <Typography variant="body2" sx={{ fontWeight: 900 }}>
-                                      {selectedUser.gender === 'male' ? (language === 'uz' ? 'Erkak' : language === 'ru' ? 'Мужчина' : 'Male') : selectedUser.gender === 'female' ? (language === 'uz' ? 'Ayol' : language === 'ru' ? 'Женщина' : 'Female') : '—'}
+                                      {t[selectedUser.gender] || selectedUser.gender}
                                       {selectedUser.dateOfBirth && ` • ${new Date().getFullYear() - new Date(selectedUser.dateOfBirth).getFullYear()} ${language === 'uz' ? 'yosh' : language === 'ru' ? 'лет' : 'years'}`}
                                    </Typography>
                                 </Box>

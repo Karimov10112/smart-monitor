@@ -228,7 +228,7 @@ export default function DoctorPage() {
                           <Grid container spacing={2} sx={{ mt: 3 }}>
                              {[
                                { label: 'Region', val: selectedPatient.region, icon: LocationOnIcon },
-                               { label: 'Gender', val: selectedPatient.gender, icon: TimelineIcon },
+                               { label: 'Gender', val: t[selectedPatient.gender] || selectedPatient.gender, icon: TimelineIcon },
                                { label: 'Age', val: `${selectedPatient.age || '—'} y.o`, icon: BiotechIcon },
                              ].map((item, idx) => (
                                <Grid size={{ xs: 4 }} key={idx}>

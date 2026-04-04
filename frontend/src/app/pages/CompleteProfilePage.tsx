@@ -184,7 +184,7 @@ export default function CompleteProfilePage() {
                         onClick={() => handleChange('gender', g)}
                         sx={{ flex: 1, fontWeight: 800, borderRadius: 1.5 }}
                       >
-                        {language === 'uz' ? (g === 'male' ? 'Erkak' : g === 'female' ? 'Ayol' : 'Boshqa') : g}
+                        {t[g] || g}
                       </Button>
                     ))}
                   </Stack>
