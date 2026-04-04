@@ -369,16 +369,16 @@ function App() {
         open={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
         sx={{
-          width: SIDEBAR_WIDTH,
+          width: isMobile ? 280 : SIDEBAR_WIDTH,
           flexShrink: 0,
-          [`& .MuiDrawer-paper`]: { width: SIDEBAR_WIDTH, boxSizing: 'border-box', borderRight: `1px solid ${theme.palette.divider}`, boxShadow: 'none' },
+          [`& .MuiDrawer-paper`]: { width: isMobile ? 280 : SIDEBAR_WIDTH, boxSizing: 'border-box', borderRight: `1px solid ${theme.palette.divider}`, boxShadow: 'none' },
         }}
       >
         {SidebarContent}
       </Drawer>
 
       {/* Main Content */}
-      <Box component="main" sx={{ flexGrow: 1, p: { xs: 2, lg: 4 }, width: { lg: `calc(100% - ${SIDEBAR_WIDTH}px)` } }}>
+      <Box component="main" sx={{ flexGrow: 1, p: { xs: 1.5, lg: 4 }, width: { lg: `calc(100% - ${SIDEBAR_WIDTH}px)` }, overflowX: 'hidden' }}>
         <AppBar 
           position="sticky" 
           color="inherit" 
@@ -386,13 +386,13 @@ function App() {
           sx={{ 
             bgcolor: 'background.default', 
             borderBottom: `1px solid ${theme.palette.divider}`,
-            mb: 4,
+            mb: isMobile ? 2 : 4,
             display: { lg: 'none' } 
           }}
         >
-          <Toolbar sx={{ justifyContent: 'space-between' }}>
+          <Toolbar sx={{ justifyContent: 'space-between', minHeight: { xs: 56, sm: 64 }, px: { xs: 1.5, sm: 2 } }}>
             <IconButton edge="start" color="inherit" onClick={() => setIsSidebarOpen(true)}><MenuIcon /></IconButton>
-            <Typography variant="h6" color="primary" sx={{ fontWeight: 900, letterSpacing: -1 }}>QAND NAZORATI</Typography>
+            <Typography variant="h6" color="primary" sx={{ fontWeight: 900, letterSpacing: isMobile ? -0.5 : -1, fontSize: isMobile ? 18 : 20 }}>QAND NAZORATI</Typography>
             <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main' }}>{user?.firstName?.[0]}</Avatar>
           </Toolbar>
         </AppBar>

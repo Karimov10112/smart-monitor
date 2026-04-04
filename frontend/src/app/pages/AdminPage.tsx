@@ -223,12 +223,12 @@ export default function AdminPage() {
   return (
     <Box sx={{ width: '100%', mb: 10 }}>
       {/* Header */}
-      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 4 }}>
+      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: isMobile ? 2 : 4 }}>
         <Box>
-          <Typography variant="h5" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 2 }}>Admin Panel</Typography>
-          <Typography variant="caption" sx={{ fontWeight: 800, color: 'text.secondary' }}>System Management</Typography>
+          <Typography variant={isMobile ? 'h6' : 'h5'} sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: isMobile ? 1 : 2 }}>Admin Panel</Typography>
+          <Typography variant="caption" sx={{ fontWeight: 800, color: 'text.secondary', fontSize: isMobile ? 8 : 10 }}>System Management</Typography>
         </Box>
-        <Avatar src={user?.avatar} sx={{ width: 48, height: 48, borderRadius: 1.5, bgcolor: 'primary.main' }}>{user?.firstName?.[0]}</Avatar>
+        <Avatar src={user?.avatar} sx={{ width: isMobile ? 40 : 48, height: isMobile ? 40 : 48, borderRadius: 1.5, bgcolor: 'primary.main' }}>{user?.firstName?.[0]}</Avatar>
       </Stack>
 
       {/* Tabs */}
@@ -246,7 +246,7 @@ export default function AdminPage() {
           allowScrollButtonsMobile
           textColor="primary"
           indicatorColor="primary"
-          sx={{ '& .MuiTab-root': { fontWeight: 800, textTransform: 'uppercase', fontSize: 11, letterSpacing: 1.5, minHeight: 64 } }}
+          sx={{ '& .MuiTab-root': { fontWeight: 800, textTransform: 'uppercase', fontSize: isMobile ? 9 : 11, letterSpacing: 1.5, minHeight: isMobile ? 48 : 64 } }}
         >
           <Tab value="dashboard" label={t.dashboard || 'Dashboard'} icon={<DashboardIcon fontSize="small" />} iconPosition="start" />
           <Tab value="users" label={t.users || 'Users'} icon={<PeopleIcon fontSize="small" />} iconPosition="start" />
@@ -295,8 +295,8 @@ export default function AdminPage() {
 
         {/* Users Tab */}
         {currentTab === 'users' && !selectedUserId && (
-          <Box>
-            <Stack direction={isMobile ? 'column' : 'row'} spacing={2} sx={{ mb: 4 }}>
+          <Box sx={{ mt: isMobile ? -1 : 0 }}>
+            <Stack direction={isMobile ? 'column' : 'row'} spacing={isMobile ? 1.5 : 2} sx={{ mb: isMobile ? 2 : 4 }}>
               <TextField
                 placeholder={t.searchUsers}
                 fullWidth={isMobile}
@@ -511,8 +511,8 @@ export default function AdminPage() {
         {selectedUserId && selectedUser && (
           <Box>
             {/* Top Profile Header Card */}
-            <Card elevation={0} sx={{ mb: 3, border: `1px solid ${theme.palette.divider}` }}>
-              <CardContent sx={{ p: 3 }}>
+            <Card elevation={0} sx={{ mb: 2, border: `1px solid ${theme.palette.divider}` }}>
+              <CardContent sx={{ p: isMobile ? 2 : 3 }}>
                 <Stack direction={isMobile ? 'column' : 'row'} spacing={3} alignItems={isMobile ? 'start' : 'center'}>
                   <Avatar sx={{ width: 80, height: 80, borderRadius: 3, bgcolor: 'primary.main', fontSize: 32, fontWeight: 900, boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.2)}` }}>
                     {selectedUser.firstName?.[0]}
