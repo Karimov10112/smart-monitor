@@ -173,7 +173,7 @@ export default function AIChatWidget() {
               <button
                 onClick={handleAnalyze}
                 disabled={analyzing || loading}
-                className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg border border-border text-blue-600 text-xs font-medium hover:bg-secondary disabled:opacity-50 transition-colors"
+                className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg border border-border text-blue-600 dark:text-blue-400 text-xs font-medium hover:bg-secondary disabled:opacity-50 transition-colors"
               >
                 <BarChart2 className="w-3.5 h-3.5" />
                 {language === 'uz' ? 'Statistikamni tahlil qil' : language === 'ru' ? 'Анализировать статистику' : 'Analyze my stats'}

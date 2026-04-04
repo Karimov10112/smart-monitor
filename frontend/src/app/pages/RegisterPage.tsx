@@ -36,10 +36,13 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ActivityIcon from '@mui/icons-material/HistoryEdu'; // Represents monitoring/health
+import DarkModeIcon from '@mui/icons-material/DarkMode';
+import LightModeIcon from '@mui/icons-material/LightMode';
+import LanguageIcon from '@mui/icons-material/Language';
 
 export default function RegisterPage() {
   const { login } = useAuth();
-  const { language } = useApp();
+  const { language, setLanguage, isDarkMode, toggleDarkMode } = useApp();
   const theme = useTheme();
   const navigate = useNavigate();
   const t = translations[language];
@@ -67,11 +70,15 @@ export default function RegisterPage() {
     }
     setLoading(true);
     try {
-      const { data } = await authAPI.register({ email, password, firstName, lastName, language });
-      if (data.success) {
+      const trimmedEmail = email.trim().toLowerCase();
+      const { data } = await authAPI.register({ email: trimmedEmail, password, firstName, lastName, language });
+      if (data.success && data.userId) {
         setUserId(data.userId);
+        setEmail(trimmedEmail);
         setStep('otp');
-        toast.success(t.codeSent);
+        toast.success(t?.codeSent || 'Kodi yuborildi');
+      } else {
+        toast.error(data.message || (language === 'uz' ? 'Xatolik' : 'Error'));
       }
     } catch (err: any) {
       toast.error(err.response?.data?.message || t.error);
@@ -98,7 +105,24 @@ export default function RegisterPage() {
   };
 
   return (
-    <Container maxWidth="xs" sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', py: 4 }}>
+    <Box sx={{ position: 'relative', minHeight: '100vh', display: 'flex', flexDirection: 'column', bgcolor: 'background.default' }}>
+      {/* Top Controls */}
+      <Box sx={{ position: 'absolute', top: 24, right: 24, display: 'flex', gap: 2, zIndex: 10 }}>
+        <IconButton
+          onClick={() => setLanguage(language === 'uz' ? 'ru' : language === 'ru' ? 'en' : 'uz')}
+          sx={{ bgcolor: alpha(theme.palette.primary.main, 0.1), color: 'primary.main', '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.2) } }}
+        >
+          <LanguageIcon />
+        </IconButton>
+        <IconButton
+          onClick={toggleDarkMode}
+          sx={{ bgcolor: alpha(theme.palette.primary.main, 0.1), color: 'primary.main', '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.2) } }}
+        >
+          {isDarkMode ? <LightModeIcon /> : <DarkModeIcon />}
+        </IconButton>
+      </Box>
+
+      <Container maxWidth="xs" sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', py: 4 }}>
       <Box sx={{ textAlign: 'center', mb: 6 }}>
         <Box sx={{ width: 64, height: 64, bgcolor: 'primary.main', borderRadius: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'center', mx: 'auto', mb: 2, color: 'white' }}>
           <ActivityIcon sx={{ fontSize: 32 }} />
@@ -233,6 +257,7 @@ export default function RegisterPage() {
           )}
         </CardContent>
       </Card>
-    </Container>
+      </Container>
+    </Box>
   );
 }

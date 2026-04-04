@@ -10,6 +10,8 @@ export interface BloodSugarRecord {
   date: string;
   fastingLevel: number;
   postMealLevel?: number;
+  level?: number;
+  category?: 'fasting' | 'post-meal' | string;
   notes?: string;
   mood?: string;
   exercise?: boolean;
@@ -44,10 +46,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return ['uz', 'ru', 'en'].includes(saved) ? saved : 'uz';
   });
   
-  // Dark Mode state (Disabled as per user request)
-  const isDarkMode = false;
-  const toggleDarkMode = () => {};
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+    return localStorage.getItem('theme') === 'dark';
+  });
 
+  const toggleDarkMode = () => {
+    setIsDarkMode(prev => !prev);
+  };
   const [records, setRecords] = useState<BloodSugarRecord[]>([]);
   const [currentFasting, setCurrentFasting] = useState<number | undefined>();
   const [currentPostMeal, setCurrentPostMeal] = useState<number | undefined>();
@@ -99,11 +104,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [isAuthenticated, user?._id, socket, updateUser, language]);
   useEffect(() => { localStorage.setItem('language', language); }, [language]);
 
-  // Force Light Mode class to <html>
   useEffect(() => {
-    document.documentElement.classList.remove('dark');
-    localStorage.setItem('theme', 'light');
-  }, []);
+    localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
 
   const loadRecords = useCallback(async () => {
     try {

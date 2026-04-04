@@ -54,6 +54,8 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import CallIcon from '@mui/icons-material/Call';
 import TelegramIcon from '@mui/icons-material/Telegram';
 import SaveIcon from '@mui/icons-material/Save';
+import DarkModeIcon from '@mui/icons-material/DarkMode';
+import LightModeIcon from '@mui/icons-material/LightMode';
 
 // Components
 import { DailyJournal } from './components/DailyJournal';
@@ -77,7 +79,7 @@ const SIDEBAR_WIDTH = 300;
 
 function App() {
   const { user, isAuthenticated, logout, loading, updateUser } = useAuth();
-  const { language, setLanguage, socket } = useApp();
+  const { language, setLanguage, socket, isDarkMode, toggleDarkMode } = useApp();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('lg'));
   const t = translations[language] || translations['uz'];
@@ -408,6 +410,9 @@ function App() {
         <Stack spacing={1}>
           <MuiButton fullWidth startIcon={<ManageAccountsIcon />} onClick={() => navigate('/complete-profile')} sx={{ borderRadius: 1.5, justifyContent: 'start', py: 1, color: 'text.secondary', fontWeight: 700 }}>{t.editProfile}</MuiButton>
           <MuiButton fullWidth startIcon={<LanguageIcon />} onClick={() => setLanguage(language === 'uz' ? 'ru' : language === 'ru' ? 'en' : 'uz')} sx={{ borderRadius: 1.5, justifyContent: 'start', py: 1, color: 'text.secondary', fontWeight: 700 }}>{t.changeLanguage} ({language.toUpperCase()})</MuiButton>
+          <MuiButton fullWidth startIcon={isDarkMode ? <LightModeIcon /> : <DarkModeIcon />} onClick={toggleDarkMode} sx={{ borderRadius: 1.5, justifyContent: 'start', py: 1, color: 'text.secondary', fontWeight: 700 }}>
+            {isDarkMode ? (language === 'uz' ? 'Yorug\' rejim' : 'Light Mode') : (language === 'uz' ? 'Tungi rejim' : 'Dark Mode')}
+          </MuiButton>
           
           {(adminContacts.phone || adminContacts.telegramUsername) && (
             <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1.5, bgcolor: alpha(theme.palette.primary.main, 0.02), borderStyle: 'dashed' }}>
@@ -531,13 +536,13 @@ function App() {
             <CloseIcon />
           </IconButton>
         </DialogTitle>
-        <DialogContent sx={{ p: 0, display: 'flex', flexDirection: 'column', bgcolor: '#f8fafc' }}>
+        <DialogContent sx={{ p: 0, display: 'flex', flexDirection: 'column', bgcolor: 'background.default' }}>
           {(adminContacts.phone || adminContacts.telegramUsername) && (
             <Box sx={{ 
               p: 1.5, px: 3, 
-              bgcolor: 'rgba(255,255,255,0.8)', 
+              bgcolor: alpha(theme.palette.background.paper, 0.8), 
               backdropFilter: 'blur(8px)',
-              borderBottom: '1px solid #e2e8f0' 
+              borderBottom: `1px solid ${theme.palette.divider}` 
             }}>
                <Stack direction="row" spacing={3} justifyContent="center">
                   {adminContacts.phone && (
@@ -582,9 +587,10 @@ function App() {
                       px: 2,
                       maxWidth: '85%',
                       background: isAdmin 
-                        ? '#ffffff' 
+                        ? undefined 
                         : 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
-                      color: isAdmin ? '#1e293b' : 'white',
+                      bgcolor: isAdmin ? 'background.paper' : undefined,
+                      color: isAdmin ? 'text.primary' : 'white',
                       borderRadius: isAdmin ? '4px 16px 16px 16px' : '16px 16px 4px 16px',
                       boxShadow: isAdmin 
                         ? '0 2px 4px rgba(0,0,0,0.02), 0 1px 2px rgba(0,0,0,0.03)' 
@@ -602,7 +608,7 @@ function App() {
             })}
             <div ref={chatEndRef} />
           </Box>
-          <Box sx={{ p: 2, bgcolor: '#ffffff', borderTop: '1px solid #f1f5f9' }}>
+          <Box sx={{ p: 2, bgcolor: 'background.paper', borderTop: '1px solid', borderColor: 'divider' }}>
             <Stack direction="row" spacing={1.5}>
               <TextField
                 placeholder={t.writeMessage || 'Xabar yozing...'}
@@ -614,10 +620,10 @@ function App() {
                 onChange={e => setSupportText(e.target.value)}
                 sx={{ 
                   '& .MuiOutlinedInput-root': {
-                    bgcolor: '#f8fafc',
+                    bgcolor: 'background.default',
                     border: 'none',
                     '& fieldset': { border: 'none' },
-                    '&:hover': { bgcolor: '#f1f5f9' },
+                    '&:hover': { bgcolor: 'action.hover' },
                     borderRadius: 3
                   }
                 }}

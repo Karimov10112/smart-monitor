@@ -290,27 +290,27 @@ export function Products() {
           const fatPct = total > 0 ? (fat / total) * 100 : 0;
 
           return (
-            <Box sx={{ bgcolor: 'white' }}>
+            <Box sx={{ bgcolor: 'background.paper' }}>
               {/* Header */}
               <Box sx={{ p: 3, pb: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Stack direction="row" spacing={2} alignItems="center">
                    <Box sx={{ fontSize: 40 }}>{selectedProduct.emoji}</Box>
                    <Box>
-                      <Typography variant="h5" sx={{ fontWeight: 800, color: '#1f2937', mb: 0.5 }}>
+                      <Typography variant="h5" sx={{ fontWeight: 800, color: 'text.primary', mb: 0.5 }}>
                         {selectedProduct.name[language] || selectedProduct.name['uz']}
                       </Typography>
                       <Box sx={{ 
                         display: 'inline-block', 
                         px: 1.5, py: 0.3, 
-                        bgcolor: info?.color === 'success' ? '#fef3c7' : info?.color === 'warning' ? '#fee2e2' : '#f3f4f6',
-                        color: info?.color === 'success' ? '#d97706' : info?.color === 'warning' ? '#dc2626' : '#4b5563',
+                        bgcolor: info?.color === 'success' ? alpha(theme.palette.success.main, 0.1) : info?.color === 'warning' ? alpha(theme.palette.warning.main, 0.1) : 'background.default',
+                        color: info?.color === 'success' ? 'success.main' : info?.color === 'warning' ? 'warning.main' : 'text.secondary',
                         borderRadius: 1, fontSize: 12, fontWeight: 700 
                       }}>
                         {info?.text}
                       </Box>
                    </Box>
                 </Stack>
-                <IconButton onClick={() => setSelectedProduct(null)} size="small" sx={{ bgcolor: '#f3f4f6' }}>
+                <IconButton onClick={() => setSelectedProduct(null)} size="small" sx={{ bgcolor: 'background.default' }}>
                   <CloseIcon fontSize="small" />
                 </IconButton>
               </Box>
@@ -319,21 +319,21 @@ export function Products() {
                 {/* GI and GL Cards */}
                 <Grid container spacing={2} sx={{ mb: 4 }}>
                   <Grid size={{ xs: 6 }}>
-                    <Box sx={{ p: 2.5, borderRadius: 3, bgcolor: '#f0f7ff', border: '1px solid #e0f2fe', height: '100%' }}>
-                      <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600, display: 'block', mb: 2 }}>Glikemik indeks</Typography>
-                      <Typography variant="h3" sx={{ fontWeight: 800, color: '#2563eb' }}>{selectedProduct.gi}</Typography>
+                    <Box sx={{ p: 2.5, borderRadius: 3, bgcolor: alpha(theme.palette.primary.main, 0.05), border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`, height: '100%' }}>
+                      <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, display: 'block', mb: 2 }}>Glikemik indeks</Typography>
+                      <Typography variant="h3" sx={{ fontWeight: 800, color: 'primary.main' }}>{selectedProduct.gi}</Typography>
                     </Box>
                   </Grid>
                   <Grid size={{ xs: 6 }}>
-                    <Box sx={{ p: 2.5, borderRadius: 3, bgcolor: '#faf5ff', border: '1px solid #f3e8ff', height: '100%' }}>
-                      <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600, display: 'block', mb: 2 }}>Glikemik yuk</Typography>
-                      <Typography variant="h3" sx={{ fontWeight: 800, color: '#9333ea' }}>{selectedProduct.gl}</Typography>
+                    <Box sx={{ p: 2.5, borderRadius: 3, bgcolor: alpha(theme.palette.secondary.main, 0.05), border: `1px solid ${alpha(theme.palette.secondary.main, 0.1)}`, height: '100%' }}>
+                      <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, display: 'block', mb: 2 }}>Glikemik yuk</Typography>
+                      <Typography variant="h3" sx={{ fontWeight: 800, color: 'secondary.main' }}>{selectedProduct.gl}</Typography>
                     </Box>
                   </Grid>
                 </Grid>
 
                 {/* Nutrition Grid */}
-                <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#1f2937', mb: 2 }}>Ozuqaviy ma'lumot (100g uchun)</Typography>
+                <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'text.primary', mb: 2 }}>Ozuqaviy ma'lumot (100g uchun)</Typography>
                 <Grid container spacing={1.5} sx={{ mb: 4 }}>
                    {[
                      { label: 'Kaloriya', val: `${cal} kcal` },
@@ -344,77 +344,77 @@ export function Products() {
                      { label: 'Yog\'', val: `${fat}g` },
                    ].map((item, i) => (
                      <Grid size={{ xs: 4 }} key={i}>
-                       <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: '#f8fafc', height: '100%' }}>
-                         <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600, display: 'block', mb: 1, fontSize: 10 }}>{item.label}</Typography>
-                         <Typography variant="body2" sx={{ fontWeight: 800, color: '#1f2937' }}>{item.val}</Typography>
+                       <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: 'background.default', height: '100%' }}>
+                         <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, display: 'block', mb: 1, fontSize: 10 }}>{item.label}</Typography>
+                         <Typography variant="body2" sx={{ fontWeight: 800, color: 'text.primary' }}>{item.val}</Typography>
                        </Box>
                      </Grid>
                    ))}
                 </Grid>
 
                 {/* Carbohydrate Distribution */}
-                <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#1f2937', mb: 2 }}>Uglevodlar taqsimoti</Typography>
+                <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'text.primary', mb: 2 }}>Uglevodlar taqsimoti</Typography>
                 <Stack spacing={3} sx={{ mb: 4 }}>
                    <Box>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                        <Typography variant="caption" sx={{ fontWeight: 700, color: '#4b5563' }}>Shakar</Typography>
-                        <Typography variant="caption" sx={{ fontWeight: 800, color: '#1f2937' }}>{sugar}g</Typography>
+                        <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary' }}>Shakar</Typography>
+                        <Typography variant="caption" sx={{ fontWeight: 800, color: 'text.primary' }}>{sugar}g</Typography>
                       </Box>
-                      <Box sx={{ height: 8, borderRadius: 4, bgcolor: '#f3f4f6', overflow: 'hidden' }}>
-                        <Box sx={{ height: '100%', width: carb > 0 ? `${(sugar / carb) * 100}%` : 0, bgcolor: '#ef4444' }} />
+                      <Box sx={{ height: 8, borderRadius: 4, bgcolor: 'background.default', overflow: 'hidden' }}>
+                        <Box sx={{ height: '100%', width: carb > 0 ? `${(sugar / carb) * 100}%` : 0, bgcolor: theme.palette.error.main }} />
                       </Box>
                    </Box>
                    <Box>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                        <Typography variant="caption" sx={{ fontWeight: 700, color: '#4b5563' }}>Tola</Typography>
-                        <Typography variant="caption" sx={{ fontWeight: 800, color: '#1f2937' }}>{fiber}g</Typography>
+                        <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary' }}>Tola</Typography>
+                        <Typography variant="caption" sx={{ fontWeight: 800, color: 'text.primary' }}>{fiber}g</Typography>
                       </Box>
-                      <Box sx={{ height: 8, borderRadius: 4, bgcolor: '#f3f4f6', overflow: 'hidden' }}>
-                        <Box sx={{ height: '100%', width: carb > 0 ? `${(fiber / carb) * 100}%` : 0, bgcolor: '#22c55e' }} />
+                      <Box sx={{ height: 8, borderRadius: 4, bgcolor: 'background.default', overflow: 'hidden' }}>
+                        <Box sx={{ height: '100%', width: carb > 0 ? `${(fiber / carb) * 100}%` : 0, bgcolor: theme.palette.success.main }} />
                       </Box>
                    </Box>
                 </Stack>
 
                 {/* Main Nutrients Stacked Bar */}
-                <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#1f2937', mb: 2 }}>Asosiy ozuqa moddalari</Typography>
+                <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'text.primary', mb: 2 }}>Asosiy ozuqa moddalari</Typography>
                 <Box sx={{ mb: 4 }}>
-                   <Box sx={{ height: 24, borderRadius: 12, bgcolor: '#f3f4f6', overflow: 'hidden', display: 'flex', mb: 2 }}>
+                   <Box sx={{ height: 24, borderRadius: 12, bgcolor: 'background.default', overflow: 'hidden', display: 'flex', mb: 2 }}>
                       {total > 0 ? (
                         <>
-                          <Box sx={{ height: '100%', width: `${carbPct}%`, bgcolor: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 10, fontWeight: 700 }}>
+                          <Box sx={{ height: '100%', width: `${carbPct}%`, bgcolor: theme.palette.primary.main, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 10, fontWeight: 700 }}>
                             {carbPct > 10 ? `${Math.round(carbPct)}%` : ''}
                           </Box>
-                          <Box sx={{ height: '100%', width: `${protPct}%`, bgcolor: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 10, fontWeight: 700 }}>
+                          <Box sx={{ height: '100%', width: `${protPct}%`, bgcolor: theme.palette.error.main, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 10, fontWeight: 700 }}>
                             {protPct > 10 ? `${Math.round(protPct)}%` : ''}
                           </Box>
-                          <Box sx={{ height: '100%', width: `${fatPct}%`, bgcolor: '#eab308', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 10, fontWeight: 700 }}>
+                          <Box sx={{ height: '100%', width: `${fatPct}%`, bgcolor: theme.palette.warning.main, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 10, fontWeight: 700 }}>
                             {fatPct > 10 ? `${Math.round(fatPct)}%` : ''}
                           </Box>
                         </>
                       ) : (
-                        <Box sx={{ height: '100%', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af', fontSize: 10 }}>Ma'lumot yo'q</Box>
+                        <Box sx={{ height: '100%', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'text.secondary', fontSize: 10 }}>Ma'lumot yo'q</Box>
                       )}
                    </Box>
                    <Stack direction="row" spacing={3} justifyContent="center">
                       <Stack direction="row" spacing={1} alignItems="center">
-                        <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: '#3b82f6' }} />
-                        <Typography variant="caption" sx={{ fontWeight: 600, color: '#4b5563' }}>Uglevodlar</Typography>
+                        <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: theme.palette.primary.main }} />
+                        <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>Uglevodlar</Typography>
                       </Stack>
                       <Stack direction="row" spacing={1} alignItems="center">
-                        <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: '#ef4444' }} />
-                        <Typography variant="caption" sx={{ fontWeight: 600, color: '#4b5563' }}>Oqsil</Typography>
+                        <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: theme.palette.error.main }} />
+                        <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>Oqsil</Typography>
                       </Stack>
                       <Stack direction="row" spacing={1} alignItems="center">
-                        <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: '#eab308' }} />
-                        <Typography variant="caption" sx={{ fontWeight: 600, color: '#4b5563' }}>Yog'</Typography>
+                        <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: theme.palette.warning.main }} />
+                        <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>Yog'</Typography>
                       </Stack>
                    </Stack>
                 </Box>
 
                 {/* Advice Section */}
-                <Box sx={{ p: 2.5, borderRadius: 3, bgcolor: '#f0f9ff' }}>
-                   <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#0c4a6e', mb: 1.5 }}>Batafsil tavsiya</Typography>
-                   <Typography variant="body2" sx={{ color: '#1e3a8a', lineHeight: 1.6, fontWeight: 500 }}>
+                <Box sx={{ p: 2.5, borderRadius: 3, bgcolor: alpha(theme.palette.info.main, 0.05), border: `1px solid ${alpha(theme.palette.info.main, 0.1)}` }}>
+                   <Typography variant="subtitle2" sx={{ fontWeight: 800, color: theme.palette.mode === 'dark' ? 'info.light' : 'info.dark', mb: 1.5 }}>Batafsil tavsiya</Typography>
+                   <Typography variant="body2" sx={{ color: theme.palette.mode === 'dark' ? 'info.light' : 'info.dark', lineHeight: 1.6, fontWeight: 500 }}>
                       {selectedProduct.advice?.[language] || selectedProduct.advice?.['uz'] || 'Tavsiya mavjud emas'}
                    </Typography>
                 </Box>

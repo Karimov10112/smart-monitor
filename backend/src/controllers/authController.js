@@ -182,7 +182,7 @@ const forgotPassword = async (req, res) => {
 
     const user = await User.findOne({ email });
     if (!user) {
-      return res.json({ success: true, message: 'Agar email mavjud bo\'lsa, havola yuborildi' });
+      return res.status(404).json({ success: false, message: 'Bu email ro\'yxatdan o\'tmagan' });
     }
 
     const resetToken = crypto.randomBytes(32).toString('hex');
@@ -292,6 +292,12 @@ const sendMessageToAdmin = async (req, res) => {
     );
 
     if (!user) return res.status(404).json({ success: false, message: 'Foydalanuvchi topilmadi' });
+
+    // Real-time: Emit to admins
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('admin-new-message', { userId: req.user._id });
+    }
 
     res.json({ success: true, message: 'Xabar yuborildi' });
   } catch (err) {

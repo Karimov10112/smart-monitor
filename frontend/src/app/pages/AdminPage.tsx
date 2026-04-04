@@ -92,6 +92,11 @@ export default function AdminPage() {
   const [sendingReply, setSendingReply] = useState(false);
   const chatEndRef = React.useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [selectedUser?.supportMessages]);
+
+
   // Products State
   const [products, setProducts] = useState<any[]>([]);
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
@@ -120,11 +125,18 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (socket) {
-      socket.on('new-message', () => {
-        loadStats();
+      const handleAdminMessage = () => {
+        loadAll();
         if (selectedUser) loadSpecificUser(selectedUser._id);
-      });
-      return () => { socket.off('new-message'); };
+      };
+      
+      socket.on('new-message', handleAdminMessage);
+      socket.on('admin-new-message', handleAdminMessage);
+      
+      return () => { 
+        socket.off('new-message', handleAdminMessage); 
+        socket.off('admin-new-message', handleAdminMessage);
+      };
     }
   }, [socket, selectedUser]);
 
@@ -620,21 +632,75 @@ export default function AdminPage() {
                   </Stack>
                 </CardContent>
               </Card>
+            </Grid>
 
+            {/* Full-width Glucose Analytics */}
+            <Grid size={{ xs: 12 }}>
               <Card elevation={0}>
                 <Box sx={{ p: 2, px: 3, borderBottom: `1px solid ${theme.palette.divider}` }}>
                   <Typography variant="caption" sx={{ fontWeight: 900 }}>GLUCOSE ANALYTICS</Typography>
                 </Box>
-                <CardContent sx={{ p: 3 }}>
+                <CardContent sx={{ p: 4, pt: 4 }}>
                   {selectedUserRecords.length > 0 ? (
-                    <ResponsiveContainer width="100%" height={250}>
-                      <AreaChart data={selectedUserRecords.map(r => ({ d: format(new Date(r.date), 'dd/MM'), v: r.fastingLevel }))}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme.palette.divider} />
-                        <XAxis dataKey="d" axisLine={false} tickLine={false} tick={{ fontSize: 9 }} />
-                        <Tooltip contentStyle={{ borderRadius: 4, border: `1px solid ${theme.palette.divider}` }} />
-                        <Area type="monotone" dataKey="v" stroke={theme.palette.primary.main} strokeWidth={2} fill={alpha(theme.palette.primary.main, 0.05)} />
-                      </AreaChart>
-                    </ResponsiveContainer>
+                    <Grid container spacing={4}>
+                      {/* Fasting Chart */}
+                      <Grid size={{ xs: 12, lg: 6 }}>
+                        <Typography variant="overline" sx={{ fontWeight: 800, color: 'primary.main', display: 'block', mb: 2, letterSpacing: 1.5 }}>
+                          Och qoringa (Real vaqt grafik)
+                        </Typography>
+                        <Box sx={{ height: 260, width: '100%' }}>
+                          <ResponsiveContainer width="100%" height={260}>
+                            <AreaChart 
+                              data={selectedUserRecords.map(r => {
+                                const parsed = new Date(r.date);
+                                const t = r.createdAt ? new Date(r.createdAt) : parsed;
+                                return {
+                                  date: `${parsed.toLocaleDateString('uz', { month: 'short', day: 'numeric' })} • ${t.toLocaleTimeString('uz', { hour: '2-digit', minute: '2-digit' })}`,
+                                  fasting: r.fastingLevel ?? (r.category === 'fasting' ? r.level : 0) ?? 0
+                                };
+                              }).reverse()}
+                              margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                            >
+                              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme.palette.divider} />
+                              <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: theme.palette.text.secondary }} />
+                              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: theme.palette.text.secondary }} />
+                              <Tooltip contentStyle={{ borderRadius: 8, border: `none`, backgroundColor: theme.palette.background.paper, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }} labelStyle={{ fontWeight: 900, marginBottom: 8, fontSize: 11 }} />
+                              <Area type="monotone" dataKey="fasting" name="Och qoringa" stroke={theme.palette.primary.main} fill={theme.palette.primary.main} fillOpacity={0.1} strokeWidth={3} connectNulls={true} />
+                            </AreaChart>
+                          </ResponsiveContainer>
+                        </Box>
+                      </Grid>
+
+                      {/* Post Meal Chart */}
+                      <Grid size={{ xs: 12, lg: 6 }}>
+                        <Typography variant="overline" sx={{ fontWeight: 800, color: 'secondary.main', display: 'block', mb: 2, letterSpacing: 1.5 }}>
+                          Ovqatdan keyin (Real vaqt grafik)
+                        </Typography>
+                        <Box sx={{ height: 260, width: '100%' }}>
+                          <ResponsiveContainer width="100%" height={260}>
+                            <AreaChart 
+                              data={selectedUserRecords
+                                .filter(r => r.postMealLevel != null || (r.category === 'post-meal' && r.level != null))
+                                .map(r => {
+                                  const parsed = new Date(r.date);
+                                  const t = r.createdAt ? new Date(r.createdAt) : parsed;
+                                  return {
+                                    date: `${parsed.toLocaleDateString('uz', { month: 'short', day: 'numeric' })} • ${t.toLocaleTimeString('uz', { hour: '2-digit', minute: '2-digit' })}`,
+                                    postMeal: r.postMealLevel ?? (r.category === 'post-meal' ? r.level : null) ?? null
+                                  };
+                                }).reverse()}
+                              margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                            >
+                              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme.palette.divider} />
+                              <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: theme.palette.text.secondary }} />
+                              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: theme.palette.text.secondary }} />
+                              <Tooltip contentStyle={{ borderRadius: 8, border: `none`, backgroundColor: theme.palette.background.paper, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }} labelStyle={{ fontWeight: 900, marginBottom: 8, fontSize: 11 }} />
+                              <Area type="monotone" dataKey="postMeal" name="Ovqatdan keyin" stroke={theme.palette.secondary.main} fill={theme.palette.secondary.main} fillOpacity={0.1} strokeWidth={3} connectNulls={true} />
+                            </AreaChart>
+                          </ResponsiveContainer>
+                        </Box>
+                      </Grid>
+                    </Grid>
                   ) : (
                     <Box sx={{ py: 6, textAlign: 'center', opacity: 0.3 }}>
                       <TimelineIcon sx={{ fontSize: 40, mb: 1 }} />

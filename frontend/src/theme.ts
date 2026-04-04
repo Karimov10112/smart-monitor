@@ -1,34 +1,36 @@
 import { createTheme, alpha } from '@mui/material/styles';
 
-const theme = createTheme({
+export const getTheme = (mode: 'light' | 'dark') => createTheme({
   palette: {
+    mode,
     primary: {
-      main: '#6366f1', // Indigo 500
+      main: '#6366f1',
       light: '#818cf8',
       dark: '#4f46e5',
       contrastText: '#ffffff',
     },
     secondary: {
-      main: '#8b5cf6', // Violet 500
+      main: '#8b5cf6',
       light: '#a78bfa',
       dark: '#7c3aed',
     },
     success: {
-      main: '#10b981', // Emerald 500
+      main: '#10b981',
       light: '#34d399',
       dark: '#059669',
     },
     error: {
-      main: '#ef4444', // Red 500
+      main: '#ef4444',
     },
     background: {
-      default: '#f8fafc', // Modern airy background
-      paper: '#ffffff',
+      default: mode === 'dark' ? '#0f172a' : '#f8fafc',
+      paper: mode === 'dark' ? '#1e293b' : '#ffffff',
     },
     text: {
-      primary: '#1e293b', // Slate 800
-      secondary: '#64748b', // Slate 500
+      primary: mode === 'dark' ? '#f1f5f9' : '#1e293b',
+      secondary: mode === 'dark' ? '#94a3b8' : '#64748b',
     },
+    divider: mode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.12)',
   },
   shape: {
     borderRadius: 12, // Modern rounded look
@@ -90,9 +92,9 @@ const theme = createTheme({
           '& .MuiOutlinedInput-root': {
             borderRadius: 12,
             transition: 'all 0.2s ease',
-            backgroundColor: '#ffffff',
+            backgroundColor: mode === 'dark' ? '#1e293b' : '#ffffff',
             '&:hover': {
-              backgroundColor: '#fcfcfd',
+              backgroundColor: mode === 'dark' ? '#334155' : '#fcfcfd',
             },
             '&.Mui-focused': {
               boxShadow: '0 0 0 4px rgba(99, 102, 241, 0.1)',
@@ -104,10 +106,10 @@ const theme = createTheme({
     MuiAppBar: {
       styleOverrides: {
         root: {
-          backgroundColor: alpha('#ffffff', 0.8),
+          backgroundColor: mode === 'dark' ? alpha('#0f172a', 0.8) : alpha('#ffffff', 0.8),
           backdropFilter: 'blur(12px)',
-          color: '#1e293b',
-          borderBottom: '1px solid #f1f5f9',
+          color: mode === 'dark' ? '#f1f5f9' : '#1e293b',
+          borderBottom: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid #f1f5f9',
           boxShadow: 'none',
         },
       },
@@ -121,6 +123,5 @@ const theme = createTheme({
       },
     },
   },
-});
 
-export default theme;
+});

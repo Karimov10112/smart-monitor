@@ -19,7 +19,8 @@ import {
   CircularProgress,
   Stack,
   useTheme,
-  alpha
+  alpha,
+  IconButton
 } from '@mui/material';
 
 // MUI Icons
@@ -29,13 +30,16 @@ import LoginIcon from '@mui/icons-material/Login';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import StorageIcon from '@mui/icons-material/Storage';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import DarkModeIcon from '@mui/icons-material/DarkMode';
+import LightModeIcon from '@mui/icons-material/LightMode';
+import LanguageIcon from '@mui/icons-material/Language';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
-  const { language } = useApp();
+  const { language, setLanguage, isDarkMode, toggleDarkMode } = useApp();
   const navigate = useNavigate();
   const theme = useTheme();
   const t = translations[language];
@@ -70,6 +74,21 @@ export default function LoginPage() {
         position: 'relative'
       }}
     >
+      <Box sx={{ position: 'absolute', top: 24, right: 24, display: 'flex', gap: 2, zIndex: 10 }}>
+        <IconButton
+          onClick={() => setLanguage(language === 'uz' ? 'ru' : language === 'ru' ? 'en' : 'uz')}
+          sx={{ bgcolor: alpha(theme.palette.primary.main, 0.1), color: 'primary.main', '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.2) } }}
+        >
+          <LanguageIcon />
+        </IconButton>
+        <IconButton
+          onClick={toggleDarkMode}
+          sx={{ bgcolor: alpha(theme.palette.primary.main, 0.1), color: 'primary.main', '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.2) } }}
+        >
+          {isDarkMode ? <LightModeIcon /> : <DarkModeIcon />}
+        </IconButton>
+      </Box>
+
       <Container maxWidth="sm">
         <Box sx={{ textAlign: 'center', mb: 4 }}>
           <Box
@@ -93,7 +112,7 @@ export default function LoginPage() {
             Qand <Box component="span" sx={{ color: 'primary.main' }}>Nazorati</Box>
           </Typography>
           <Typography variant="overline" sx={{ fontWeight: 800, letterSpacing: 2, color: 'text.secondary', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-             <AutoAwesomeIcon sx={{ fontSize: 14, color: 'primary.main' }} /> {t.appName || 'Smart Monitor System'}
+            <AutoAwesomeIcon sx={{ fontSize: 14, color: 'primary.main' }} /> {t.appName || 'Smart Monitor System'}
           </Typography>
         </Box>
 
