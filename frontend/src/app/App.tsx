@@ -83,6 +83,7 @@ function App() {
   const isMobile = useMediaQuery(theme.breakpoints.down('lg'));
   const t = translations[language] || translations['uz'];
   const navigate = useNavigate();
+  const lastNotifiedRef = React.useRef<string>('');
 
   const getT = (key: keyof typeof translations['uz']) => t[key] || (translations['uz'] as any)[key] || key;
 
@@ -133,18 +134,25 @@ function App() {
       const now = new Date();
       const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
+      if (currentTime === lastNotifiedRef.current) return;
+
+      let triggered = false;
       reminders.forEach(r => {
         if (r.isActive && r.time === currentTime) {
+          triggered = true;
           const sound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
           sound.play().catch(() => { });
 
           toast(t.reminderTriggered || 'Eslatma!', {
             description: `${r.name} - ${r.dose}`,
-            duration: 10000,
+            duration: 20000,
             icon: r.type === 'insulin' ? '💉' : '💊',
           });
         }
       });
+      if (triggered) {
+        lastNotifiedRef.current = currentTime;
+      }
     };
 
     const interval = setInterval(checkReminders, 60000);
