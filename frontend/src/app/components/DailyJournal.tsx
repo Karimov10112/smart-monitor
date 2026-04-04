@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../contexts/AppContext';
+import { useAuth } from '../contexts/AuthContext';
 import { translations } from '../utils/translations';
 import { toast } from 'sonner';
 import { productAPI } from '../utils/api';
@@ -31,9 +32,11 @@ import NotesIcon from '@mui/icons-material/Notes';
 import InfoIcon from '@mui/icons-material/Info';
 import StarIcon from '@mui/icons-material/Star';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
 
 export function DailyJournal() {
   const { language, addRecord } = useApp();
+  const { user } = useAuth();
   const theme = useTheme();
   const t = translations[language];
   const [loading, setLoading] = useState(false);
@@ -197,6 +200,52 @@ export function DailyJournal() {
       {/* Info & Recommendations */}
       <Grid size={{ xs: 12, md: 5 }}>
         <Stack spacing={3}>
+           {/* Admin Recommendation Card */}
+           {user?.adminNotes && (
+             <Card 
+               elevation={0} 
+               sx={{ 
+                 bgcolor: alpha('#6366f1', 0.05), 
+                 border: `1px solid ${alpha('#6366f1', 0.2)}`,
+                 position: 'relative',
+                 overflow: 'hidden'
+               }}
+             >
+               <Box 
+                 sx={{ 
+                   position: 'absolute', 
+                   top: -10, 
+                   right: -10, 
+                   opacity: 0.1, 
+                   transform: 'rotate(15deg)' 
+                 }}
+               >
+                 <AssignmentIndIcon sx={{ fontSize: 80, color: '#6366f1' }} />
+               </Box>
+               <CardContent sx={{ p: 3 }}>
+                 <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 2 }}>
+                    <Avatar 
+                      sx={{ 
+                        width: 32, 
+                        height: 32, 
+                        bgcolor: '#6366f1', 
+                        color: 'white',
+                        fontSize: 16
+                      }}
+                    >
+                      <AssignmentIndIcon fontSize="small" />
+                    </Avatar>
+                    <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5, color: '#6366f1' }}>
+                      {t.adminRecommendation}
+                    </Typography>
+                 </Stack>
+                 <Typography variant="body2" sx={{ fontWeight: 700, lineHeight: 1.6, color: 'text.primary', position: 'relative', zIndex: 1 }}>
+                    {user.adminNotes}
+                 </Typography>
+               </CardContent>
+             </Card>
+           )}
+
           {/* Norm Info Card */}
           <Card elevation={0} sx={{ bgcolor: alpha(theme.palette.primary.main, 0.02), border: `1px solid ${theme.palette.divider}` }}>
             <CardContent sx={{ p: 3 }}>
