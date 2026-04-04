@@ -170,7 +170,7 @@ export const ReminderModal: React.FC<ReminderModalProps> = ({ isOpen, onClose, l
                              </div>
                              <button 
                                onClick={() => handleDelete(r._id)}
-                               className="w-10 h-10 flex items-center justify-center rounded-xl bg-red-50 dark:bg-red-900/10 text-red-500 opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500 hover:text-white"
+                               className="w-10 h-10 flex items-center justify-center rounded-xl bg-red-50 dark:bg-red-900/10 text-red-500 transition-all hover:bg-red-500 hover:text-white border border-red-100 dark:border-red-900/20"
                              >
                                 <Trash2 className="w-4 h-4" />
                              </button>
