@@ -187,7 +187,15 @@ export function Statistics() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {[...records].reverse().map((record) => (
+              {[...records].sort((a, b) => {
+                const dateA = new Date(a.date).getTime();
+                const dateB = new Date(b.date).getTime();
+                if (dateB !== dateA) return dateB - dateA;
+                
+                const createA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+                const createB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+                return createB - createA;
+              }).map((record) => (
                 <TableRow key={record._id || record.id} sx={{ '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.01) } }}>
                   <TableCell sx={{ py: 1.5 }}>
                     <Typography variant="body2" sx={{ fontWeight: 800 }}>{new Date(record.date).toLocaleDateString(language === 'uz' ? 'uz' : 'ru')}</Typography>
