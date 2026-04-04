@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { productAPI, adminAPI } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useApp } from '../contexts/AppContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { translations } from '../utils/translations';
 import { categories } from '../data/products';
 import { toast, Toaster } from 'sonner';
@@ -47,6 +47,7 @@ import {
   List,
   ListItem,
   ListItemButton,
+  useMediaQuery,
 } from '@mui/material';
 
 // MUI Icons
@@ -69,11 +70,13 @@ type TabType = 'dashboard' | 'users' | 'products' | 'settings';
 export default function AdminPage() {
   const { user } = useAuth();
   const { language, socket } = useApp();
-  const t = translations[language];
+  const [searchParams] = useSearchParams();
   const theme = useTheme();
   const navigate = useNavigate();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const t = translations[language];
 
-  const [currentTab, setCurrentTab] = useState<TabType>('dashboard');
+  const [currentTab, setCurrentTab] = useState<TabType>(searchParams.get('tab') as TabType || 'dashboard');
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -238,6 +241,9 @@ export default function AdminPage() {
             setSelectedUserId(null);
             setSelectedUser(null);
           }}
+          variant="scrollable"
+          scrollButtons="auto"
+          allowScrollButtonsMobile
           textColor="primary"
           indicatorColor="primary"
           sx={{ '& .MuiTab-root': { fontWeight: 800, textTransform: 'uppercase', fontSize: 11, letterSpacing: 1.5, minHeight: 64 } }}
@@ -290,9 +296,10 @@ export default function AdminPage() {
         {/* Users Tab */}
         {currentTab === 'users' && !selectedUserId && (
           <Box>
-            <Stack direction="row" spacing={2} sx={{ mb: 4 }}>
+            <Stack direction={isMobile ? 'column' : 'row'} spacing={2} sx={{ mb: 4 }}>
               <TextField
                 placeholder={t.searchUsers}
+                fullWidth={isMobile}
                 size="small"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
@@ -303,79 +310,130 @@ export default function AdminPage() {
                   endAdornment: userLoading && <CircularProgress size={16} />
                 }}
               />
-              <FormControl size="small" sx={{ minWidth: 150 }}>
-                <InputLabel>{t.role}</InputLabel>
-                <Select value={role} label={t.role} onChange={e => setRole(e.target.value)}>
-                  <MenuItem value="">{t.allStatuses || 'All'}</MenuItem>
-                  <MenuItem value="user">User</MenuItem>
-                  <MenuItem value="doctor">Doctor</MenuItem>
-                  <MenuItem value="superadmin">SuperAdmin</MenuItem>
-                </Select>
-              </FormControl>
-              <Button variant="outlined" onClick={() => { setSearch(''); setRole(''); }} sx={{ fontWeight: 800 }}>{t.refresh}</Button>
+              <Box sx={{ display: 'flex', gap: 2 }}>
+                <FormControl size="small" sx={{ flexGrow: 1, minWidth: isMobile ? 0 : 150 }}>
+                  <InputLabel>{t.role}</InputLabel>
+                  <Select value={role} label={t.role} onChange={e => setRole(e.target.value)}>
+                    <MenuItem value="">{t.allStatuses || 'All'}</MenuItem>
+                    <MenuItem value="user">User</MenuItem>
+                    <MenuItem value="doctor">Doctor</MenuItem>
+                    <MenuItem value="superadmin">SuperAdmin</MenuItem>
+                  </Select>
+                </FormControl>
+                <Button variant="outlined" onClick={() => { setSearch(''); setRole(''); }} sx={{ fontWeight: 800 }}>{t.refresh}</Button>
+              </Box>
             </Stack>
 
-            <TableContainer component={Paper} elevation={0} sx={{ border: `1px solid ${theme.palette.divider}`, maxHeight: 600, overflowY: 'auto', position: 'relative' }}>
-              {userLoading && (
-                <Box sx={{ position: 'absolute', inset: 0, bgcolor: alpha(theme.palette.background.paper, 0.5), zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                   <CircularProgress size={32} />
-                </Box>
-              )}
-              <Table size="medium" stickyHeader>
-                <TableHead sx={{ bgcolor: alpha(theme.palette.primary.main, 0.01) }}>
-                  <TableRow>
-                    <TableCell sx={{ fontWeight: 900, textTransform: 'uppercase', fontSize: 10, letterSpacing: 1 }}>User</TableCell>
-                    <TableCell sx={{ fontWeight: 900, textTransform: 'uppercase', fontSize: 10, letterSpacing: 1 }}>Region</TableCell>
-                    <TableCell sx={{ fontWeight: 900, textTransform: 'uppercase', fontSize: 10, letterSpacing: 1 }}>Role</TableCell>
-                    <TableCell align="right"></TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {users.map(u => (
-                    <TableRow
-                      key={u._id}
-                      hover
-                      sx={{ cursor: 'pointer' }}
-                      onClick={() => { setSelectedUserId(u._id); loadSpecificUser(u._id); }}
-                    >
-                      <TableCell>
-                        <Stack direction="row" spacing={2} alignItems="center">
+            {!isMobile ? (
+              <TableContainer component={Paper} elevation={0} sx={{ border: `1px solid ${theme.palette.divider}`, maxHeight: 600, overflowY: 'auto' }}>
+                <Table size="medium" stickyHeader>
+                  <TableHead sx={{ bgcolor: alpha(theme.palette.primary.main, 0.01) }}>
+                    <TableRow>
+                      <TableCell sx={{ fontWeight: 900, textTransform: 'uppercase', fontSize: 10, letterSpacing: 1 }}>{t.user || 'User'}</TableCell>
+                      <TableCell sx={{ fontWeight: 900, textTransform: 'uppercase', fontSize: 10, letterSpacing: 1 }}>{t.regionLabel || 'Region'}</TableCell>
+                      <TableCell align="right"></TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {users.map(u => (
+                      <TableRow
+                        key={u._id}
+                        hover
+                        sx={{ cursor: 'pointer' }}
+                        onClick={() => { setSelectedUserId(u._id); loadSpecificUser(u._id); }}
+                      >
+                        <TableCell>
+                          <Stack direction="row" spacing={2} alignItems="center">
+                            <Avatar sx={{ borderRadius: 1.5, bgcolor: alpha(theme.palette.primary.main, 0.1), color: 'primary.main', fontWeight: 800 }}>
+                              {u.firstName?.[0]}
+                            </Avatar>
+                            <Box>
+                              <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>{u.firstName} {u.lastName}</Typography>
+                              <Typography variant="caption" color="text.secondary">{u.email}</Typography>
+                            </Box>
+                          </Stack>
+                        </TableCell>
+                        <TableCell>
+                          <Box>
+                             <Typography variant="caption" sx={{ fontWeight: 800, display: 'block' }}>{u.region || '—'}</Typography>
+                             <Chip 
+                              label={u.role.toUpperCase()} 
+                              size="small" 
+                              sx={{ height: 16, fontSize: 8, fontWeight: 900, borderRadius: 1, bgcolor: alpha(theme.palette.primary.main, 0.1), color: 'primary.main' }} 
+                             />
+                          </Box>
+                        </TableCell>
+                        <TableCell align="right">
+                          <Stack direction="row" spacing={1} justifyContent="flex-end">
+                            <Chip
+                              label={u.isBanned ? 'BANNED' : 'ACTIVE'}
+                              size="small"
+                              color={u.isBanned ? 'error' : 'success'}
+                              sx={{ fontWeight: 900, fontSize: 9, borderRadius: 1 }}
+                            />
+                            <IconButton
+                              size="small"
+                              color="error"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (confirm("O'chirilsinmi?")) adminAPI.deleteUser(u._id).then(() => loadUsers());
+                              }}
+                            >
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                          </Stack>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            ) : (
+              <Stack spacing={2}>
+                {users.map(u => (
+                  <Card 
+                    key={u._id} 
+                    elevation={0} 
+                    sx={{ border: `1px solid ${theme.palette.divider}`, borderRadius: 2 }}
+                    onClick={() => { setSelectedUserId(u._id); loadSpecificUser(u._id); }}
+                  >
+                    <CardContent sx={{ p: 2 }}>
+                       <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
                           <Avatar sx={{ borderRadius: 1.5, bgcolor: alpha(theme.palette.primary.main, 0.1), color: 'primary.main', fontWeight: 800 }}>
                             {u.firstName?.[0]}
                           </Avatar>
-                          <Box>
+                          <Box sx={{ flexGrow: 1 }}>
                             <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>{u.firstName} {u.lastName}</Typography>
                             <Typography variant="caption" color="text.secondary">{u.email}</Typography>
                           </Box>
-                        </Stack>
-                      </TableCell>
-                      <TableCell sx={{ fontWeight: 700, fontSize: 12, textTransform: 'uppercase' }}>{u.role}</TableCell>
-                      <TableCell><Typography variant="caption" sx={{ fontWeight: 800 }}>{u.region || '—'}</Typography></TableCell>
-                      <TableCell>
-                        <Chip
-                          label={u.isBanned ? (t.bannedUsers || 'Banned') : (t.activeToday || 'Active')}
-                          size="small"
-                          color={u.isBanned ? 'error' : 'success'}
-                          sx={{ fontWeight: 900, fontSize: 9, borderRadius: 1 }}
-                        />
-                      </TableCell>
-                      <TableCell align="right">
-                        <IconButton
-                          size="small"
-                          color="error"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (confirm("O'chirilsinmi?")) adminAPI.deleteUser(u._id).then(() => loadUsers());
-                          }}
-                        >
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
+                          <Chip 
+                            label={u.isBanned ? 'BANNED' : 'ACTIVE'} 
+                            size="small" 
+                            color={u.isBanned ? 'error' : 'success'}
+                            sx={{ fontWeight: 900, fontSize: 8, borderRadius: 1 }}
+                          />
+                       </Stack>
+                       <Stack direction="row" justifyContent="space-between" alignItems="center">
+                          <Box>
+                             <Typography variant="caption" sx={{ display: 'block', fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', fontSize: 8 }}>{t.regionLabel} • {t.role}</Typography>
+                             <Typography variant="body2" sx={{ fontWeight: 800 }}>{u.region || '—'} • {u.role.toUpperCase()}</Typography>
+                          </Box>
+                          <IconButton
+                              size="small" color="error"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (confirm("O'chirilsinmi?")) adminAPI.deleteUser(u._id).then(() => loadUsers());
+                              }}
+                              sx={{ border: `1px solid ${alpha(theme.palette.error.main, 0.1)}`, borderRadius: 1 }}
+                            >
+                              <DeleteIcon fontSize="small" />
+                          </IconButton>
+                       </Stack>
+                    </CardContent>
+                  </Card>
+                ))}
+              </Stack>
+            )}
           </Box>
         )}
 
@@ -455,7 +513,7 @@ export default function AdminPage() {
             {/* Top Profile Header Card */}
             <Card elevation={0} sx={{ mb: 3, border: `1px solid ${theme.palette.divider}` }}>
               <CardContent sx={{ p: 3 }}>
-                <Stack direction={{ xs: 'column', md: 'row' }} spacing={3} alignItems={{ xs: 'start', md: 'center' }}>
+                <Stack direction={isMobile ? 'column' : 'row'} spacing={3} alignItems={isMobile ? 'start' : 'center'}>
                   <Avatar sx={{ width: 80, height: 80, borderRadius: 3, bgcolor: 'primary.main', fontSize: 32, fontWeight: 900, boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.2)}` }}>
                     {selectedUser.firstName?.[0]}
                   </Avatar>
@@ -470,7 +528,7 @@ export default function AdminPage() {
                        <Chip label={`Joined ${format(new Date(selectedUser.createdAt), 'MMM yyyy')}`} size="small" sx={{ fontWeight: 800, fontSize: 10, bgcolor: alpha(theme.palette.divider, 0.5) }} />
                     </Stack>
                   </Box>
-                  <Stack direction="row" spacing={2}>
+                  <Stack direction={isMobile ? 'column' : 'row'} spacing={2} sx={{ width: isMobile ? '100%' : 'auto' }}>
                      <FormControl size="small" sx={{ minWidth: 160 }}>
                         <InputLabel>Update Role</InputLabel>
                         <Select
@@ -720,7 +778,8 @@ export default function AdminPage() {
         onClose={() => setIsProductModalOpen(false)}
         fullWidth
         maxWidth="md"
-        PaperProps={{ sx: { borderRadius: 2 } }}
+        fullScreen={isMobile}
+        PaperProps={{ sx: { borderRadius: isMobile ? 0 : 2 } }}
       >
         <DialogTitle sx={{ borderBottom: `1px solid ${theme.palette.divider}` }}>
           {editingProduct ? 'Edit Product' : 'Add New Product'}
