@@ -63,14 +63,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
     withCredentials: true
   }), []);
 
+  // Effect 1: Connection management
   useEffect(() => {
     if (isAuthenticated && user?._id) {
       socket.connect();
       socket.emit('join-room', user._id);
+      return () => {
+        socket.disconnect();
+      };
+    }
+  }, [isAuthenticated, user?._id, socket]);
 
-      socket.on('new-message', async (messageData) => {
-        if (messageData && messageData.sender === 'admin') {
-           // Play notification sound
+  // Effect 2: Global listeners
+  useEffect(() => {
+    if (isAuthenticated && socket) {
+      const handleNewMessage = async (messageData: any) => {
+        // For users: notify when admin sends a message
+        if (messageData && messageData.sender === 'admin' && user?.role !== 'superadmin') {
            const sound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
            sound.play().catch(() => {});
 
@@ -86,22 +95,46 @@ export function AppProvider({ children }: { children: ReactNode }) {
         } catch (err) {
           console.error('Socket refresh error:', err);
         }
-      });
+      };
 
-      socket.on('messages-read', async () => {
+      const handleAdminNewMessage = async (messageData: any) => {
+        // For admins: notify when ANY user sends a message
+        if (user?.role === 'superadmin') {
+           const sound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+           sound.play().catch(() => {});
+
+           toast.info(`Support: ${messageData.userName || 'User'}`, {
+              description: messageData.text?.substring(0, 50) + (messageData.text?.length > 50 ? '...' : ''),
+              duration: 7000, 
+              position: 'top-right'
+           });
+           
+           try {
+              const { data } = await authAPI.getMe();
+              updateUser(data.user);
+           } catch {}
+        }
+      };
+
+      const handleMessagesRead = async () => {
         try {
           const { data } = await authAPI.getMe();
           updateUser(data.user);
         } catch (err) {}
-      });
+      };
+
+      socket.on('new-message', handleNewMessage);
+      socket.on('admin-new-message', handleAdminNewMessage);
+      socket.on('messages-read', handleMessagesRead);
 
       return () => {
-        socket.off('new-message');
-        socket.off('messages-read');
-        socket.disconnect();
+        socket.off('new-message', handleNewMessage);
+        socket.off('admin-new-message', handleAdminNewMessage);
+        socket.off('messages-read', handleMessagesRead);
       };
     }
-  }, [isAuthenticated, user?._id, socket, updateUser, language]);
+  }, [isAuthenticated, socket, updateUser, language, user?.role]);
+
   useEffect(() => { localStorage.setItem('language', language); }, [language]);
 
   useEffect(() => {

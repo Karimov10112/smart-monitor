@@ -296,7 +296,11 @@ const sendMessageToAdmin = async (req, res) => {
     // Real-time: Emit to admins
     const io = req.app.get('io');
     if (io) {
-      io.emit('admin-new-message', { userId: req.user._id });
+      io.emit('admin-new-message', { 
+        userId: req.user._id,
+        userName: `${req.user.firstName} ${req.user.lastName}`,
+        text: text
+      });
     }
 
     res.json({ success: true, message: 'Xabar yuborildi' });

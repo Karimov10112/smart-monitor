@@ -194,9 +194,13 @@ function App() {
       };
       const handleNewMessage = async (data: any) => {
         if (user?.role === 'superadmin') loadAdminStats();
-        if (isSupportModalOpen && data.sender === 'admin') {
+        
+        // Always refresh user to update unread counts/badges
+        if (data.sender === 'admin') {
           try {
-            await authAPI.markMessagesAsRead();
+            if (isSupportModalOpen) {
+              await authAPI.markMessagesAsRead().catch(() => {});
+            }
             const { data: userData } = await authAPI.getMe();
             updateUser(userData.user);
           } catch (err) { }

@@ -125,9 +125,13 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (socket) {
-      const handleAdminMessage = () => {
-        loadAll();
-        if (selectedUser) loadSpecificUser(selectedUser._id);
+      const handleAdminMessage = (data: any) => {
+        loadStats();
+        loadSupportNotifications();
+        // If we are currently looking at THIS user, reload their messages
+        if (selectedUser && data?.userId === selectedUser._id) {
+          loadSpecificUser(selectedUser._id);
+        }
       };
       
       socket.on('new-message', handleAdminMessage);
@@ -138,7 +142,7 @@ export default function AdminPage() {
         socket.off('admin-new-message', handleAdminMessage);
       };
     }
-  }, [socket, selectedUser]);
+  }, [socket, selectedUser?._id]);
 
   useEffect(() => {
     loadAll();

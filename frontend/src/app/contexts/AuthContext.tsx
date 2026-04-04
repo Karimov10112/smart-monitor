@@ -70,22 +70,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     initAuth();
   }, []);
 
-  const login = (accessToken: string, refreshToken: string, userData: User) => {
+  const login = React.useCallback((accessToken: string, refreshToken: string, userData: User) => {
     localStorage.setItem('token', accessToken);
     localStorage.setItem('refreshToken', refreshToken);
     setToken(accessToken);
     setUser(userData);
-  };
+  }, []);
 
-  const logout = async () => {
+  const logout = React.useCallback(async () => {
     try { await authAPI.logout(); } catch {}
     localStorage.removeItem('token');
     localStorage.removeItem('refreshToken');
     setToken(null);
     setUser(null);
-  };
+  }, []);
 
-  const updateUser = (updatedUser: User) => setUser(updatedUser);
+  const updateUser = React.useCallback((updatedUser: User) => setUser(updatedUser), []);
 
   return (
     <AuthContext.Provider value={{
