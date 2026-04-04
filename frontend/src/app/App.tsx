@@ -115,10 +115,7 @@ function App() {
 
   useEffect(() => {
     if (isAuthenticated && user && !user.isProfileComplete && location.pathname !== '/complete-profile') {
-      const timer = setTimeout(() => {
-        navigate('/complete-profile');
-      }, 800);
-      return () => clearTimeout(timer);
+      navigate('/complete-profile', { replace: true });
     }
   }, [isAuthenticated, user, location.pathname, navigate]);
 
@@ -228,7 +225,7 @@ function App() {
       </Stack>
 
       <List sx={{ flexGrow: 1 }}>
-        {[
+        {(user?.isProfileComplete || user?.role === 'superadmin') && [
           { id: 'journal', label: t.dailyJournal || 'Journal', icon: <AssignmentIcon fontSize="small" />, path: '/?tab=journal' },
           { id: 'statistics', label: t.statistics || 'Stats', icon: <BarChartIcon fontSize="small" />, path: '/?tab=statistics' },
           { id: 'products', label: t.products || 'Products', icon: <StorageIcon fontSize="small" />, path: '/?tab=products' },
@@ -251,7 +248,7 @@ function App() {
           </ListItem>
         ))}
 
-        {user?.role === 'superadmin' && (
+        {user?.isProfileComplete && user?.role === 'superadmin' && (
           <ListItem disablePadding sx={{ mb: 0.5 }}>
             <ListItemButton 
               component={RouterLink} 
@@ -270,20 +267,22 @@ function App() {
           </ListItem>
         )}
 
-        <ListItem disablePadding sx={{ mt: 0.5 }}>
-          <ListItemButton 
-            onClick={openReminders} 
-            selected={isReminderModalOpen}
-            sx={{ 
-              borderRadius: 1.5, 
-              py: 1,
-              '&.Mui-selected': { bgcolor: alpha(theme.palette.primary.main, 0.08), color: 'primary.main', '& .MuiListItemIcon-root': { color: 'primary.main' } },
-            }}
-          >
-            <ListItemIcon sx={{ minWidth: 40 }}><AccessTimeIcon fontSize="small" /></ListItemIcon>
-            <ListItemText primary={getT('reminders')} primaryTypographyProps={{ fontWeight: 700, fontSize: '0.875rem' }} />
-          </ListItemButton>
-        </ListItem>
+        {user?.isProfileComplete && (
+          <ListItem disablePadding sx={{ mt: 0.5 }}>
+            <ListItemButton 
+              onClick={openReminders} 
+              selected={isReminderModalOpen}
+              sx={{ 
+                borderRadius: 1.5, 
+                py: 1,
+                '&.Mui-selected': { bgcolor: alpha(theme.palette.primary.main, 0.08), color: 'primary.main', '& .MuiListItemIcon-root': { color: 'primary.main' } },
+              }}
+            >
+              <ListItemIcon sx={{ minWidth: 40 }}><AccessTimeIcon fontSize="small" /></ListItemIcon>
+              <ListItemText primary={getT('reminders')} primaryTypographyProps={{ fontWeight: 700, fontSize: '0.875rem' }} />
+            </ListItemButton>
+          </ListItem>
+        )}
       </List>
 
       {/* Footer Area */}
@@ -392,13 +391,15 @@ function App() {
         <Box sx={{ maxWidth: 1200, mx: 'auto' }}>
           <Routes>
             <Route path="/" element={
-              activeTab === 'journal' ? <DailyJournal /> :
-                activeTab === 'products' ? <Products /> :
-                  <Statistics />
+              user?.isProfileComplete ? (
+                activeTab === 'journal' ? <DailyJournal /> :
+                  activeTab === 'products' ? <Products /> :
+                    <Statistics />
+              ) : <Navigate to="/complete-profile" replace />
             } />
             <Route path="/complete-profile" element={<CompleteProfilePage />} />
-            <Route path="/admin" element={<AdminPage />} />
-            <Route path="/doctor" element={<DoctorPage />} />
+            <Route path="/admin" element={user?.isProfileComplete && user?.role === 'superadmin' ? <AdminPage /> : <Navigate to="/complete-profile" replace />} />
+            <Route path="/doctor" element={user?.isProfileComplete && user?.role === 'doctor' ? <DoctorPage /> : <Navigate to="/complete-profile" replace />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Box>

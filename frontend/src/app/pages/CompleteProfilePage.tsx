@@ -302,10 +302,6 @@ export default function CompleteProfilePage() {
                 {loading ? <CircularProgress size={24} color="inherit" /> : (isEditing ? 'Saqlash' : t.saveContinue)}
               </Button>
               
-              {!isEditing && (
-                <Button fullWidth onClick={() => navigate('/')} sx={{ fontWeight: 800, color: 'text.secondary' }}>{t.fillLater}</Button>
-              )}
-              
               <Button fullWidth color="error" startIcon={<LogoutIcon />} onClick={logout} sx={{ fontWeight: 800 }}>Logout</Button>
             </Stack>
           </Box>
