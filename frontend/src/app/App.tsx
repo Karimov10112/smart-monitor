@@ -83,7 +83,6 @@ function App() {
   const isMobile = useMediaQuery(theme.breakpoints.down('lg'));
   const t = translations[language] || translations['uz'];
   const navigate = useNavigate();
-  const lastNotifiedRef = React.useRef<string>('');
 
   const getT = (key: keyof typeof translations['uz']) => t[key] || (translations['uz'] as any)[key] || key;
 
@@ -93,6 +92,7 @@ function App() {
   const [adminContacts, setAdminContacts] = useState({ phone: '', telegramUsername: '' });
   const [languageAnchorEl, setLanguageAnchorEl] = useState<null | HTMLElement>(null);
   const [themeAnchorEl, setThemeAnchorEl] = useState<null | HTMLElement>(null);
+  const triggeredReminders = React.useRef<Set<string>>(new Set());
   const location = useLocation();
   const [searchParams] = useSearchParams();
 
@@ -134,28 +134,29 @@ function App() {
       const now = new Date();
       const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
-      if (currentTime === lastNotifiedRef.current) return;
-
-      let triggered = false;
       reminders.forEach(r => {
-        if (r.isActive && r.time === currentTime) {
-          triggered = true;
+        const triggerKey = `${r._id}_${currentTime}`;
+        if (r.isActive && r.time === currentTime && !triggeredReminders.current.has(triggerKey)) {
+          triggeredReminders.current.add(triggerKey);
+          
           const sound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
           sound.play().catch(() => { });
 
           toast(t.reminderTriggered || 'Eslatma!', {
             description: `${r.name} - ${r.dose}`,
-            duration: 20000,
+            duration: 10000,
             icon: r.type === 'insulin' ? '💉' : '💊',
           });
+
+          // Cleanup old keys (keep only current minute or similar)
+          if (triggeredReminders.current.size > 50) {
+            triggeredReminders.current.clear();
+          }
         }
       });
-      if (triggered) {
-        lastNotifiedRef.current = currentTime;
-      }
     };
 
-    const interval = setInterval(checkReminders, 60000);
+    const interval = setInterval(checkReminders, 15000); // Check every 15s for better accuracy
     checkReminders();
     return () => clearInterval(interval);
   }, [isAuthenticated, reminders, t.reminderTriggered]);

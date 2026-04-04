@@ -191,10 +191,7 @@ export function Statistics() {
                 const dateA = new Date(a.date).getTime();
                 const dateB = new Date(b.date).getTime();
                 if (dateB !== dateA) return dateB - dateA;
-                
-                const createA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-                const createB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-                return createB - createA;
+                return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
               }).map((record) => (
                 <TableRow key={record._id || record.id} sx={{ '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.01) } }}>
                   <TableCell sx={{ py: 1.5 }}>
