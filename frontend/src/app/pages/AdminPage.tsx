@@ -57,10 +57,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import AddIcon from '@mui/icons-material/Add';
-import NotificationsIcon from '@mui/icons-material/Notifications';
 import CloseIcon from '@mui/icons-material/Close';
-import ForumIcon from '@mui/icons-material/Forum';
-import SendIcon from '@mui/icons-material/Send';
 import BlockIcon from '@mui/icons-material/Block';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -87,15 +84,6 @@ export default function AdminPage() {
   const [role, setRole] = useState('');
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [selectedUserRecords, setSelectedUserRecords] = useState<any[]>([]);
-  const [showChat, setShowChat] = useState(false);
-  const [replyText, setReplyText] = useState('');
-  const [sendingReply, setSendingReply] = useState(false);
-  const chatEndRef = React.useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [selectedUser?.supportMessages]);
-
 
   // Products State
   const [products, setProducts] = useState<any[]>([]);
@@ -119,45 +107,6 @@ export default function AdminPage() {
   const [adminContacts, setAdminContacts] = useState({ phone: '', telegramUsername: '', deepseekApiKey: '' });
   const [savingContacts, setSavingContacts] = useState(false);
 
-  // Support Notifications
-  const [supportUsers, setSupportUsers] = useState<any[]>([]);
-  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-
-  useEffect(() => {
-    if (socket) {
-      const handleAdminMessage = (data: any) => {
-        loadStats();
-        loadSupportNotifications();
-        
-        // If we are currently looking at THIS user, inject message instantly
-        const targetUserId = data?.userId || data?.message?.userId;
-        if (selectedUser && targetUserId === selectedUser._id) {
-          const newMsg = data.message || (data.sender ? data : null);
-          if (newMsg) {
-            setSelectedUser((prev: any) => {
-              if (!prev || prev._id !== targetUserId) return prev;
-              const msgs = prev.supportMessages || [];
-              if (msgs.some((m: any) => m.text === newMsg.text && Math.abs(new Date(m.createdAt).getTime() - new Date(newMsg.createdAt).getTime()) < 2000)) {
-                return prev;
-              }
-              return { ...prev, supportMessages: [...msgs, newMsg] };
-            });
-          }
-        }
-      };
-      
-      socket.on('new-message', handleAdminMessage);
-      socket.on('admin-new-message', handleAdminMessage);
-      socket.on('admin-message-all', handleAdminMessage);
-      
-      return () => { 
-        socket.off('new-message', handleAdminMessage); 
-        socket.off('admin-new-message', handleAdminMessage);
-        socket.off('admin-message-all', handleAdminMessage);
-      };
-    }
-  }, [socket, selectedUser?._id]);
-
   useEffect(() => {
     loadAll();
   }, []);
@@ -165,7 +114,7 @@ export default function AdminPage() {
   const loadAll = async () => {
     setLoading(true);
     try {
-      await Promise.all([loadStats(), loadUsers(), loadSupportNotifications(), loadProducts(), loadContacts()]);
+      await Promise.all([loadStats(), loadUsers(), loadProducts(), loadContacts()]);
     } catch (err) { }
     finally { setLoading(false); }
   };
@@ -212,37 +161,13 @@ export default function AdminPage() {
     } catch { }
   };
 
-  const loadSupportNotifications = async () => {
-    try {
-      const { data } = await adminAPI.getUsers({ limit: 100 });
-      const withUnread = data.users.filter((u: any) => u.supportMessages?.some((m: any) => !m.isReadByAdmin));
-      setSupportUsers(withUnread);
-    } catch { }
-  };
-
   const loadSpecificUser = async (userId: string) => {
     try {
-      await adminAPI.markMessagesAsRead(userId).catch(() => {});
       const { data } = await adminAPI.getUser(userId);
       setSelectedUser(data.user);
       setSelectedUserRecords(data.records ? [...data.records].reverse() : []);
-      loadSupportNotifications();
       loadStats();
     } catch { }
-  };
-
-  const handleReply = async () => {
-    if (!replyText.trim()) return;
-    setSendingReply(true);
-    try {
-      const { data } = await adminAPI.replyToUser(selectedUser._id, replyText);
-      if (data.success) {
-        setSelectedUser(data.user);
-        setReplyText('');
-        toast.success('Javob yuborildi');
-      }
-    } catch { }
-    finally { setSendingReply(false); }
   };
 
   const handleSaveProduct = async (e: React.FormEvent) => {
@@ -270,17 +195,7 @@ export default function AdminPage() {
           <Typography variant="h5" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 2 }}>Admin Panel</Typography>
           <Typography variant="caption" sx={{ fontWeight: 800, color: 'text.secondary' }}>System Management</Typography>
         </Box>
-        <Stack direction="row" spacing={2} alignItems="center">
-          <IconButton
-            onClick={() => setIsNotificationsOpen(true)}
-            sx={{ border: `1px solid ${theme.palette.divider}`, borderRadius: 1.5, p: 1.5, color: supportUsers.length > 0 ? 'primary.main' : 'inherit' }}
-          >
-            <Badge badgeContent={supportUsers.length} color="error">
-              <NotificationsIcon />
-            </Badge>
-          </IconButton>
-          <Avatar src={user?.avatar} sx={{ width: 48, height: 48, borderRadius: 1.5, bgcolor: 'primary.main' }}>{user?.firstName?.[0]}</Avatar>
-        </Stack>
+        <Avatar src={user?.avatar} sx={{ width: 48, height: 48, borderRadius: 1.5, bgcolor: 'primary.main' }}>{user?.firstName?.[0]}</Avatar>
       </Stack>
 
       {/* Tabs */}
@@ -289,7 +204,7 @@ export default function AdminPage() {
           value={selectedUserId ? 'user-detail' : currentTab}
           onChange={(_, val) => {
             if (val === 'user-detail') return;
-            setCurrentTab(val);
+            setCurrentTab(val as TabType);
             setSelectedUserId(null);
             setSelectedUser(null);
           }}
@@ -320,10 +235,9 @@ export default function AdminPage() {
             {[
               { icon: PeopleIcon, label: t.totalUsers || 'Total Users', val: stats?.totalUsers ?? 0, color: theme.palette.primary.main },
               { icon: TimelineIcon, label: t.activeToday || 'Active Today', val: stats?.activeToday ?? 0, color: '#10b981' },
-              { icon: ForumIcon, label: 'Unread Support', val: supportUsers.length, color: '#f59e0b' },
               { icon: InventoryIcon, label: 'Total Products', val: products.length, color: '#8b5cf6' },
             ].map((s, idx) => (
-              <Grid size={{ xs: 12, sm: 6, md: 3 }} key={idx}>
+              <Grid size={{ xs: 12, sm: 6, md: 4 }} key={idx}>
                 <Card elevation={0}>
                   <CardContent sx={{ p: 3 }}>
                     <Stack direction="row" spacing={2} alignItems="center">
@@ -351,7 +265,7 @@ export default function AdminPage() {
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme.palette.divider} />
                       <XAxis dataKey="n" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: theme.palette.text.secondary }} />
                       <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: theme.palette.text.secondary }} />
-                      <Tooltip contentStyle={{ borderRadius: 4, border: `1px solid ${theme.palette.divider}`, boxShadow: 'none' }} />
+                      <Tooltip contentStyle={{ borderRadius: 4, border: `1px solid ${theme.palette.divider}`, boxShadow: 'none' }} labelStyle={{ fontWeight: 900, marginBottom: 8, fontSize: 11 }} />
                       <Area type="monotone" dataKey="v" stroke={theme.palette.primary.main} strokeWidth={2.5} fill={alpha(theme.palette.primary.main, 0.05)} />
                     </AreaChart>
                   </ResponsiveContainer>
@@ -546,64 +460,74 @@ export default function AdminPage() {
                 </CardContent>
               </Card>
 
-              {/* Support Chat */}
+              {/* Full-width Glucose Analytics */}
               <Card elevation={0}>
-                <Box sx={{ p: 2, px: 3, borderBottom: `1px solid ${theme.palette.divider}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Typography variant="caption" sx={{ fontWeight: 900 }}>SUPPORT CHAT</Typography>
-                  {selectedUser.supportMessages?.some((m: any) => !m.isReadByAdmin) && (
-                    <Button size="small" onClick={() => adminAPI.markMessagesAsRead(selectedUser._id).then(() => loadStats())}>
-                      Mark as Read
-                    </Button>
-                  )}
+                <Box sx={{ p: 2, px: 3, borderBottom: `1px solid ${theme.palette.divider}` }}>
+                  <Typography variant="caption" sx={{ fontWeight: 900 }}>GLUCOSE ANALYTICS</Typography>
                 </Box>
-                <CardContent sx={{ p: 0 }}>
-                  <Box sx={{ height: 400, overflowY: 'auto', p: 3, bgcolor: alpha(theme.palette.background.default, 0.5) }}>
-                    {selectedUser.supportMessages?.map((msg: any, idx: number) => {
-                      const isAdmin = msg.sender === 'admin';
-                      return (
-                        <Box key={idx} sx={{ display: 'flex', justifyContent: isAdmin ? 'flex-end' : 'flex-start', mb: 2 }}>
-                          <Paper
-                            elevation={0}
-                            sx={{
-                              p: 1.5, px: 2, borderRadius: 1.5, maxWidth: '80%',
-                              bgcolor: isAdmin ? 'text.primary' : 'background.paper',
-                              color: isAdmin ? 'background.paper' : 'text.primary',
-                              border: isAdmin ? 'none' : `1px solid ${theme.palette.divider}`
-                            }}
-                          >
-                            <Typography variant="body2" sx={{ fontWeight: 600 }}>{msg.text}</Typography>
-                            <Typography variant="caption" sx={{ display: 'block', mt: 0.5, opacity: 0.7, textAlign: 'right', fontSize: 10, fontWeight: 700 }}>
-                              {msg.createdAt ? format(new Date(msg.createdAt), 'HH:mm') : ''}
-                            </Typography>
-                          </Paper>
+                <CardContent sx={{ p: 4, pt: 4 }}>
+                  {selectedUserRecords.length > 0 ? (
+                    <Grid container spacing={4}>
+                      <Grid size={{ xs: 12, lg: 6 }}>
+                        <Typography variant="overline" sx={{ fontWeight: 800, color: 'primary.main', display: 'block', mb: 2, letterSpacing: 1.5 }}>
+                          Och qoringa
+                        </Typography>
+                        <Box sx={{ height: 260, width: '100%' }}>
+                          <ResponsiveContainer width="100%" height={260}>
+                            <AreaChart 
+                              data={selectedUserRecords.map(r => ({
+                                date: format(new Date(r.date), 'dd/MM HH:mm'),
+                                fasting: r.fastingLevel ?? (r.category === 'fasting' ? r.level : 0) ?? 0
+                              })).reverse()}
+                              margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                            >
+                              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme.palette.divider} />
+                              <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: theme.palette.text.secondary }} />
+                              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: theme.palette.text.secondary }} />
+                              <Tooltip contentStyle={{ borderRadius: 8, border: `none`, backgroundColor: theme.palette.background.paper, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }} labelStyle={{ fontWeight: 900, marginBottom: 8, fontSize: 11 }} />
+                              <Area type="monotone" dataKey="fasting" name="Och qoringa" stroke={theme.palette.primary.main} fill={theme.palette.primary.main} fillOpacity={0.1} strokeWidth={3} connectNulls={true} />
+                            </AreaChart>
+                          </ResponsiveContainer>
                         </Box>
-                      );
-                    })}
-                    <div ref={chatEndRef} />
-                  </Box>
-                  <Divider />
-                  <Box sx={{ p: 2 }}>
-                    <Stack direction="row" spacing={1}>
-                      <TextField
-                        fullWidth
-                        size="small"
-                        multiline
-                        maxRows={3}
-                        placeholder="Type a response..."
-                        value={replyText}
-                        onChange={e => setReplyText(e.target.value)}
-                      />
-                      <Button variant="contained" disabled={sendingReply || !replyText.trim()} onClick={handleReply} sx={{ px: 3 }}>
-                        <SendIcon fontSize="small" />
-                      </Button>
-                    </Stack>
-                  </Box>
+                      </Grid>
+
+                      <Grid size={{ xs: 12, lg: 6 }}>
+                        <Typography variant="overline" sx={{ fontWeight: 800, color: 'secondary.main', display: 'block', mb: 2, letterSpacing: 1.5 }}>
+                          Ovqatdan keyin
+                        </Typography>
+                        <Box sx={{ height: 260, width: '100%' }}>
+                          <ResponsiveContainer width="100%" height={260}>
+                            <AreaChart 
+                              data={selectedUserRecords
+                                .filter(r => r.postMealLevel != null || (r.category === 'post-meal' && r.level != null))
+                                .map(r => ({
+                                  date: format(new Date(r.date), 'dd/MM HH:mm'),
+                                  postMeal: r.postMealLevel ?? (r.category === 'post-meal' ? r.level : null) ?? null
+                                })).reverse()}
+                              margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                            >
+                              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme.palette.divider} />
+                              <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: theme.palette.text.secondary }} />
+                              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: theme.palette.text.secondary }} />
+                              <Tooltip contentStyle={{ borderRadius: 8, border: `none`, backgroundColor: theme.palette.background.paper, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }} labelStyle={{ fontWeight: 900, marginBottom: 8, fontSize: 11 }} />
+                              <Area type="monotone" dataKey="postMeal" name="Ovqatdan keyin" stroke={theme.palette.secondary.main} fill={theme.palette.secondary.main} fillOpacity={0.1} strokeWidth={3} connectNulls={true} />
+                            </AreaChart>
+                          </ResponsiveContainer>
+                        </Box>
+                      </Grid>
+                    </Grid>
+                  ) : (
+                    <Box sx={{ py: 6, textAlign: 'center', opacity: 0.3 }}>
+                      <TimelineIcon sx={{ fontSize: 40, mb: 1 }} />
+                      <Typography variant="caption" sx={{ display: 'block', fontWeight: 800 }}>No record data</Typography>
+                    </Box>
+                  )}
                 </CardContent>
               </Card>
             </Grid>
 
             <Grid size={{ xs: 12, md: 5 }}>
-              <Card elevation={0} sx={{ mb: 4 }}>
+              <Card elevation={0}>
                 <Box sx={{ p: 2, px: 3, borderBottom: `1px solid ${theme.palette.divider}` }}>
                   <Typography variant="caption" sx={{ fontWeight: 900 }}>USER ACTIONS</Typography>
                 </Box>
@@ -613,7 +537,7 @@ export default function AdminPage() {
                     <Select
                       value={selectedUser.role}
                       label="Update Role"
-                      onChange={e => adminAPI.updateRole(selectedUser._id, e.target.value).then(() => loadSpecificUser(selectedUser._id))}
+                      onChange={e => adminAPI.updateRole(selectedUser._id, e.target.value as string).then(() => loadSpecificUser(selectedUser._id))}
                     >
                       <MenuItem value="user">User</MenuItem>
                       <MenuItem value="doctor">Doctor</MenuItem>
@@ -648,83 +572,6 @@ export default function AdminPage() {
                       Delete
                     </Button>
                   </Stack>
-                </CardContent>
-              </Card>
-            </Grid>
-
-            {/* Full-width Glucose Analytics */}
-            <Grid size={{ xs: 12 }}>
-              <Card elevation={0}>
-                <Box sx={{ p: 2, px: 3, borderBottom: `1px solid ${theme.palette.divider}` }}>
-                  <Typography variant="caption" sx={{ fontWeight: 900 }}>GLUCOSE ANALYTICS</Typography>
-                </Box>
-                <CardContent sx={{ p: 4, pt: 4 }}>
-                  {selectedUserRecords.length > 0 ? (
-                    <Grid container spacing={4}>
-                      {/* Fasting Chart */}
-                      <Grid size={{ xs: 12, lg: 6 }}>
-                        <Typography variant="overline" sx={{ fontWeight: 800, color: 'primary.main', display: 'block', mb: 2, letterSpacing: 1.5 }}>
-                          Och qoringa (Real vaqt grafik)
-                        </Typography>
-                        <Box sx={{ height: 260, width: '100%' }}>
-                          <ResponsiveContainer width="100%" height={260}>
-                            <AreaChart 
-                              data={selectedUserRecords.map(r => {
-                                const parsed = new Date(r.date);
-                                const t = r.createdAt ? new Date(r.createdAt) : parsed;
-                                return {
-                                  date: `${parsed.toLocaleDateString('uz', { month: 'short', day: 'numeric' })} • ${t.toLocaleTimeString('uz', { hour: '2-digit', minute: '2-digit' })}`,
-                                  fasting: r.fastingLevel ?? (r.category === 'fasting' ? r.level : 0) ?? 0
-                                };
-                              }).reverse()}
-                              margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-                            >
-                              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme.palette.divider} />
-                              <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: theme.palette.text.secondary }} />
-                              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: theme.palette.text.secondary }} />
-                              <Tooltip contentStyle={{ borderRadius: 8, border: `none`, backgroundColor: theme.palette.background.paper, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }} labelStyle={{ fontWeight: 900, marginBottom: 8, fontSize: 11 }} />
-                              <Area type="monotone" dataKey="fasting" name="Och qoringa" stroke={theme.palette.primary.main} fill={theme.palette.primary.main} fillOpacity={0.1} strokeWidth={3} connectNulls={true} />
-                            </AreaChart>
-                          </ResponsiveContainer>
-                        </Box>
-                      </Grid>
-
-                      {/* Post Meal Chart */}
-                      <Grid size={{ xs: 12, lg: 6 }}>
-                        <Typography variant="overline" sx={{ fontWeight: 800, color: 'secondary.main', display: 'block', mb: 2, letterSpacing: 1.5 }}>
-                          Ovqatdan keyin (Real vaqt grafik)
-                        </Typography>
-                        <Box sx={{ height: 260, width: '100%' }}>
-                          <ResponsiveContainer width="100%" height={260}>
-                            <AreaChart 
-                              data={selectedUserRecords
-                                .filter(r => r.postMealLevel != null || (r.category === 'post-meal' && r.level != null))
-                                .map(r => {
-                                  const parsed = new Date(r.date);
-                                  const t = r.createdAt ? new Date(r.createdAt) : parsed;
-                                  return {
-                                    date: `${parsed.toLocaleDateString('uz', { month: 'short', day: 'numeric' })} • ${t.toLocaleTimeString('uz', { hour: '2-digit', minute: '2-digit' })}`,
-                                    postMeal: r.postMealLevel ?? (r.category === 'post-meal' ? r.level : null) ?? null
-                                  };
-                                }).reverse()}
-                              margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-                            >
-                              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme.palette.divider} />
-                              <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: theme.palette.text.secondary }} />
-                              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: theme.palette.text.secondary }} />
-                              <Tooltip contentStyle={{ borderRadius: 8, border: `none`, backgroundColor: theme.palette.background.paper, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }} labelStyle={{ fontWeight: 900, marginBottom: 8, fontSize: 11 }} />
-                              <Area type="monotone" dataKey="postMeal" name="Ovqatdan keyin" stroke={theme.palette.secondary.main} fill={theme.palette.secondary.main} fillOpacity={0.1} strokeWidth={3} connectNulls={true} />
-                            </AreaChart>
-                          </ResponsiveContainer>
-                        </Box>
-                      </Grid>
-                    </Grid>
-                  ) : (
-                    <Box sx={{ py: 6, textAlign: 'center', opacity: 0.3 }}>
-                      <TimelineIcon sx={{ fontSize: 40, mb: 1 }} />
-                      <Typography variant="caption" sx={{ display: 'block', fontWeight: 800 }}>No record data</Typography>
-                    </Box>
-                  )}
                 </CardContent>
               </Card>
             </Grid>
@@ -780,55 +627,6 @@ export default function AdminPage() {
           </Box>
         )}
       </Box>
-
-      {/* Notifications Dialog */}
-      <Dialog
-        open={isNotificationsOpen}
-        onClose={() => setIsNotificationsOpen(false)}
-        fullWidth
-        maxWidth="xs"
-        PaperProps={{ sx: { borderRadius: 2, position: 'fixed', right: 20, top: 80, m: 0, height: 500 } }}
-      >
-        <DialogTitle sx={{ borderBottom: `1px solid ${theme.palette.divider}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>MESSAGES</Typography>
-          <IconButton size="small" onClick={() => setIsNotificationsOpen(false)}><CloseIcon fontSize="small" /></IconButton>
-        </DialogTitle>
-        <DialogContent sx={{ p: 0 }}>
-          <List>
-            {supportUsers.map(u => (
-              <ListItem disablePadding key={u._id}>
-                <ListItemButton
-                  onClick={() => {
-                    setSelectedUserId(u._id);
-                    loadSpecificUser(u._id);
-                    setCurrentTab('users');
-                    setIsNotificationsOpen(false);
-                  }}
-                >
-                  <Stack direction="row" spacing={2} alignItems="center" sx={{ width: '100%' }}>
-                    <Avatar sx={{ borderRadius: 1.5, bgcolor: 'primary.main' }}>{u.firstName?.[0]}</Avatar>
-                    <Box sx={{ flexGrow: 1, overflow: 'hidden' }}>
-                      <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>{u.firstName}</Typography>
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        sx={{ display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontStyle: 'italic' }}
-                      >
-                        {u.supportMessages?.find((m: any) => !m.isReadByAdmin)?.text}
-                      </Typography>
-                    </Box>
-                  </Stack>
-                </ListItemButton>
-              </ListItem>
-            ))}
-            {supportUsers.length === 0 && (
-              <Box sx={{ py: 10, textAlign: 'center', opacity: 0.3 }}>
-                <Typography variant="caption" sx={{ fontWeight: 800 }}>NO MESSAGES</Typography>
-              </Box>
-            )}
-          </List>
-        </DialogContent>
-      </Dialog>
 
       {/* Product Add/Edit Modal */}
       <Dialog
@@ -897,8 +695,8 @@ export default function AdminPage() {
             </Grid>
           </DialogContent>
           <DialogActions sx={{ p: 3, borderTop: `1px solid ${theme.palette.divider}` }}>
-            <Button onClick={() => setIsProductModalOpen(false)}>Cancel</Button>
-            <Button type="submit" variant="contained">Save Product</Button>
+            <Button onClick={() => setIsProductModalOpen(false)} sx={{ fontWeight: 800 }}>Cancel</Button>
+            <Button type="submit" variant="contained" sx={{ fontWeight: 800, px: 4 }}>Save Product</Button>
           </DialogActions>
         </form>
       </Dialog>

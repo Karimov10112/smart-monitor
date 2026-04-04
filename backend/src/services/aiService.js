@@ -73,7 +73,7 @@ const getAIResponse = async ({ userId, role, message, language = 'uz', conversat
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${process.env.DEEPSEEK_API_KEY}`,
+        Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
         model: 'deepseek-chat',
@@ -86,7 +86,7 @@ const getAIResponse = async ({ userId, role, message, language = 'uz', conversat
 
     if (!response.ok) {
       const errText = await response.text();
-      console.error('DeepSeek service error:', errText);
+      console.error(`DeepSeek error (${response.status}):`, errText);
       return "Kechirasiz, AI xizmatida vaqtinchalik xatolik yuz berdi.";
     }
 

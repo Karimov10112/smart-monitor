@@ -47,13 +47,10 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import MedicalServicesIcon from '@mui/icons-material/MedicalServices';
 import NotificationsIcon from '@mui/icons-material/Notifications';
-import ForumIcon from '@mui/icons-material/Forum';
-import SendIcon from '@mui/icons-material/Send';
 import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import CallIcon from '@mui/icons-material/Call';
 import TelegramIcon from '@mui/icons-material/Telegram';
-import SaveIcon from '@mui/icons-material/Save';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
 
@@ -88,29 +85,23 @@ function App() {
   const getT = (key: keyof typeof translations['uz']) => t[key] || (translations['uz'] as any)[key] || key;
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
   const [isReminderModalOpen, setIsReminderModalOpen] = useState(false);
   const [reminders, setReminders] = useState<any[]>([]);
-  const [adminUnreadCount, setAdminUnreadCount] = useState(0);
   const [adminContacts, setAdminContacts] = useState({ phone: '', telegramUsername: '' });
-  const [contactSaving, setContactSaving] = useState(false);
-  const [supportText, setSupportText] = useState('');
-  const [sendingSupport, setSendingSupport] = useState(false);
   const location = useLocation();
   const [searchParams] = useSearchParams();
-  const chatEndRef = React.useRef<HTMLDivElement>(null);
-
-  const unreadSupportCount = user?.supportMessages?.filter((m: any) => m.sender === 'admin' && m.isReadByUser === false).length || 0;
-
-  const scrollToBottom = () => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
   useEffect(() => {
-    if (isSupportModalOpen) {
-      setTimeout(scrollToBottom, 100);
-    }
-  }, [isSupportModalOpen, user?.supportMessages]);
+    const loadData = async () => {
+      try {
+        const { data: contactsData } = await adminAPI.getAdminContacts();
+        setAdminContacts(contactsData.contacts);
+        
+        const { data: remData } = await reminderAPI.getReminders();
+        setReminders(remData.reminders);
+      } catch (err) {}
+    };
+    if (isAuthenticated) loadData();
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (isAuthenticated && user && !user.isProfileComplete && location.pathname !== '/complete-profile') {
@@ -173,29 +164,22 @@ function App() {
     return () => clearInterval(interval);
   }, [isAuthenticated, reminders, t.reminderTriggered]);
 
-  const openSupport = async () => {
-    setIsReminderModalOpen(false); // Close reminders if open
-    setIsSidebarOpen(false); // Close sidebar for focus
-    setIsSupportModalOpen(true);
-    try {
-      await authAPI.markMessagesAsRead();
-      const { data } = await authAPI.getMe();
-      updateUser(data.user);
-      if (user?.role === 'superadmin') loadAdminStats();
-    } catch (err) { }
+  const openReminders = () => {
+    setIsSidebarOpen(false);
+    setIsReminderModalOpen(true);
   };
 
   // socket is already destructured above from useApp()
 
   useEffect(() => {
     if (isAuthenticated && socket) {
-      const handleReadByUser = (data: any) => {
+      const handleGlobalSync = () => {
         if (user?.role === 'superadmin') loadAdminStats();
       };
-      // Note: handleNewMessage is now managed centrally in AppContext.tsx
-      socket.on('support-messages-read-by-user', handleReadByUser);
+      
+      socket.on('support-messages-read-by-user', handleGlobalSync);
       return () => {
-        socket.off('support-messages-read-by-user', handleReadByUser);
+        socket.off('support-messages-read-by-user', handleGlobalSync);
       };
     }
   }, [isAuthenticated, socket, user?.role]);
@@ -224,29 +208,6 @@ function App() {
   }
 
   const activeTab = searchParams.get('tab') || 'journal';
-
-  const handleSendSupport = async () => {
-    if (!supportText.trim()) return;
-    setSendingSupport(true);
-    try {
-      const newMessage: any = {
-        sender: 'user',
-        text: supportText,
-        createdAt: new Date().toISOString(),
-        isReadByAdmin: false
-      };
-      if (user) {
-        updateUser({ ...user, supportMessages: [...(user.supportMessages || []), newMessage] });
-      }
-      await authAPI.sendMessageToAdmin({ text: supportText });
-      toast.success(language === 'uz' ? 'Xabar yuborildi!' : 'Сообщение отправлено!');
-      setSupportText('');
-    } catch (err) {
-      toast.error('Error sending message');
-    } finally {
-      setSendingSupport(false);
-    }
-  };
 
   const handleSaveContacts = async () => {
     setContactSaving(true);
@@ -374,22 +335,15 @@ function App() {
         <ListItem disablePadding sx={{ mt: 0.5 }}>
           <ListItemButton onClick={openSupport} sx={{ borderRadius: 1.5, py: 1 }}>
             <ListItemIcon sx={{ minWidth: 40 }}><ForumIcon fontSize="small" /></ListItemIcon>
-            <ListItemText primary={t.supportChat} primaryTypographyProps={{ fontWeight: 700, fontSize: '0.875rem' }} />
-            {unreadSupportCount > 0 && <Badge badgeContent={unreadSupportCount} color="error" sx={{ ml: 2 }} />}
-          </ListItemButton>
-        </ListItem>
-
-        <ListItem disablePadding sx={{ mt: 0.5 }}>
           <ListItemButton 
             onClick={() => {
-              setIsSupportModalOpen(false);
               setIsSidebarOpen(false);
               setIsReminderModalOpen(true);
             }} 
             sx={{ borderRadius: 1.5, py: 1 }}
           >
             <ListItemIcon sx={{ minWidth: 40 }}><AccessTimeIcon fontSize="small" /></ListItemIcon>
-            <ListItemText primary={t.reminders} primaryTypographyProps={{ fontWeight: 700, fontSize: '0.875rem' }} />
+            <ListItemText primary={getT('reminders')} primaryTypographyProps={{ fontWeight: 700, fontSize: '0.875rem' }} />
           </ListItemButton>
         </ListItem>
       </List>
@@ -501,139 +455,7 @@ function App() {
         </Box>
       </Box>
 
-      {/* Support Chat Dialog */}
-      <Dialog
-        open={isSupportModalOpen}
-        onClose={() => setIsSupportModalOpen(false)}
-        maxWidth="xs"
-        fullWidth
-        PaperProps={{ sx: { borderRadius: 2, height: 600 } }}
-      >
-        <DialogTitle sx={{ 
-          p: 2, px: 3, 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'space-between',
-          background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
-          color: 'white'
-        }}>
-          <Stack direction="row" spacing={2} alignItems="center">
-            <ForumIcon sx={{ color: 'white' }} />
-            <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>{t.supportChat}</Typography>
-          </Stack>
-          <IconButton onClick={() => setIsSupportModalOpen(false)} size="small" sx={{ color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
-            <CloseIcon />
-          </IconButton>
-        </DialogTitle>
-        <DialogContent sx={{ p: 0, display: 'flex', flexDirection: 'column', bgcolor: 'background.default' }}>
-          {(adminContacts.phone || adminContacts.telegramUsername) && (
-            <Box sx={{ 
-              p: 1.5, px: 3, 
-              bgcolor: alpha(theme.palette.background.paper, 0.8), 
-              backdropFilter: 'blur(8px)',
-              borderBottom: `1px solid ${theme.palette.divider}` 
-            }}>
-               <Stack direction="row" spacing={3} justifyContent="center">
-                  {adminContacts.phone && (
-                    <Box component="a" href={`tel:${adminContacts.phone}`} sx={{ 
-                      display: 'flex', alignItems: 'center', gap: 1, 
-                      textDecoration: 'none', color: '#6366f1',
-                      fontWeight: 700, fontSize: '0.75rem',
-                      '&:hover': { color: '#4f46e5' }
-                    }}>
-                       <CallIcon sx={{ fontSize: 16 }} />
-                       <Typography variant="caption" sx={{ fontWeight: 800 }}>{adminContacts.phone}</Typography>
-                    </Box>
-                  )}
-                  {adminContacts.telegramUsername && (
-                    <Box 
-                      component="a" 
-                      href={adminContacts.telegramUsername.startsWith('http') ? adminContacts.telegramUsername : `https://t.me/${adminContacts.telegramUsername.replace('@', '')}`} 
-                      target="_blank"
-                      sx={{ 
-                        display: 'flex', alignItems: 'center', gap: 1, 
-                        textDecoration: 'none', color: '#6366f1',
-                        fontWeight: 700, fontSize: '0.75rem',
-                        '&:hover': { color: '#4f46e5' }
-                      }}
-                    >
-                       <TelegramIcon sx={{ fontSize: 16 }} />
-                       <Typography variant="caption" sx={{ fontWeight: 800 }}>Telegram</Typography>
-                    </Box>
-                  )}
-               </Stack>
-            </Box>
-          )}
-          <Box sx={{ flexGrow: 1, p: 3, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
-            {user?.supportMessages?.map((msg: any, idx: number) => {
-              const isAdmin = msg.sender === 'admin';
-              return (
-                <Box key={idx} sx={{ display: 'flex', justifyContent: isAdmin ? 'flex-start' : 'flex-end', mb: 2 }}>
-                  <Paper
-                    elevation={0}
-                    sx={{
-                      p: 1.5,
-                      px: 2,
-                      maxWidth: '85%',
-                      background: isAdmin 
-                        ? undefined 
-                        : 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
-                      bgcolor: isAdmin ? 'background.paper' : undefined,
-                      color: isAdmin ? 'text.primary' : 'white',
-                      borderRadius: isAdmin ? '4px 16px 16px 16px' : '16px 16px 4px 16px',
-                      boxShadow: isAdmin 
-                        ? '0 2px 4px rgba(0,0,0,0.02), 0 1px 2px rgba(0,0,0,0.03)' 
-                        : '0 4px 12px rgba(99, 102, 241, 0.2)',
-                    }}
-                  >
-                    <Typography variant="body2" sx={{ fontWeight: 500, fontSize: '0.875rem' }}>{msg.text}</Typography>
-                    <Typography variant="caption" sx={{ display: 'block', mt: 0.5, opacity: 0.7, textAlign: 'right', fontSize: 10, fontWeight: 700 }}>
-                      {msg.createdAt ? new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
-                      {!isAdmin && (msg.isReadByAdmin ? ' ✓✓' : ' ✓')}
-                    </Typography>
-                  </Paper>
-                </Box>
-              );
-            })}
-            <div ref={chatEndRef} />
-          </Box>
-          <Box sx={{ p: 2, bgcolor: 'background.paper', borderTop: '1px solid', borderColor: 'divider' }}>
-            <Stack direction="row" spacing={1.5}>
-              <TextField
-                placeholder={t.writeMessage || 'Xabar yozing...'}
-                fullWidth
-                size="medium"
-                multiline
-                maxRows={3}
-                value={supportText}
-                onChange={e => setSupportText(e.target.value)}
-                sx={{ 
-                  '& .MuiOutlinedInput-root': {
-                    bgcolor: 'background.default',
-                    border: 'none',
-                    '& fieldset': { border: 'none' },
-                    '&:hover': { bgcolor: 'action.hover' },
-                    borderRadius: 3
-                  }
-                }}
-              />
-              <MuiButton
-                variant="contained"
-                disabled={sendingSupport || !supportText.trim()}
-                onClick={handleSendSupport}
-                sx={{ 
-                  minWidth: 54, width: 54, height: 54, p: 0, 
-                  borderRadius: 3,
-                  boxShadow: '0 4px 12px rgba(79, 70, 229, 0.2)',
-                  '&:hover': { transform: 'scale(1.05)' }
-                }}
-              >
-                {sendingSupport ? <CircularProgress size={16} color="inherit" /> : <SendIcon />}
-              </MuiButton>
-            </Stack>
-          </Box>
-        </DialogContent>
-      </Dialog>
+
 
       <ReminderModal
         isOpen={isReminderModalOpen}
