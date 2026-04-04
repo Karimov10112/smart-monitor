@@ -27,7 +27,7 @@ import AddIcon from '@mui/icons-material/Add';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import CoffeeIcon from '@mui/icons-material/Coffee';
 import RestaurantIcon from '@mui/icons-material/Restaurant';
-import ForumIcon from '@mui/icons-material/Forum';
+import NotesIcon from '@mui/icons-material/Notes';
 import InfoIcon from '@mui/icons-material/Info';
 import StarIcon from '@mui/icons-material/Star';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
@@ -170,7 +170,7 @@ export function DailyJournal() {
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                   fullWidth
                   InputProps={{
-                    startAdornment: <ForumIcon sx={{ mr: 1, mt: 0.5, color: 'text.secondary', alignSelf: 'flex-start', fontSize: 18 }} />,
+                    startAdornment: <NotesIcon sx={{ mr: 1, mt: 0.5, color: 'text.secondary', alignSelf: 'flex-start', fontSize: 18 }} />,
                   }}
                 />
 

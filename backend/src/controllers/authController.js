@@ -279,111 +279,7 @@ const completeProfile = async (req, res) => {
   }
 };
 
-// ==================== SEND MESSAGE TO ADMIN ====================
-const sendMessageToAdmin = async (req, res) => {
-  try {
-    const { text } = req.body;
-    if (!text) return res.status(400).json({ success: false, message: 'Xabar matni bo\'sh' });
 
-    // 1. Save User's Message
-    const user = await User.findByIdAndUpdate(
-      req.user._id,
-      { $push: { supportMessages: { text, sender: 'user', isReadByAdmin: false } } },
-      { new: true, runValidators: false }
-    );
-
-    if (!user) return res.status(404).json({ success: false, message: 'Foydalanuvchi topilmadi' });
-
-    // 2. Real-time: Emit user's message to admins
-    const io = req.app.get('io');
-    if (io) {
-      io.emit('admin-new-message', { 
-        userId: req.user._id,
-        userName: `${req.user.firstName} ${req.user.lastName}`,
-        message: {
-          text,
-          sender: 'user',
-          createdAt: new Date(),
-          isReadByAdmin: false,
-          isReadByUser: false
-        }
-      });
-    }
-
-    // 3. Respond to User HTTP Request (Non-blocking AI part)
-    res.json({ success: true, message: 'Xabar yuborildi' });
-
-    // 4. Trigger AI Response in the background
-    const { getAIResponse } = require('../services/aiService');
-    const aiResponseText = await getAIResponse({
-      userId: user._id,
-      role: user.role,
-      message: text,
-      language: 'uz' // Defaulting to uz for now, can be dynamic
-    });
-
-    // 5. Save AI's response
-    const aiMessage = {
-      text: aiResponseText,
-      sender: 'admin',
-      isReadByAdmin: true,
-      isReadByUser: false,
-      createdAt: new Date()
-    };
-
-    const updatedUser = await User.findByIdAndUpdate(
-      user._id,
-      { $push: { supportMessages: aiMessage } },
-      { new: true }
-    );
-
-    // 6. Real-time: Emit AI message to user and admins
-    if (io) {
-      // To User
-      io.to(user._id.toString()).emit('new-message', aiMessage);
-      // To sync Admins
-      io.emit('admin-message-all', { ...aiMessage, userId: user._id });
-    }
-
-  } catch (err) {
-    console.error('Send message error:', err);
-    if (!res.headersSent) {
-      res.status(500).json({ success: false, message: 'Server xatosi' });
-    }
-  }
-};
-
-// ==================== MARK SUPPORT MESSAGES AS READ BY USER ====================
-const markSupportMessagesAsReadByUser = async (req, res) => {
-  try {
-    const user = await User.findById(req.user._id);
-    if (!user) return res.status(404).json({ success: false, message: 'Foydalanuvchi topilmadi' });
-
-    let updated = false;
-    user.supportMessages.forEach(m => {
-      if (m.sender === 'admin' && !m.isReadByUser) {
-        m.isReadByUser = true;
-        updated = true;
-      }
-    });
-
-    if (updated) {
-      user.markModified('supportMessages');
-      await user.save();
-    }
-    
-    // Real-time: Emit to admin if possible
-    const io = req.app.get('io');
-    if (io) {
-      io.emit('support-messages-read-by-user', { userId: req.user._id });
-    }
-
-    res.json({ success: true, message: 'Xabarlar o\'qildi' });
-  } catch (err) {
-    console.error('Read by user error:', err);
-    res.status(500).json({ success: false, message: 'Server xatosi' });
-  }
-};
 
 // ==================== UPDATE PROFILE CREDENTIALS ====================
 const updateProfile = async (req, res) => {
@@ -484,8 +380,6 @@ module.exports = {
   getMe,
   logout,
   oauthCallback,
-  sendMessageToAdmin,
-  markSupportMessagesAsReadByUser,
   updateProfile,
   updatePassword,
 };

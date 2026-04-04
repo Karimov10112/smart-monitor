@@ -24,7 +24,6 @@ const userSchema = new mongoose.Schema(
     mfy: String,      // mahalla
     diabetesType: { type: String, enum: ['type1', 'type2', 'prediabetes', 'gestational', 'none'] },
     doctorName: String,
-    deepseekApiKey: String,
     isProfileComplete: { type: Boolean, default: false },
 
     // Auth
@@ -53,17 +52,6 @@ const userSchema = new mongoose.Schema(
     // Notes by admin
     adminNotes: String,
     doctorNotes: String,
-
-    // Support and Notifications
-    supportMessages: [
-      {
-        text: String,
-        sender: { type: String, enum: ['user', 'admin'], default: 'user' },
-        createdAt: { type: Date, default: Date.now },
-        isReadByAdmin: { type: Boolean, default: false },
-        isReadByUser: { type: Boolean, default: false },
-      },
-    ],
   },
   { timestamps: true }
 );

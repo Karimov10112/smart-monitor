@@ -90,13 +90,14 @@ function App() {
   const [adminContacts, setAdminContacts] = useState({ phone: '', telegramUsername: '' });
   const location = useLocation();
   const [searchParams] = useSearchParams();
+
   useEffect(() => {
     const loadData = async () => {
       try {
-        const { data: contactsData } = await adminAPI.getAdminContacts();
+        const { data: contactsData } = await adminAPI.getContacts();
         setAdminContacts(contactsData.contacts);
         
-        const { data: remData } = await reminderAPI.getReminders();
+        const { data: remData } = await reminderAPI.getAll();
         setReminders(remData.reminders);
       } catch (err) {}
     };
@@ -118,25 +119,6 @@ function App() {
       setReminders(data.reminders || []);
     } catch { }
   };
-
-  const loadAdminStats = async () => {
-    if (user?.role === 'superadmin') {
-      try {
-        const { data } = await adminAPI.getStats();
-        setAdminUnreadCount(data.stats.unreadSupportMessages || 0);
-      } catch { }
-    }
-  };
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      loadReminders();
-      adminAPI.getContacts().then(res => {
-        if (res.data?.success) setAdminContacts(res.data.contacts);
-      }).catch(() => {});
-      if (user?.role === 'superadmin') loadAdminStats();
-    }
-  }, [isAuthenticated, user?.role]);
 
   useEffect(() => {
     if (!isAuthenticated || reminders.length === 0) return;
@@ -169,21 +151,6 @@ function App() {
     setIsReminderModalOpen(true);
   };
 
-  // socket is already destructured above from useApp()
-
-  useEffect(() => {
-    if (isAuthenticated && socket) {
-      const handleGlobalSync = () => {
-        if (user?.role === 'superadmin') loadAdminStats();
-      };
-      
-      socket.on('support-messages-read-by-user', handleGlobalSync);
-      return () => {
-        socket.off('support-messages-read-by-user', handleGlobalSync);
-      };
-    }
-  }, [isAuthenticated, socket, user?.role]);
-
   if (loading) {
     return (
       <Box sx={{ display: 'flex', height: '100vh', width: '100%', alignItems: 'center', justifyContent: 'center', bgcolor: 'background.default' }}>
@@ -209,137 +176,65 @@ function App() {
 
   const activeTab = searchParams.get('tab') || 'journal';
 
-  const handleSaveContacts = async () => {
-    setContactSaving(true);
-    try {
-      await adminAPI.updateContacts(adminContacts);
-      toast.success(t.success || 'Muvaffaqiyatli saqlandi');
-    } catch {
-      toast.error(t.error || 'Xato yuz berdi');
-    } finally {
-      setContactSaving(false);
-    }
-  };
-
   const SidebarContent = (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', p: 3 }}>
-      {/* Brand */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 4, px: 1 }}>
-        <Box
-          sx={{
-            width: 40,
-            height: 40,
-            background: theme.palette.primary.main,
-            borderRadius: 1.5,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'white'
+    <Box sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 4 }}>
+        <Avatar 
+          sx={{ 
+            width: 50, height: 50, 
+            bgcolor: 'primary.main',
+            boxShadow: '0 4px 12px rgba(99, 102, 241, 0.2)',
+            borderRadius: 2
           }}
         >
-          <StorageIcon fontSize="small" />
-        </Box>
+          {user?.firstName?.[0]}
+        </Avatar>
         <Box>
-          <Typography variant="subtitle1" sx={{ fontWeight: 800, lineHeight: 1 }}>{t.appName || 'Qand Nazorati'}</Typography>
-          <Typography variant="overline" sx={{ fontWeight: 800, letterSpacing: 1.5, color: 'text.secondary', fontSize: 8 }}>Professional Monitor</Typography>
+          <Typography variant="subtitle1" sx={{ fontWeight: 800, color: 'text.primary', lineHeight: 1.2 }}>
+            {user?.firstName}
+          </Typography>
+          <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+            {user?.role === 'superadmin' ? 'Administrator' : t.user}
+          </Typography>
         </Box>
-      </Box>
+      </Stack>
 
-      <Divider sx={{ mb: 3 }} />
-
-      {/* Navigation */}
-      <List sx={{ flexGrow: 1, px: 0 }}>
-        <ListItem disablePadding sx={{ mb: 0.5 }}>
-          <ListItemButton
-            component={RouterLink}
-            to="/?tab=journal"
-            selected={activeTab === 'journal'}
-            onClick={() => setIsSidebarOpen(false)}
-            sx={{
-              borderRadius: 1.5,
-              py: 1,
-              '&.Mui-selected': { bgcolor: alpha(theme.palette.primary.main, 0.08), color: 'primary.main', '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.12) }, '& .MuiListItemIcon-root': { color: 'primary.main' } }
-            }}
-          >
-            <ListItemIcon sx={{ minWidth: 40 }}><AssignmentIcon fontSize="small" /></ListItemIcon>
-            <ListItemText primary={getT('dailyJournal')} primaryTypographyProps={{ fontWeight: 700, fontSize: '0.875rem' }} />
-          </ListItemButton>
-        </ListItem>
-
-        <ListItem disablePadding sx={{ mb: 0.5 }}>
-          <ListItemButton
-            component={RouterLink}
-            to="/?tab=products"
-            selected={activeTab === 'products'}
-            onClick={() => setIsSidebarOpen(false)}
-            sx={{
-              borderRadius: 1.5,
-              py: 1,
-              '&.Mui-selected': { bgcolor: alpha(theme.palette.primary.main, 0.08), color: 'primary.main', '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.12) }, '& .MuiListItemIcon-root': { color: 'primary.main' } }
-            }}
-          >
-            <ListItemIcon sx={{ minWidth: 40 }}><StorageIcon fontSize="small" /></ListItemIcon>
-            <ListItemText primary={getT('products')} primaryTypographyProps={{ fontWeight: 700, fontSize: '0.875rem' }} />
-          </ListItemButton>
-        </ListItem>
-
-        <ListItem disablePadding sx={{ mb: 0.5 }}>
-          <ListItemButton
-            component={RouterLink}
-            to="/?tab=stats"
-            selected={activeTab === 'stats'}
-            onClick={() => setIsSidebarOpen(false)}
-            sx={{
-              borderRadius: 1.5,
-              py: 1,
-              '&.Mui-selected': { bgcolor: alpha(theme.palette.primary.main, 0.08), color: 'primary.main', '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.12) }, '& .MuiListItemIcon-root': { color: 'primary.main' } }
-            }}
-          >
-            <ListItemIcon sx={{ minWidth: 40 }}><BarChartIcon fontSize="small" /></ListItemIcon>
-            <ListItemText primary={getT('statistics')} primaryTypographyProps={{ fontWeight: 700, fontSize: '0.875rem' }} />
-          </ListItemButton>
-        </ListItem>
-
-        <Divider sx={{ my: 2, opacity: 0.5 }} />
-
-        <Typography variant="overline" sx={{ px: 1.5, fontWeight: 800, color: 'text.secondary', letterSpacing: 1.5, fontSize: 10 }}>{t.systemPanel}</Typography>
-        
-        {user?.role === 'superadmin' && (
-          <ListItem disablePadding sx={{ mt: 0.5 }}>
-            <ListItemButton
-              onClick={() => { navigate('/admin'); setIsSidebarOpen(false); }}
-              selected={location.pathname === '/admin'}
-              sx={{ borderRadius: 1.5, py: 1 }}
-            >
-              <ListItemIcon sx={{ minWidth: 40 }}><AdminPanelSettingsIcon fontSize="small" /></ListItemIcon>
-              <ListItemText primary={getT('adminPanel')} primaryTypographyProps={{ fontWeight: 700, fontSize: '0.875rem' }} />
-              {adminUnreadCount > 0 && <Badge badgeContent={adminUnreadCount} color="error" sx={{ ml: 2 }} />}
-            </ListItemButton>
-          </ListItem>
-        )}
-
-        {user?.role === 'doctor' && (
-          <ListItem disablePadding sx={{ mt: 0.5 }}>
+      <List sx={{ flexGrow: 1 }}>
+        {[
+          { id: 'journal', label: t.dailyJournal || 'Journal', icon: <AssignmentIcon fontSize="small" />, path: '/?tab=journal' },
+          { id: 'statistics', label: t.statistics || 'Stats', icon: <BarChartIcon fontSize="small" />, path: '/?tab=statistics' },
+          { id: 'products', label: t.products || 'Products', icon: <StorageIcon fontSize="small" />, path: '/?tab=products' },
+        ].map((item) => (
+          <ListItem key={item.id} disablePadding sx={{ mb: 0.5 }}>
             <ListItemButton
               component={RouterLink}
-              to="/doctor"
-              selected={location.pathname === '/doctor'}
-              sx={{ borderRadius: 1.5, py: 1 }}
+              to={item.path}
+              selected={activeTab === item.id}
+              onClick={() => setIsSidebarOpen(false)}
+              sx={{
+                borderRadius: 1.5,
+                py: 1,
+                '&.Mui-selected': { bgcolor: alpha(theme.palette.primary.main, 0.08), color: 'primary.main', '& .MuiListItemIcon-root': { color: 'primary.main' } },
+              }}
             >
-              <ListItemIcon sx={{ minWidth: 40 }}><MedicalServicesIcon fontSize="small" /></ListItemIcon>
-              <ListItemText primary={getT('doctorPanel')} primaryTypographyProps={{ fontWeight: 700, fontSize: '0.875rem' }} />
+              <ListItemIcon sx={{ minWidth: 40 }}>{item.icon}</ListItemIcon>
+              <ListItemText primary={item.label} primaryTypographyProps={{ fontWeight: 700, fontSize: '0.875rem' }} />
+            </ListItemButton>
+          </ListItem>
+        ))}
+
+        {user?.role === 'superadmin' && (
+          <ListItem disablePadding sx={{ mb: 0.5 }}>
+            <ListItemButton component={RouterLink} to="/admin" onClick={() => setIsSidebarOpen(false)} sx={{ borderRadius: 1.5, py: 1 }}>
+              <ListItemIcon sx={{ minWidth: 40 }}><AdminPanelSettingsIcon fontSize="small" /></ListItemIcon>
+              <ListItemText primary="Admin Panel" primaryTypographyProps={{ fontWeight: 700, fontSize: '0.875rem' }} />
             </ListItemButton>
           </ListItem>
         )}
 
         <ListItem disablePadding sx={{ mt: 0.5 }}>
-          <ListItemButton onClick={openSupport} sx={{ borderRadius: 1.5, py: 1 }}>
-            <ListItemIcon sx={{ minWidth: 40 }}><ForumIcon fontSize="small" /></ListItemIcon>
           <ListItemButton 
-            onClick={() => {
-              setIsSidebarOpen(false);
-              setIsReminderModalOpen(true);
-            }} 
+            onClick={openReminders} 
             sx={{ borderRadius: 1.5, py: 1 }}
           >
             <ListItemIcon sx={{ minWidth: 40 }}><AccessTimeIcon fontSize="small" /></ListItemIcon>
@@ -359,7 +254,7 @@ function App() {
           
           {(adminContacts.phone || adminContacts.telegramUsername) && (
             <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1.5, bgcolor: alpha(theme.palette.primary.main, 0.02), borderStyle: 'dashed' }}>
-               <Typography variant="caption" sx={{ fontWeight: 900, color: 'primary.main', display: 'block', mb: 1, textTransform: 'uppercase', fontSize: 8 }}>{t.contactSupport || 'Bog\'lanish'}</Typography>
+               <Typography variant="caption" sx={{ fontWeight: 900, color: 'primary.main', display: 'block', mb: 1, textTransform: 'uppercase', fontSize: 8 }}>{t.contactSupport || 'Support'}</Typography>
                <Stack spacing={1}>
                   {adminContacts.phone && (
                     <Link href={`tel:${adminContacts.phone}`} sx={{ display: 'flex', alignItems: 'center', gap: 1, textDecoration: 'none', color: 'text.primary', '&:hover': { color: 'primary.main' } }}>
@@ -404,36 +299,26 @@ function App() {
       </Drawer>
 
       {/* Main Content */}
-      <Box component="main" sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', minHeight: '100vh', width: { lg: `calc(100% - ${SIDEBAR_WIDTH}px)` } }}>
-        {/* Header (Official & Simple) */}
-        <AppBar position="sticky" elevation={0} sx={{ bgcolor: 'background.paper', borderBottom: `1px solid ${theme.palette.divider}`, color: 'text.primary' }}>
-          <Toolbar sx={{ height: 64, px: { xs: 2, sm: 3 } }}>
-            {isMobile && (
-              <IconButton edge="start" color="inherit" onClick={() => setIsSidebarOpen(true)} sx={{ mr: 2 }}>
-                <MenuIcon />
-              </IconButton>
-            )}
-            
-            <Typography variant="subtitle1" sx={{ flexGrow: 1, fontWeight: 800, color: 'text.primary', textTransform: 'uppercase', letterSpacing: 2 }}>
-              {activeTab === 'journal' ? getT('dailyJournal') : activeTab === 'products' ? getT('products') : getT('statistics')}
-            </Typography>
-
-            <Stack direction="row" spacing={3} alignItems="center">
-               <Box sx={{ textAlign: 'right', display: { xs: 'none', md: 'block' } }}>
-                  <Typography variant="body2" sx={{ fontWeight: 800, lineHeight: 1 }}>{user?.firstName}</Typography>
-                  <Typography variant="caption" sx={{ fontWeight: 800, color: 'primary.main', textTransform: 'uppercase', fontSize: 9 }}>{user?.role}</Typography>
-               </Box>
-               <IconButton component={RouterLink} to="/complete-profile" sx={{ width: 44, height: 44, bgcolor: alpha(theme.palette.primary.main, 0.05), p: 0, borderRadius: 1.5 }}>
-                  <Badge badgeContent={user?.role === 'superadmin' ? adminUnreadCount : unreadSupportCount} color="error" overlap="circular">
-                    <Avatar sx={{ bgcolor: 'transparent', color: 'primary.main', width: 44, height: 44 }}><PersonIcon /></Avatar>
-                  </Badge>
-               </IconButton>
-            </Stack>
+      <Box component="main" sx={{ flexGrow: 1, p: { xs: 2, lg: 4 }, width: { lg: `calc(100% - ${SIDEBAR_WIDTH}px)` } }}>
+        <AppBar 
+          position="sticky" 
+          color="inherit" 
+          elevation={0} 
+          sx={{ 
+            bgcolor: 'background.default', 
+            borderBottom: `1px solid ${theme.palette.divider}`,
+            mb: 4,
+            display: { lg: 'none' } 
+          }}
+        >
+          <Toolbar sx={{ justifyContent: 'space-between' }}>
+            <IconButton edge="start" color="inherit" onClick={() => setIsSidebarOpen(true)}><MenuIcon /></IconButton>
+            <Typography variant="h6" color="primary" sx={{ fontWeight: 900, letterSpacing: -1 }}>QAND NAZORATI</Typography>
+            <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main' }}>{user?.firstName?.[0]}</Avatar>
           </Toolbar>
         </AppBar>
 
-        {/* Page Content */}
-        <Box sx={{ p: { xs: 3, md: 4 }, flexGrow: 1 }}>
+        <Box sx={{ maxWidth: 1200, mx: 'auto' }}>
           <Routes>
             <Route path="/" element={
               activeTab === 'journal' ? <DailyJournal /> :
@@ -454,8 +339,6 @@ function App() {
            </Typography>
         </Box>
       </Box>
-
-
 
       <ReminderModal
         isOpen={isReminderModalOpen}

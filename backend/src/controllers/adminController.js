@@ -3,13 +3,11 @@ const BloodSugar = require('../models/BloodSugar');
 
 const getAdminContacts = async (req, res) => {
   try {
-    const admin = await User.findOne({ role: 'superadmin' }).select('phone telegramUsername deepseekApiKey');
     res.json({
       success: true,
       contacts: {
         phone: admin?.phone || '',
-        telegramUsername: admin?.telegramUsername || '',
-        deepseekApiKey: admin?.deepseekApiKey || ''
+        telegramUsername: admin?.telegramUsername || ''
       }
     });
   } catch (err) {
@@ -19,16 +17,9 @@ const getAdminContacts = async (req, res) => {
 
 const updateAdminContacts = async (req, res) => {
   try {
-    const { phone, telegramUsername, deepseekApiKey } = req.body;
-    
-    // Allow any superadmin to update these
-    if (req.user.role !== 'superadmin') {
-      return res.status(403).json({ success: false, message: 'Faqatgina superadmin o\'zgartirishi mumkin' });
-    }
-
     const admin = await User.findOneAndUpdate(
        { role: 'superadmin' }, 
-       { phone, telegramUsername, deepseekApiKey },
+       { phone, telegramUsername },
        { new: true }
     );
     
@@ -37,8 +28,7 @@ const updateAdminContacts = async (req, res) => {
       message: 'Sozlamalar yangilandi',
       contacts: { 
         phone: admin.phone, 
-        telegramUsername: admin.telegramUsername,
-        deepseekApiKey: admin.deepseekApiKey
+        telegramUsername: admin.telegramUsername
       }
     });
   } catch (err) {
@@ -202,15 +192,10 @@ const getDashboardStats = async (req, res) => {
       User.aggregate([
         { $match: { gender: { $exists: true, $ne: null } } },
         { $group: { _id: '$gender', count: { $sum: 1 } } },
-      ]),
-      User.aggregate([
-        { $unwind: '$supportMessages' },
-        { $match: { 'supportMessages.isReadByAdmin': false } },
-        { $count: 'count' }
-      ]),
+      ])
     ]);
 
-    const totalUnreadMessages = statsArray[9].length > 0 ? statsArray[9][0].count : 0;
+
 
     res.json({
       success: true,
@@ -224,8 +209,6 @@ const getDashboardStats = async (req, res) => {
         regionStats: statsArray[6],
         diabetesTypeStats: statsArray[7],
         genderStats: statsArray[8],
-        genderStats: statsArray[8],
-        unreadSupportMessages: totalUnreadMessages,
       },
     });
   } catch (err) {
@@ -234,79 +217,7 @@ const getDashboardStats = async (req, res) => {
   }
 };
 
-// Mark support messages as read
-const markMessagesAsRead = async (req, res) => {
-  try {
-    await User.updateOne(
-      { _id: req.params.id },
-      { $set: { 'supportMessages.$[].isReadByAdmin': true } }
-    );
-    
-    const io = req.app.get('io');
-    if (io) {
-      io.to(req.params.id).emit('messages-read');
-    }
 
-    res.json({ success: true, message: 'Xabarlar o\'qildi' });
-  } catch (err) {
-    res.status(500).json({ success: false, message: 'Server xatosi' });
-  }
-};
-
-// Get user blood sugar records for admin view
-const getUserRecords = async (req, res) => {
-  try {
-    const records = await BloodSugar.find({ user: req.params.id })
-      .sort({ date: -1 });
-    res.json({ success: true, records });
-  } catch (err) {
-    res.status(500).json({ success: false, message: 'Server xatosi' });
-  }
-};
-
-// Admin: Reply to user support message
-const replyToUser = async (req, res) => {
-  try {
-    const { userId, text } = req.body;
-    if (!text) return res.status(400).json({ success: false, message: 'Xabar bo\'sh' });
-
-    const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ success: false, message: 'Foydalanuvchi topilmadi' });
-
-    user.supportMessages.push({
-      text,
-      sender: 'admin',
-      isReadByAdmin: true,
-      isReadByUser: false,
-    });
-
-    await user.save();
-    
-    // Real-time: Emit message via socket
-    const io = req.app.get('io');
-    if (io) {
-      const messagePayload = {
-        text,
-        sender: 'admin',
-        createdAt: new Date(),
-        isReadByAdmin: true,
-        isReadByUser: false,
-        userId: userId
-      };
-
-      // To the specific user
-      io.to(userId).emit('new-message', messagePayload);
-      
-      // To all admins (to sync other admin dashboards)
-      io.emit('admin-message-all', messagePayload);
-    }
-
-    res.json({ success: true, message: 'Javob yuborildi', user });
-  } catch (err) {
-    console.error('Reply to user error:', err.message);
-    res.status(500).json({ success: false, message: 'Server xatosi' });
-  }
-};
 
 module.exports = {
   getAllUsers,
@@ -317,8 +228,6 @@ module.exports = {
   addAdminNote,
   getDashboardStats,
   getUserRecords,
-  markMessagesAsRead,
-  replyToUser,
   getAdminContacts,
   updateAdminContacts,
 };

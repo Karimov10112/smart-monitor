@@ -598,19 +598,7 @@ export default function AdminPage() {
                       onChange={e => setAdminContacts({ ...adminContacts, phone: e.target.value })}
                     />
                   </Box>
-                  <Box>
-                    <Typography variant="caption" sx={{ fontWeight: 900, color: 'primary.main', mb: 1, display: 'block' }}>DEEPSEEK AI API KEY</Typography>
-                    <TextField
-                      fullWidth
-                      type="password"
-                      placeholder="sk-..."
-                      value={adminContacts.deepseekApiKey}
-                      onChange={e => setAdminContacts({ ...adminContacts, deepseekApiKey: e.target.value })}
-                    />
-                    <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
-                      Get your key from <a href="https://api.deepseek.com" target="_blank" rel="noreferrer" style={{ color: '#6366f1' }}>api.deepseek.com</a>
-                    </Typography>
-                  </Box>
+
                   <Button
                     variant="contained"
                     size="large"

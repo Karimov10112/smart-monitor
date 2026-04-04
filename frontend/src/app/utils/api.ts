@@ -43,8 +43,6 @@ api.interceptors.response.use(
 export const authAPI = {
   register: (data: any) => api.post('/auth/register', data),
   verifyOTP: (data: any) => api.post('/auth/verify-otp', data),
-  sendMessageToAdmin: (data: { text: string }) => api.post('/auth/support', data),
-  markMessagesAsRead: () => api.put('/auth/mark-support-read'),
   updateProfile: (data: any) => api.put('/auth/update-profile', data),
   forgotPassword: (data: any) => api.post('/auth/forgot-password', data),
   resetPassword: (data: any) => api.post('/auth/reset-password', data),
@@ -73,8 +71,6 @@ export const adminAPI = {
   toggleBan: (id: string, reason?: string) => api.patch(`/admin/users/${id}/ban`, { reason }),
   deleteUser: (id: string) => api.delete(`/admin/users/${id}`),
   addNote: (id: string, notes: string) => api.patch(`/admin/users/${id}/notes`, { notes }),
-  markMessagesAsRead: (id: string) => api.patch(`/admin/users/${id}/read-messages`),
-  replyToUser: (userId: string, text: string) => api.post(`/admin/reply-to-user`, { userId, text }),
   getContacts: () => api.get('/admin/contacts'),
   updateContacts: (data: { phone: string; telegramUsername: string }) => api.put('/admin/contacts', data),
 };
@@ -97,11 +93,6 @@ export const doctorAPI = {
   getPatients: (params?: any) => api.get('/doctor/patients', { params }),
   getPatientRecords: (id: string) => api.get(`/doctor/patients/${id}/records`),
   addNote: (id: string, notes: string) => api.patch(`/doctor/patients/${id}/notes`, { notes }),
-};
-
-export const aiAPI = {
-  chat: (data: any) => api.post('/ai/chat', data),
-  analyze: (data: any) => api.post('/ai/analyze', data),
 };
 
 export default api;

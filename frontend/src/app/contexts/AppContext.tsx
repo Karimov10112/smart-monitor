@@ -84,72 +84,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [isAuthenticated, user?._id, socket]);
 
-  // Effect 2: Global listeners
   useEffect(() => {
     if (isAuthenticated && socket) {
-      const handleNewMessage = (messageData: any) => {
-        if (!messageData) return;
-
-        // 1. Instant Injection: Update local user state immediately
-        updateUser((prev: any) => {
-           if (!prev) return prev;
-           const messages = prev.supportMessages || [];
-           // Avoid duplicates (if API sync was faster, which is unlikely but possible)
-           if (messages.some((m: any) => m._id === messageData._id || (m.text === messageData.text && Math.abs(new Date(m.createdAt).getTime() - new Date(messageData.createdAt).getTime()) < 1000))) {
-              return prev;
-           }
-           return { ...prev, supportMessages: [...messages, messageData] };
-        });
-
-        // 2. Play sound & Toast for users
-        if (messageData.sender === 'admin' && user?.role !== 'superadmin') {
-           const sound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
-           sound.play().catch(() => {});
-
-           toast.info(language === 'uz' ? 'Support: Yangi xabar keldi' : 'Support: Новое сообщение', {
-              duration: 4000, 
-              position: 'top-right'
-           });
-        }
-        
-        // 3. Background Sync (to get official DB IDs etc)
-        authAPI.getMe().then(({ data }) => updateUser(data.user)).catch(() => {});
-      };
-
-      const handleAdminNewMessage = (data: any) => {
-        if (!data || !data.message) return;
-
-        // Play sound for admins
-        if (user?.role === 'superadmin') {
-           const sound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
-           sound.play().catch(() => {});
-
-           toast.info(`Support: ${data.userName || 'User'}`, {
-              description: data.message.text?.substring(0, 50) + (data.message.text?.length > 50 ? '...' : ''),
-              duration: 6000, 
-              position: 'top-right'
-           });
-           
-           // If admin is NOT on the specific user page, update the unread count globally
-           authAPI.getMe().then(({ data }) => updateUser(data.user)).catch(() => {});
-        }
-      };
-
-      const handleMessagesRead = () => {
-        authAPI.getMe().then(({ data }) => updateUser(data.user)).catch(() => {});
-      };
-
-      socket.on('new-message', handleNewMessage);
-      socket.on('admin-new-message', handleAdminNewMessage);
-      socket.on('messages-read', handleMessagesRead);
-
+      // Global synchronization listeners (if any needed in future)
+      
       return () => {
-        socket.off('new-message', handleNewMessage);
-        socket.off('admin-new-message', handleAdminNewMessage);
-        socket.off('messages-read', handleMessagesRead);
+        // Cleanup listeners
       };
     }
-  }, [isAuthenticated, socket, updateUser, language, user?.role]);
+  }, [isAuthenticated, socket]);
 
   useEffect(() => { localStorage.setItem('language', language); }, [language]);
 

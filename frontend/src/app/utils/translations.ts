@@ -145,12 +145,6 @@ export const translations: any = {
     avgSugar: "O'rtacha qand",
     lastActivity: "So'nggi faollik",
     
-    // AI
-    aiAnalysis: "AI Tahlili",
-    getDetailedReport: "Batafsil hisobot olish",
-    processing: "Ishlov berilmoqda...",
-    aiAnalysisResult: "AI Tahlili Natijasi:",
-    
     // Common
     mmol: "mmol/l",
     gi: "GI",
@@ -180,14 +174,7 @@ export const translations: any = {
     backBtn: "Orqaga",
     appName: "Qand Nazorati",
     systemPanel: "System Panel",
-    supportChat: "Support Chat",
-    supportChatDesc: "Super Admin doim yordamga tayyor",
-    contactLabel: "A'loqa uchun",
-    changeLanguage: "Tilni o'zgartirish",
     logoutUser: "Chiqish",
-    askQuestion: "Savol bering",
-    writeMessage: "Xabaringizni yozing...",
-    replySent: "Javob yuborildi",
     productUpdated: "Mahsulot yangilandi",
     productAdded: "Mahsulot qo'shildi",
     addNew: "Yangi qo'shish",
@@ -362,12 +349,6 @@ export const translations: any = {
     avgSugar: "Средний сахар",
     lastActivity: "Последняя активность",
     
-    // AI
-    aiAnalysis: "AI Анализ",
-    getDetailedReport: "Получить подробный отчет",
-    processing: "Обработка...",
-    aiAnalysisResult: "Результат AI Анализа:",
-    
     // Common
     mmol: "ммоль/л",
     gi: "ГИ",
@@ -397,14 +378,7 @@ export const translations: any = {
     backBtn: "Назад",
     appName: "Qand Nazorati",
     systemPanel: "Системная панель",
-    supportChat: "Чат поддержки",
-    supportChatDesc: "Супер Админ готов помочь",
-    contactLabel: "Для связи",
-    changeLanguage: "Сменить язык",
     logoutUser: "Выйти",
-    askQuestion: "Задайте вопрос",
-    writeMessage: "Напишите сообщение...",
-    replySent: "Ответ отправлен",
     productUpdated: "Продукт обновлен",
     productAdded: "Продукт добавлен",
     addNew: "Добавить",
@@ -579,12 +553,6 @@ export const translations: any = {
     avgSugar: "Avg Blood Sugar",
     lastActivity: "Last Activity",
     
-    // AI
-    aiAnalysis: "AI Analysis",
-    getDetailedReport: "Get Detailed Report",
-    processing: "Processing...",
-    aiAnalysisResult: "AI Analysis Result:",
-    
     // Common
     mmol: "mmol/L",
     gi: "GI",
@@ -614,14 +582,7 @@ export const translations: any = {
     backBtn: "Back",
     appName: "Glucose Monitor",
     systemPanel: "System Panel",
-    supportChat: "Support Chat",
-    supportChatDesc: "Super Admin is here to help",
-    contactLabel: "Contact info",
-    changeLanguage: "Change Language",
     logoutUser: "Logout",
-    askQuestion: "Ask a question",
-    writeMessage: "Write your message...",
-    replySent: "Reply sent",
     productUpdated: "Product updated",
     productAdded: "Product added",
     addNew: "Add new",

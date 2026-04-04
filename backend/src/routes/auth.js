@@ -11,10 +11,6 @@ const {
   refreshToken,
   completeProfile,
   getMe,
-  logout,
-  oauthCallback,
-  sendMessageToAdmin,
-  markSupportMessagesAsReadByUser,
   updateProfile,
   updatePassword,
 } = require('../controllers/authController');
@@ -32,8 +28,6 @@ router.post('/refresh-token', refreshToken);
 // Protected
 router.get('/me', protect, getMe);
 router.post('/logout', protect, logout);
-router.post('/support', protect, sendMessageToAdmin);
-router.put('/mark-support-read', protect, markSupportMessagesAsReadByUser);
 router.post('/complete-profile', protect, completeProfile);
 router.put('/update-profile', protect, updateProfile);
 router.put('/update-password', protect, updatePassword);
