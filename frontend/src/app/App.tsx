@@ -215,7 +215,7 @@ function App() {
               component={RouterLink}
               to={item.path}
               selected={!isReminderModalOpen && location.pathname === '/' && activeTab === item.id}
-              onClick={() => setIsSidebarOpen(false)}
+              onClick={() => { setIsSidebarOpen(false); setIsReminderModalOpen(false); }}
               sx={{
                 borderRadius: 1.5,
                 py: 1,
@@ -234,7 +234,7 @@ function App() {
               component={RouterLink} 
               to="/admin" 
               selected={!isReminderModalOpen && location.pathname === '/admin'}
-              onClick={() => setIsSidebarOpen(false)} 
+              onClick={() => { setIsSidebarOpen(false); setIsReminderModalOpen(false); }} 
               sx={{ 
                 borderRadius: 1.5, 
                 py: 1,
