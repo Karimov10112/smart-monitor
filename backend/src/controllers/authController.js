@@ -299,7 +299,13 @@ const sendMessageToAdmin = async (req, res) => {
       io.emit('admin-new-message', { 
         userId: req.user._id,
         userName: `${req.user.firstName} ${req.user.lastName}`,
-        text: text
+        message: {
+          text,
+          sender: 'user',
+          createdAt: new Date(),
+          isReadByAdmin: false,
+          isReadByUser: false
+        }
       });
     }
 

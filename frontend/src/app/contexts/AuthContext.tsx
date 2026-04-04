@@ -40,7 +40,7 @@ interface AuthContextType {
   loading: boolean;
   login: (token: string, refreshToken: string, user: User) => void;
   logout: () => Promise<void>;
-  updateUser: (user: User) => void;
+  updateUser: (user: any) => void;
   isAuthenticated: boolean;
   isSuperAdmin: boolean;
 }
@@ -85,7 +85,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }, []);
 
-  const updateUser = React.useCallback((updatedUser: User) => setUser(updatedUser), []);
+  const updateUser = React.useCallback((updatedUser: any) => {
+    if (typeof updatedUser === 'function') {
+      setUser(updatedUser);
+    } else {
+      setUser(updatedUser);
+    }
+  }, []);
 
   return (
     <AuthContext.Provider value={{

@@ -192,28 +192,13 @@ function App() {
       const handleReadByUser = (data: any) => {
         if (user?.role === 'superadmin') loadAdminStats();
       };
-      const handleNewMessage = async (data: any) => {
-        if (user?.role === 'superadmin') loadAdminStats();
-        
-        // Always refresh user to update unread counts/badges
-        if (data.sender === 'admin') {
-          try {
-            if (isSupportModalOpen) {
-              await authAPI.markMessagesAsRead().catch(() => {});
-            }
-            const { data: userData } = await authAPI.getMe();
-            updateUser(userData.user);
-          } catch (err) { }
-        }
-      };
+      // Note: handleNewMessage is now managed centrally in AppContext.tsx
       socket.on('support-messages-read-by-user', handleReadByUser);
-      socket.on('new-message', handleNewMessage);
       return () => {
         socket.off('support-messages-read-by-user', handleReadByUser);
-        socket.off('new-message', handleNewMessage);
       };
     }
-  }, [isAuthenticated, isSupportModalOpen, socket, user?.role, updateUser]);
+  }, [isAuthenticated, socket, user?.role]);
 
   if (loading) {
     return (

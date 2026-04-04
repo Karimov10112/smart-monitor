@@ -280,11 +280,20 @@ const replyToUser = async (req, res) => {
     // Real-time: Emit message via socket
     const io = req.app.get('io');
     if (io) {
-      io.to(userId).emit('new-message', {
+      const messagePayload = {
         text,
         sender: 'admin',
-        createdAt: new Date()
-      });
+        createdAt: new Date(),
+        isReadByAdmin: true,
+        isReadByUser: false,
+        userId: userId
+      };
+
+      // To the specific user
+      io.to(userId).emit('new-message', messagePayload);
+      
+      // To all admins (to sync other admin dashboards)
+      io.emit('admin-message-all', messagePayload);
     }
 
     res.json({ success: true, message: 'Javob yuborildi', user });

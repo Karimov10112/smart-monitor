@@ -66,9 +66,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Effect 1: Connection management
   useEffect(() => {
     if (isAuthenticated && user?._id) {
+      const onConnect = () => {
+        socket.emit('join-room', user._id);
+        console.log('Joined room:', user._id);
+      };
+
+      socket.on('connect', onConnect);
       socket.connect();
-      socket.emit('join-room', user._id);
+      
+      // Initial join
+      if (socket.connected) onConnect();
+
       return () => {
+        socket.off('connect', onConnect);
         socket.disconnect();
       };
     }
@@ -77,50 +87,56 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Effect 2: Global listeners
   useEffect(() => {
     if (isAuthenticated && socket) {
-      const handleNewMessage = async (messageData: any) => {
-        // For users: notify when admin sends a message
-        if (messageData && messageData.sender === 'admin' && user?.role !== 'superadmin') {
+      const handleNewMessage = (messageData: any) => {
+        if (!messageData) return;
+
+        // 1. Instant Injection: Update local user state immediately
+        updateUser((prev: any) => {
+           if (!prev) return prev;
+           const messages = prev.supportMessages || [];
+           // Avoid duplicates (if API sync was faster, which is unlikely but possible)
+           if (messages.some((m: any) => m._id === messageData._id || (m.text === messageData.text && Math.abs(new Date(m.createdAt).getTime() - new Date(messageData.createdAt).getTime()) < 1000))) {
+              return prev;
+           }
+           return { ...prev, supportMessages: [...messages, messageData] };
+        });
+
+        // 2. Play sound & Toast for users
+        if (messageData.sender === 'admin' && user?.role !== 'superadmin') {
            const sound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
            sound.play().catch(() => {});
 
            toast.info(language === 'uz' ? 'Support: Yangi xabar keldi' : 'Support: Новое сообщение', {
-              duration: 5000, 
+              duration: 4000, 
               position: 'top-right'
            });
         }
         
-        try {
-          const { data } = await authAPI.getMe();
-          updateUser(data.user);
-        } catch (err) {
-          console.error('Socket refresh error:', err);
-        }
+        // 3. Background Sync (to get official DB IDs etc)
+        authAPI.getMe().then(({ data }) => updateUser(data.user)).catch(() => {});
       };
 
-      const handleAdminNewMessage = async (messageData: any) => {
-        // For admins: notify when ANY user sends a message
+      const handleAdminNewMessage = (data: any) => {
+        if (!data || !data.message) return;
+
+        // Play sound for admins
         if (user?.role === 'superadmin') {
            const sound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
            sound.play().catch(() => {});
 
-           toast.info(`Support: ${messageData.userName || 'User'}`, {
-              description: messageData.text?.substring(0, 50) + (messageData.text?.length > 50 ? '...' : ''),
-              duration: 7000, 
+           toast.info(`Support: ${data.userName || 'User'}`, {
+              description: data.message.text?.substring(0, 50) + (data.message.text?.length > 50 ? '...' : ''),
+              duration: 6000, 
               position: 'top-right'
            });
            
-           try {
-              const { data } = await authAPI.getMe();
-              updateUser(data.user);
-           } catch {}
+           // If admin is NOT on the specific user page, update the unread count globally
+           authAPI.getMe().then(({ data }) => updateUser(data.user)).catch(() => {});
         }
       };
 
-      const handleMessagesRead = async () => {
-        try {
-          const { data } = await authAPI.getMe();
-          updateUser(data.user);
-        } catch (err) {}
+      const handleMessagesRead = () => {
+        authAPI.getMe().then(({ data }) => updateUser(data.user)).catch(() => {});
       };
 
       socket.on('new-message', handleNewMessage);

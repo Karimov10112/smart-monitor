@@ -128,18 +128,32 @@ export default function AdminPage() {
       const handleAdminMessage = (data: any) => {
         loadStats();
         loadSupportNotifications();
-        // If we are currently looking at THIS user, reload their messages
-        if (selectedUser && data?.userId === selectedUser._id) {
-          loadSpecificUser(selectedUser._id);
+        
+        // If we are currently looking at THIS user, inject message instantly
+        const targetUserId = data?.userId || data?.message?.userId;
+        if (selectedUser && targetUserId === selectedUser._id) {
+          const newMsg = data.message || (data.sender ? data : null);
+          if (newMsg) {
+            setSelectedUser((prev: any) => {
+              if (!prev || prev._id !== targetUserId) return prev;
+              const msgs = prev.supportMessages || [];
+              if (msgs.some((m: any) => m.text === newMsg.text && Math.abs(new Date(m.createdAt).getTime() - new Date(newMsg.createdAt).getTime()) < 2000)) {
+                return prev;
+              }
+              return { ...prev, supportMessages: [...msgs, newMsg] };
+            });
+          }
         }
       };
       
       socket.on('new-message', handleAdminMessage);
       socket.on('admin-new-message', handleAdminMessage);
+      socket.on('admin-message-all', handleAdminMessage);
       
       return () => { 
         socket.off('new-message', handleAdminMessage); 
         socket.off('admin-new-message', handleAdminMessage);
+        socket.off('admin-message-all', handleAdminMessage);
       };
     }
   }, [socket, selectedUser?._id]);
