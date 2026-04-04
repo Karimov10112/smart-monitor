@@ -55,6 +55,7 @@ import CallIcon from '@mui/icons-material/Call';
 import TelegramIcon from '@mui/icons-material/Telegram';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 
 // Components
 import { DailyJournal } from './components/DailyJournal';

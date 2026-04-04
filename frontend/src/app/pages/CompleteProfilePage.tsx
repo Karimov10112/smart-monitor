@@ -62,7 +62,8 @@ export default function CompleteProfilePage() {
   const [form, setForm] = useState({
     firstName: '', lastName: '', phone: '', telegramUsername: '',
     dateOfBirth: '', gender: '', region: '',
-    district: '', mfy: '', diabetesType: '', doctorName: '',
+    district: '', mfy: '', diabetesType: '',
+    height: '', weight: '',
     email: '', currentPassword: '', newPassword: '',
   });
   const [loading, setLoading] = useState(false);
@@ -80,7 +81,8 @@ export default function CompleteProfilePage() {
         district: user.district || '',
         mfy: user.mfy || '',
         diabetesType: user.diabetesType || '',
-        doctorName: user.doctorName || '',
+        height: user.height ? String(user.height) : '',
+        weight: user.weight ? String(user.weight) : '',
         email: user.email || '',
         currentPassword: '',
         newPassword: '',
@@ -109,8 +111,8 @@ export default function CompleteProfilePage() {
       const { data } = await authAPI.completeProfile(form);
       if (data.success) {
         if (user && (form.newPassword || (form.email && form.email !== user.email))) {
-           if (form.email && form.email !== user.email) await authAPI.updateProfile({ email: form.email });
-           if (form.newPassword) await authAPI.updatePassword({ currentPassword: form.currentPassword, newPassword: form.newPassword });
+          if (form.email && form.email !== user.email) await authAPI.updateProfile({ email: form.email });
+          if (form.newPassword) await authAPI.updatePassword({ currentPassword: form.currentPassword, newPassword: form.newPassword });
         }
         toast.success(t.success);
         updateUser(data.user);
@@ -128,13 +130,13 @@ export default function CompleteProfilePage() {
   return (
     <Container maxWidth="md" sx={{ py: 6 }}>
       <Box sx={{ textAlign: 'center', mb: 6 }}>
-        <Avatar 
-          sx={{ 
-            width: 80, 
-            height: 80, 
-            bgcolor: 'primary.main', 
-            borderRadius: 2, 
-            mx: 'auto', 
+        <Avatar
+          sx={{
+            width: 80,
+            height: 80,
+            bgcolor: 'primary.main',
+            borderRadius: 2,
+            mx: 'auto',
             mb: 2,
             fontSize: 40
           }}
@@ -152,7 +154,7 @@ export default function CompleteProfilePage() {
       <Card elevation={0} sx={{ border: `1px solid ${theme.palette.divider}` }}>
         <CardContent sx={{ p: { xs: 3, md: 5 } }}>
           <Box component="form" onSubmit={handleSubmit}>
-            
+
             {/* Section: Personal Info */}
             <Box sx={{ mb: 6 }}>
               <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 3 }}>
@@ -176,9 +178,9 @@ export default function CompleteProfilePage() {
                   <Typography variant="caption" sx={{ fontWeight: 800, mb: 1.5, display: 'block', textTransform: 'uppercase', color: 'text.secondary' }}>{t.gender}</Typography>
                   <Stack direction="row" spacing={2}>
                     {['male', 'female', 'other'].map(g => (
-                      <Button 
-                        key={g} 
-                        variant={form.gender === g ? 'contained' : 'outlined'} 
+                      <Button
+                        key={g}
+                        variant={form.gender === g ? 'contained' : 'outlined'}
                         onClick={() => handleChange('gender', g)}
                         sx={{ flex: 1, fontWeight: 800, borderRadius: 1.5 }}
                       >
@@ -227,11 +229,11 @@ export default function CompleteProfilePage() {
                     onInputChange={(_, val) => handleChange('mfy', val)}
                     disabled={!form.district}
                     renderInput={(params) => (
-                      <TextField 
-                        {...params} 
-                        label={t.mfy} 
-                        size="small" 
-                        required 
+                      <TextField
+                        {...params}
+                        label={t.mfy}
+                        size="small"
+                        required
                         placeholder={form.district && !UZ_MAHALLAS[form.district] ? "Mahalla nomini yozing..." : "Tanlang yoki yozing..."}
                       />
                     )}
@@ -255,9 +257,9 @@ export default function CompleteProfilePage() {
                   <Grid container spacing={2}>
                     {DIABETES_TYPES.map(dt => (
                       <Grid size={{ xs: 12, sm: 6, md: 4 }} key={dt.value}>
-                        <Button 
-                          fullWidth 
-                          variant={form.diabetesType === dt.value ? 'contained' : 'outlined'} 
+                        <Button
+                          fullWidth
+                          variant={form.diabetesType === dt.value ? 'contained' : 'outlined'}
                           onClick={() => handleChange('diabetesType', dt.value)}
                           startIcon={form.diabetesType === dt.value && <CheckCircleIcon />}
                           sx={{ justifyContent: 'start', px: 2, fontWeight: 700, borderRadius: 1.5, py: 1.5 }}
@@ -268,8 +270,27 @@ export default function CompleteProfilePage() {
                     ))}
                   </Grid>
                 </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                   <TextField fullWidth size="small" label={t.doctorName} value={form.doctorName} onChange={e => handleChange('doctorName', e.target.value)} placeholder="Dr. Azamat Karimov" />
+                <Grid size={{ xs: 12, sm: 3 }}>
+                  <TextField
+                    fullWidth size="small" type="number"
+                    label="Bo'y (sm) *"
+                    value={form.height}
+                    onChange={e => handleChange('height', e.target.value)}
+                    inputProps={{ min: 100, max: 250, step: 1 }}
+                    placeholder="170"
+                    required
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 3 }}>
+                  <TextField
+                    fullWidth size="small" type="number"
+                    label="Vazn (kg) *"
+                    value={form.weight}
+                    onChange={e => handleChange('weight', e.target.value)}
+                    inputProps={{ min: 20, max: 300, step: 0.5 }}
+                    placeholder="70"
+                    required
+                  />
                 </Grid>
               </Grid>
             </Box>
@@ -284,7 +305,7 @@ export default function CompleteProfilePage() {
               </Stack>
               <Grid container spacing={3}>
                 <Grid size={{ xs: 12 }}>
-                  <TextField fullWidth size="small" type="email" label={t.email} value={form.email} onChange={e => handleChange('email', e.target.value)} />
+                  <TextField fullWidth size="small" type="text" label={t.email} value={form.email} onChange={e => handleChange('email', e.target.value)} />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField fullWidth size="small" type="password" label={t.currentPassword} value={form.currentPassword} onChange={e => handleChange('currentPassword', e.target.value)} placeholder="••••••••" helperText="Email yoki parolni o'zgartirish uchun kerak" />
@@ -296,22 +317,22 @@ export default function CompleteProfilePage() {
             </Paper>
 
             <Stack spacing={2}>
-              <Button 
-                fullWidth 
-                type="submit" 
-                variant="contained" 
-                size="large" 
+              <Button
+                fullWidth
+                type="submit"
+                variant="contained"
+                size="large"
                 disabled={
-                  loading || 
-                  !form.firstName || !form.lastName || !form.phone || 
-                  !form.dateOfBirth || !form.gender || !form.region || 
-                  !form.district || !form.mfy || !form.diabetesType
+                  !form.firstName || !form.lastName || !form.phone ||
+                  !form.dateOfBirth || !form.gender || !form.region ||
+                  !form.district || !form.mfy || !form.diabetesType ||
+                  !form.height || !form.weight
                 }
                 sx={{ height: 64, fontWeight: 900, fontSize: '1rem', borderRadius: 2, boxShadow: 'none', '&:hover': { boxShadow: 'none' } }}
               >
                 {loading ? <CircularProgress size={24} color="inherit" /> : (isEditing ? 'Saqlash' : t.saveContinue)}
               </Button>
-              
+
               <Button fullWidth color="error" startIcon={<LogoutIcon />} onClick={logout} sx={{ fontWeight: 800 }}>Logout</Button>
             </Stack>
           </Box>

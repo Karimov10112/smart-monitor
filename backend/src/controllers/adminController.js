@@ -79,6 +79,9 @@ const getAllUsers = async (req, res) => {
     if (role) query.role = role;
     if (isBanned !== undefined) query.isBanned = isBanned === 'true';
     if (region) query.region = region;
+    
+    // Always filter for verified users by default to avoid showing pending registrations
+    query.isEmailVerified = true;
 
     const total = await User.countDocuments(query);
     const users = await User.find(query)

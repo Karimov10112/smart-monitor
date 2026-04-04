@@ -252,7 +252,7 @@ const refreshToken = async (req, res) => {
 // ==================== COMPLETE PROFILE ====================
 const completeProfile = async (req, res) => {
   try {
-    const { firstName, lastName, phone, dateOfBirth, gender, region, district, mfy, diabetesType, doctorName } = req.body;
+    const { firstName, lastName, phone, dateOfBirth, gender, region, district, mfy, diabetesType, doctorName, height, weight } = req.body;
 
     const isProfileComplete = !!(firstName && lastName && phone && dateOfBirth && gender && region && district && mfy && diabetesType);
 
@@ -269,6 +269,8 @@ const completeProfile = async (req, res) => {
         mfy,
         diabetesType,
         doctorName,
+        height: height ? Number(height) : undefined,
+        weight: weight ? Number(weight) : undefined,
         isProfileComplete,
       },
       { new: true }

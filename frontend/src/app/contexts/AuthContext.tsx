@@ -19,6 +19,8 @@ export interface User {
   gender?: string;
   diabetesType?: string;
   doctorName?: string;
+  height?: number;
+  weight?: number;
   isEmailVerified: boolean;
   isProfileComplete: boolean;
   lastLogin?: string;

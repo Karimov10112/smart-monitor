@@ -24,6 +24,8 @@ const userSchema = new mongoose.Schema(
     mfy: String,      // mahalla
     diabetesType: { type: String, enum: ['type1', 'type2', 'prediabetes', 'gestational', 'none'] },
     doctorName: String,
+    height: { type: Number, min: 50, max: 250 },  // sm (santimetr)
+    weight: { type: Number, min: 10, max: 300 },  // kg
     isProfileComplete: { type: Boolean, default: false },
 
     // Auth

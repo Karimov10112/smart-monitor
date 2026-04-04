@@ -3,6 +3,10 @@ const router = express.Router();
 const { protect } = require('../middleware/auth');
 const BloodSugar = require('../models/BloodSugar');
 const { getAIResponse } = require('../services/aiService');
+const { getNutritionRecommendation } = require('../services/geminiService');
+
+// Personalized nutrition recommendation (Gemini AI)
+router.post('/nutrition', protect, getNutritionRecommendation);
 
 router.post('/chat', protect, async (req, res) => {
   try {

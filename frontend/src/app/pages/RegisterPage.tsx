@@ -163,7 +163,7 @@ export default function RegisterPage() {
                 <TextField
                   fullWidth
                   label={t.email}
-                  type="email"
+                  type="text"
                   size="small"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
