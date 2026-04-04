@@ -67,8 +67,8 @@ export function DailyJournal() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.fastingLevel) {
-      toast.error(language === 'uz' ? 'Och qoringa qand miqdorini kiriting' : 'Введите уровень натощак');
+    if (!formData.fastingLevel && !formData.postMealLevel) {
+      toast.error(language === 'uz' ? 'Kamida bitta (och yoki to\'q qoringa) qand miqdorini kiriting' : 'Введите хотя бы один показатель сахара');
       return;
     }
 

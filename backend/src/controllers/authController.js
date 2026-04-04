@@ -254,6 +254,8 @@ const completeProfile = async (req, res) => {
   try {
     const { firstName, lastName, phone, dateOfBirth, gender, region, district, mfy, diabetesType, doctorName } = req.body;
 
+    const isProfileComplete = !!(firstName && lastName && phone && dateOfBirth && gender && region && district && mfy && diabetesType);
+
     const user = await User.findByIdAndUpdate(
       req.user._id,
       {
@@ -267,7 +269,7 @@ const completeProfile = async (req, res) => {
         mfy,
         diabetesType,
         doctorName,
-        isProfileComplete: true,
+        isProfileComplete,
       },
       { new: true }
     );

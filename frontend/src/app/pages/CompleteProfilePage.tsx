@@ -27,8 +27,10 @@ import {
   alpha,
   useTheme,
   CircularProgress,
-  Container
+  Container,
+  Autocomplete
 } from '@mui/material';
+import { UZ_REGIONS, UZ_DISTRICTS, UZ_MAHALLAS } from '../data/administrative';
 
 // MUI Icons
 import PersonIcon from '@mui/icons-material/Person';
@@ -41,29 +43,6 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
-const UZ_REGIONS = [
-  'Toshkent shahri', 'Toshkent viloyati', 'Samarqand viloyati', 'Buxoro viloyati',
-  'Andijon viloyati', 'Farg\'ona viloyati', 'Namangan viloyati', 'Qashqadaryo viloyati',
-  'Surxondaryo viloyati', 'Navoiy viloyati', 'Xorazm viloyati', 'Sirdaryo viloyati',
-  'Jizzax viloyati', 'Qoraqalpog\'iston Respublikasi',
-];
-
-const UZ_DISTRICTS: Record<string, string[]> = {
-  'Toshkent shahri': ['Chilonzor', 'Yunusobod', 'Mirzo Ulug‘bek', 'Yashnobod', 'Mirobod', 'Shayxontohur', 'Uchtepa', 'Jakasaroiy', 'Olmazor', 'Sergeli', 'Yangihayot', 'Bektemir'],
-  'Toshkent viloyati': ['Angren sh.', 'Olmaliq sh.', 'Chirchiq sh.', 'Bekobod sh.', 'Oqqo‘rg‘on', 'Olmaliq', 'Piskent', 'Qibray', 'Zangiota', 'Yangiyo‘l', 'Chinoz', 'Bo‘stonliq', 'Parkent'],
-  'Samarqand viloyati': ['Samarqand sh.', 'Kattaqo‘rg‘on sh.', 'Samarqand t.', 'Pastdarg‘om', 'Paxtachi', 'Narpay', 'Kattaqo‘rg‘on t.', 'Ishtixon', 'Oqdaryo', 'Bulung‘ur', 'Jomboy', 'Toyloq', 'Urgut', 'Nurobod', 'Qo‘shrabot'],
-  'Buxoro viloyati': ['Buxoro sh.', 'Kogon sh.', 'Buxoro t.', 'Kogon t.', 'G‘ijduvon', 'Shofirkon', 'Vobkent', 'Romitan', 'Peshku', 'Jondor', 'Olot', 'Qorako‘l', 'Qorovulbozor'],
-  'Andijon viloyati': ['Andijon sh.', 'Xonobod sh.', 'Andijon t.', 'Asaka', 'Shahrixon', 'Oltinko‘l', 'Baliqchi', 'Paxtaobod', 'Izboskan', 'Qo‘rg‘ontepa', 'Jalaquduq', 'Xo‘jaobod', 'Bo‘ston', 'Ulug‘nor', 'Marhamat'],
-  'Farg\'ona viloyati': ['Farg‘ona sh.', 'Qo‘qon sh.', 'Marg‘ilon sh.', 'Quvasoy sh.', 'Farg‘ona t.', 'Oltiariq', 'Rishton', 'Bag‘dod', 'Uchko‘prik', 'Buvayda', 'Yozyovon', 'Toshloq', 'Quva', 'O‘zbekiston', 'Furqat', 'Dang‘ara', 'Besharik', 'Sux'],
-  'Namangan viloyati': ['Namangan sh.', 'Namangan t.', 'Chust', 'Pop', 'Uychi', 'Uchqo‘rg‘on', 'Norin', 'Yangiqo‘rg‘on', 'Kosonsoy', 'To‘raqo‘rg‘on', 'Mingbuloq'],
-  'Qashqadaryo viloyati': ['Qarshi sh.', 'Qarshi t.', 'Shaxrisabz sh.', 'Shaxrisabz t.', 'Kitob', 'Yakkabog‘', 'Qamashi', 'G‘uzor', 'Dehqonobod', 'Nishon', 'Kasbi', 'Ko‘kdala', 'Mirishkor', 'Muborak', 'Chiroqchi'],
-  'Surxondaryo viloyati': ['Termiz sh.', 'Termiz t.', 'Denov', 'Sho‘rchi', 'Jarqo‘rg‘on', 'Qumqo‘rg‘on', 'Angor', 'Sherobod', 'Boysun', 'Sariosiyo', 'Uzun', 'Oltinsoy', 'Qiziriq', 'Muzrabot'],
-  'Navoiy viloyati': ['Navoiy sh.', 'Zarafshon sh.', 'Karmana', 'Qiziltepa', 'Xatirchi', 'Nurota', 'Navbahor', 'Konimex', 'Tomdi', 'Uchkuduq'],
-  'Xorazm viloyati': ['Urganch sh.', 'Xiva sh.', 'Urganch t.', 'Xiva t.', 'Xonqa', 'Gurlan', 'Shovot', 'Qo‘shko‘pir', 'Bog‘ot', 'Hazorasp', 'Yangiariq', 'Yangibozor', 'Tuproqqala'],
-  'Sirdaryo viloyati': ['Guliston sh.', 'Shirin sh.', 'Yangiyer sh.', 'Guliston t.', 'Sirdaryo t.', 'Sayxunobod', 'Boyovut', 'Mirzaobod', 'Oqoltin', 'Sardoba', 'Xovos'],
-  'Jizzax viloyati': ['Jizzax sh.', 'Jizzax t.', 'Sharof Rashidov', 'Do‘stlik', 'Paxtakor', 'Zafarobod', 'Mirzachul', 'Arnasoy', 'Baxmal', 'G‘allaorol', 'Forish', 'Zomin', 'Yangiobod'],
-  'Qoraqalpog\'iston Respublikasi': ['Nukus sh.', 'Nukus t.', 'Amudaryo', 'Beruniy', 'To‘rtko‘l', 'Ellikqala', 'Xo‘jayli', 'Taxiatosh', 'Shumanay', 'Qonliko‘l', 'Qo‘ng‘irot', 'Mo‘ynoq', 'Chimboy', 'Kegeyli', 'Qorao‘zak', 'Taxtako‘pir', 'Bo‘zatov'],
-};
 
 const DIABETES_TYPES = [
   { value: 'type1', uz: '1-tip diabet', ru: 'Диабет 1 типа', en: 'Type 1 Diabetes' },
@@ -215,23 +194,31 @@ export default function CompleteProfilePage() {
               </Stack>
               <Grid container spacing={3}>
                 <Grid size={{ xs: 12, sm: 4 }}>
-                  <FormControl fullWidth size="small">
-                    <InputLabel>{t.region} *</InputLabel>
-                    <Select value={form.region} label={t.region + " *"} onChange={e => handleChange('region', e.target.value)} required>
-                      {UZ_REGIONS.map(r => <MenuItem key={r} value={r}>{r}</MenuItem>)}
-                    </Select>
-                  </FormControl>
+                  <Autocomplete
+                    options={UZ_REGIONS}
+                    value={form.region}
+                    onChange={(_, val) => handleChange('region', val || '')}
+                    renderInput={(params) => <TextField {...params} label={t.region} size="small" required />}
+                  />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 4 }}>
-                  <FormControl fullWidth size="small" disabled={!form.region}>
-                    <InputLabel>{t.districtCity} *</InputLabel>
-                    <Select value={form.district} label={t.districtCity + " *"} onChange={e => handleChange('district', e.target.value)} required>
-                      {form.region && UZ_DISTRICTS[form.region]?.map(d => <MenuItem key={d} value={d}>{d}</MenuItem>)}
-                    </Select>
-                  </FormControl>
+                  <Autocomplete
+                    options={form.region ? UZ_DISTRICTS[form.region] || [] : []}
+                    value={form.district}
+                    onChange={(_, val) => handleChange('district', val || '')}
+                    disabled={!form.region}
+                    renderInput={(params) => <TextField {...params} label={t.districtCity} size="small" required />}
+                  />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 4 }}>
-                  <TextField fullWidth size="small" label={t.mfy + " *"} value={form.mfy} onChange={e => handleChange('mfy', e.target.value)} disabled={!form.district} required />
+                  <Autocomplete
+                    freeSolo
+                    options={form.district ? UZ_MAHALLAS[form.district] || [] : []}
+                    value={form.mfy}
+                    onInputChange={(_, val) => handleChange('mfy', val)}
+                    disabled={!form.district}
+                    renderInput={(params) => <TextField {...params} label={t.mfy} size="small" required />}
+                  />
                 </Grid>
               </Grid>
             </Box>
@@ -296,7 +283,12 @@ export default function CompleteProfilePage() {
                 type="submit" 
                 variant="contained" 
                 size="large" 
-                disabled={loading || !form.region || !form.district || !form.diabetesType}
+                disabled={
+                  loading || 
+                  !form.firstName || !form.lastName || !form.phone || 
+                  !form.dateOfBirth || !form.gender || !form.region || 
+                  !form.district || !form.mfy || !form.diabetesType
+                }
                 sx={{ height: 64, fontWeight: 900, fontSize: '1rem', borderRadius: 2, boxShadow: 'none', '&:hover': { boxShadow: 'none' } }}
               >
                 {loading ? <CircularProgress size={24} color="inherit" /> : (isEditing ? 'Saqlash' : t.saveContinue)}
