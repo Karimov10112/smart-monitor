@@ -82,6 +82,7 @@ export default function AdminPage() {
   const [users, setUsers] = useState<any[]>([]);
   const [search, setSearch] = useState('');
   const [role, setRole] = useState('');
+  const [userLoading, setUserLoading] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [selectedUserRecords, setSelectedUserRecords] = useState<any[]>([]);
 
@@ -168,6 +169,23 @@ export default function AdminPage() {
       setSelectedUserRecords(data.records ? [...data.records].reverse() : []);
       loadStats();
     } catch { }
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (currentTab === 'users' && !selectedUserId) {
+         setUserLoading(true);
+         loadUsers(search, role).finally(() => setUserLoading(false));
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [search, role, currentTab, selectedUserId]);
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      setUserLoading(true);
+      loadUsers(search, role).finally(() => setUserLoading(false));
+    }
   };
 
   const handleSaveAdminNotes = async (userId: string, notes: string) => {
@@ -278,23 +296,31 @@ export default function AdminPage() {
                 size="small"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
+                onKeyDown={handleSearchKeyDown}
                 sx={{ flexGrow: 1 }}
-                InputProps={{ startAdornment: <SearchIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} /> }}
+                InputProps={{ 
+                  startAdornment: <SearchIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />,
+                  endAdornment: userLoading && <CircularProgress size={16} />
+                }}
               />
               <FormControl size="small" sx={{ minWidth: 150 }}>
                 <InputLabel>{t.role}</InputLabel>
-                <Select value={role} label={t.role} onChange={e => { setRole(e.target.value); loadUsers(search, e.target.value); }}>
+                <Select value={role} label={t.role} onChange={e => setRole(e.target.value)}>
                   <MenuItem value="">{t.allStatuses || 'All'}</MenuItem>
                   <MenuItem value="user">User</MenuItem>
                   <MenuItem value="doctor">Doctor</MenuItem>
                   <MenuItem value="superadmin">SuperAdmin</MenuItem>
                 </Select>
               </FormControl>
-              <Button variant="contained" onClick={() => loadUsers(search, role)} sx={{ fontWeight: 800 }}>{t.apply}</Button>
-              <Button variant="outlined" onClick={() => { setSearch(''); setRole(''); loadUsers('', ''); }} sx={{ fontWeight: 800 }}>{t.refresh}</Button>
+              <Button variant="outlined" onClick={() => { setSearch(''); setRole(''); }} sx={{ fontWeight: 800 }}>{t.refresh}</Button>
             </Stack>
 
-            <TableContainer component={Paper} elevation={0} sx={{ border: `1px solid ${theme.palette.divider}`, maxHeight: 600, overflowY: 'auto' }}>
+            <TableContainer component={Paper} elevation={0} sx={{ border: `1px solid ${theme.palette.divider}`, maxHeight: 600, overflowY: 'auto', position: 'relative' }}>
+              {userLoading && (
+                <Box sx={{ position: 'absolute', inset: 0, bgcolor: alpha(theme.palette.background.paper, 0.5), zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                   <CircularProgress size={32} />
+                </Box>
+              )}
               <Table size="medium" stickyHeader>
                 <TableHead sx={{ bgcolor: alpha(theme.palette.primary.main, 0.01) }}>
                   <TableRow>

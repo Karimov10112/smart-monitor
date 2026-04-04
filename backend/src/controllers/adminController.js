@@ -56,16 +56,23 @@ const getAllUsers = async (req, res) => {
             $or: [
               { firstName: { $regex: term, $options: 'i' } },
               { lastName: { $regex: term, $options: 'i' } },
-              { email: { $regex: term, $options: 'i' } }
+              { email: { $regex: term, $options: 'i' } },
+              { phone: { $regex: term, $options: 'i' } },
+              { telegramUsername: { $regex: term, $options: 'i' } },
+              { region: { $regex: term, $options: 'i' } }
             ]
           }))},
-          { email: searchRegex }
+          { email: searchRegex },
+          { phone: searchRegex }
         ];
       } else {
         query.$or = [
           { firstName: searchRegex },
           { lastName: searchRegex },
           { email: searchRegex },
+          { phone: searchRegex },
+          { telegramUsername: searchRegex },
+          { region: searchRegex },
         ];
       }
     }
