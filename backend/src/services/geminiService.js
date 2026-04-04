@@ -71,8 +71,11 @@ const callGeminiAPI = async (prompt, retries = 1) => {
 // ── Nutrition Recommendation ──────────────────────────────────────
 const getNutritionRecommendation = async (req, res) => {
   try {
-    if (!GEMINI_API_KEY) {
-      return res.status(500).json({ success: false, message: 'Gemini AI kaliti sozlanmagan.' });
+    if (!GEMINI_API_KEY && !GROQ_API_KEY) {
+      return res.status(500).json({ 
+        success: false, 
+        message: 'AI API kalitlari (Groq yoki Gemini) sozlanmagan. Iltimos, muhit o\'zgaruvchilarini tekshiring.' 
+      });
     }
 
     const user = req.user;
