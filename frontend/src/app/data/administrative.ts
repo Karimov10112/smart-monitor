@@ -31,12 +31,14 @@ export const UZ_MAHALLAS: Record<string, string[]> = {
   'Mirobod': ['Afrosiyob', 'Banokatiy', 'Inom', 'Lomonosov', 'Mirobod', 'Navro\'z', 'Oqyo\'l', 'Salar', 'Tog\'ay', 'Tong'],
   'Sergeli': ['Abay', 'Cho\'ponota', 'Do\'stlik', 'Humo', 'Itifoq', 'Junariq', 'Nilufar', 'Olmazor', 'Qoraqamish', 'Sergeli-1', 'Sergeli-2', 'Sohibqiron'],
   
+  // Andijon
+  'Shahrixon': ['Abdubiy', 'Ahmadbek', 'Ahtalik', 'Andijonlik', 'Azamat', 'Bekbachcha', 'Bo‘ston', 'Bobochek', 'Bolg‘ali', 'Cho‘ntak', 'Cho‘ja', 'Chuqurcha', 'Do‘lan', 'Do‘rmon', 'Dorikash', 'Dorilamon', 'Eshonqishloq', 'Eski-Qo‘rg‘oncha', 'Guliston', 'Gulqishloq', 'Haqiqat', 'Ho‘jaobod', 'Honkuruq', 'Kamoltepa', 'Karnaychi', 'Koramuyin', 'Qo‘rg‘oncha', 'Qumaryq', 'Quruqsoy', 'Nazarmahram', 'Naynavo', 'O‘zbekiston', 'O‘rta Shahrixon', 'Paxtaobod', 'Paxtako‘l', 'Qalacha', 'Qipchoqqo‘rg‘on', 'Segaza', 'Segazaqum', 'Shaydo', 'Sohiobod', 'Suzok', 'Tegirmonboshi', 'Tojik', 'Tojikaram', 'Tolmozor', 'Toshtepa', 'Tumor', 'Vaxim', 'Xidirsho', 'Yangiyo‘l', 'Yangi Naynavo', 'Yangi Mahalla', 'Yuqori Shahrixon', 'Yuzlar'],
+  'Asaka': ['Navro\'z', 'Istiqlol', 'Olot', 'Qo\'shchinor', 'Obod', 'Do\'stlik', 'Yangi hayot', 'Guliston'],
+  'Andijon sh.': ['Bobur', 'Jaloliddin Manguberdi', 'Sabo', 'Sayhun', 'Xumo', 'Yangi hayot', 'Navoiy', 'Cho\'lpon', 'Mustaqillik'],
+
   // Samarkand
-  'Samarqand sh.': ['Al-Xorazmiy', 'Amir Temur', 'Beruniy', 'Bog\'ishamol', 'Gullar', 'Lolazor', 'Navoiy', 'Sariosiyo', 'Siyob', 'Universitet', 'Vatan'],
+  'Samarqand sh.': ['Al-Xorazmiy', 'Amir Temur', 'Beruniy', 'Bog\'ishamol', 'Gullar', 'Lolazor', 'Navoiy', 'Sariosiyo', 'Siyob', 'Universitet', 'Vatan', 'Xo\'ja Axror Vali', 'Registon', 'Motrit'],
   
   // Farg'ona
-  'Farg‘ona sh.': ['Istiklol', 'Guzal', 'Bahor', 'Marifat', 'Mustaqillik', 'Nur', 'Oydin', 'Sohil', 'Tong'],
-  
-  // Andijon
-  'Andijon sh.': ['Bobur', 'Jaloliddin Manguberdi', 'Sabo', 'Sayhun', 'Xumo', 'Yangi hayot'],
+  'Farg‘ona sh.': ['Istiklol', 'Guzal', 'Bahor', 'Marifat', 'Mustaqillik', 'Nur', 'Oydin', 'Sohil', 'Tong', 'Kirguli', 'Aeroport'],
 };
