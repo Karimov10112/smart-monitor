@@ -417,6 +417,7 @@ function App() {
         onClose={() => setIsReminderModalOpen(false)}
         language={language}
         t={t}
+        reminders={reminders}
         onRefresh={loadReminders}
       />
 
