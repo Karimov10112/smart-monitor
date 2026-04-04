@@ -599,6 +599,16 @@ export default function AdminPage() {
                     />
                   </Box>
 
+                  <Box>
+                    <Typography variant="caption" sx={{ fontWeight: 900, color: 'primary.main', mb: 1, display: 'block' }}>TELEGRAM USERNAME / LINK</Typography>
+                    <TextField
+                      fullWidth
+                      placeholder="@username yoki t.me/link"
+                      value={adminContacts.telegramUsername}
+                      onChange={e => setAdminContacts({ ...adminContacts, telegramUsername: e.target.value })}
+                    />
+                  </Box>
+
                   <Button
                     variant="contained"
                     size="large"
