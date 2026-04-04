@@ -11,6 +11,8 @@ const {
   refreshToken,
   completeProfile,
   getMe,
+  logout,
+  oauthCallback,
   updateProfile,
   updatePassword,
 } = require('../controllers/authController');

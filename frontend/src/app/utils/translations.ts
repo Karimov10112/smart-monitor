@@ -80,6 +80,8 @@ export const translations: any = {
     // Auth
     signIn: "Tizimga kirish",
     signUp: "Ro'yxatdan o'tish",
+    login: "Kirish",
+    register: "Ro'yxatdan o'tish",
     email: "Email",
     password: "Parol",
     forgotPassword: "Parolni unutdingizmi?",
@@ -284,6 +286,8 @@ export const translations: any = {
     // Auth
     signIn: "Вход в систему",
     signUp: "Регистрация",
+    login: "Войти",
+    register: "Регистрация",
     email: "Email",
     password: "Пароль",
     forgotPassword: "Забыли пароль?",
@@ -488,6 +492,8 @@ export const translations: any = {
     // Auth
     signIn: "Sign In",
     signUp: "Sign Up",
+    login: "Login",
+    register: "Register",
     email: "Email",
     password: "Password",
     forgotPassword: "Forgot Password?",

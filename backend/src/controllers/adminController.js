@@ -3,6 +3,7 @@ const BloodSugar = require('../models/BloodSugar');
 
 const getAdminContacts = async (req, res) => {
   try {
+    const admin = await User.findOne({ role: 'superadmin' }).select('phone telegramUsername');
     res.json({
       success: true,
       contacts: {
