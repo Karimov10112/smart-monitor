@@ -92,6 +92,11 @@ function App() {
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
+    setIsSidebarOpen(false);
+    setIsReminderModalOpen(false);
+  }, [location.pathname, location.search]);
+
+  useEffect(() => {
     const loadData = async () => {
       try {
         const { data: contactsData } = await adminAPI.getContacts();
@@ -209,7 +214,7 @@ function App() {
             <ListItemButton
               component={RouterLink}
               to={item.path}
-              selected={activeTab === item.id}
+              selected={location.pathname === '/' && activeTab === item.id}
               onClick={() => setIsSidebarOpen(false)}
               sx={{
                 borderRadius: 1.5,
@@ -225,7 +230,17 @@ function App() {
 
         {user?.role === 'superadmin' && (
           <ListItem disablePadding sx={{ mb: 0.5 }}>
-            <ListItemButton component={RouterLink} to="/admin" onClick={() => setIsSidebarOpen(false)} sx={{ borderRadius: 1.5, py: 1 }}>
+            <ListItemButton 
+              component={RouterLink} 
+              to="/admin" 
+              selected={location.pathname === '/admin'}
+              onClick={() => setIsSidebarOpen(false)} 
+              sx={{ 
+                borderRadius: 1.5, 
+                py: 1,
+                '&.Mui-selected': { bgcolor: alpha(theme.palette.primary.main, 0.08), color: 'primary.main', '& .MuiListItemIcon-root': { color: 'primary.main' } },
+              }}
+            >
               <ListItemIcon sx={{ minWidth: 40 }}><AdminPanelSettingsIcon fontSize="small" /></ListItemIcon>
               <ListItemText primary="Admin Panel" primaryTypographyProps={{ fontWeight: 700, fontSize: '0.875rem' }} />
             </ListItemButton>
