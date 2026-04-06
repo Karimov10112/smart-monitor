@@ -1,9 +1,9 @@
-const Reminder = require('../models/Reminder');
+const reminderRepository = require('../repositories/ReminderRepository');
 
 // Get all reminders for a user
 const getReminders = async (req, res) => {
   try {
-    const reminders = await Reminder.find({ user: req.user._id }).sort({ time: 1 });
+    const reminders = await reminderRepository.find({ user: req.user._id }, { sort: { time: 1 } });
     res.json({ success: true, reminders });
   } catch (err) {
     console.error('Get reminders error:', err);
@@ -20,7 +20,7 @@ const addReminder = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Barcha majburiy maydonlarni to\'ldiring' });
     }
 
-    const reminder = new Reminder({
+    const reminder = await reminderRepository.create({
       user: req.user._id,
       type,
       name,
@@ -30,7 +30,6 @@ const addReminder = async (req, res) => {
       notes,
     });
 
-    await reminder.save();
     res.status(201).json({ success: true, reminder });
   } catch (err) {
     console.error('Add reminder error:', err);
@@ -43,10 +42,9 @@ const updateReminder = async (req, res) => {
   try {
     const { type, name, dose, time, repeatDaily, notes, isActive } = req.body;
     
-    const reminder = await Reminder.findOneAndUpdate(
+    const reminder = await reminderRepository.updateOne(
       { _id: req.params.id, user: req.user._id },
-      { type, name, dose, time, repeatDaily, notes, isActive },
-      { new: true }
+      { type, name, dose, time, repeatDaily, notes, isActive }
     );
 
     if (!reminder) {
@@ -63,7 +61,7 @@ const updateReminder = async (req, res) => {
 // Delete a reminder
 const deleteReminder = async (req, res) => {
   try {
-    const reminder = await Reminder.findOneAndDelete({ _id: req.params.id, user: req.user._id });
+    const reminder = await reminderRepository.deleteOne({ _id: req.params.id, user: req.user._id });
     
     if (!reminder) {
       return res.status(404).json({ success: false, message: 'Eslatma topilmadi' });

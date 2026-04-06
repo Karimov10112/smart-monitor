@@ -1,9 +1,9 @@
-const User = require('../models/User');
-const BloodSugar = require('../models/BloodSugar');
+const userRepository = require('../repositories/UserRepository');
+const bloodSugarRepository = require('../repositories/BloodSugarRepository');
 
 const getAdminContacts = async (req, res) => {
   try {
-    const admin = await User.findOne({ role: 'superadmin' }).select('phone telegramUsername');
+    const admin = await userRepository.findOne({ role: 'superadmin' });
     res.json({
       success: true,
       contacts: {
@@ -20,10 +20,9 @@ const updateAdminContacts = async (req, res) => {
   try {
     const { phone, telegramUsername } = req.body;
     
-    const admin = await User.findOneAndUpdate(
+    const admin = await userRepository.updateOne(
        { role: 'superadmin' }, 
-       { phone, telegramUsername },
-       { new: true }
+       { phone, telegramUsername }
     );
     
     res.json({ 
@@ -83,12 +82,13 @@ const getAllUsers = async (req, res) => {
     // Always filter for verified users by default to avoid showing pending registrations
     query.isEmailVerified = true;
 
-    const total = await User.countDocuments(query);
-    const users = await User.find(query)
-      .select('-password -emailOTP -passwordResetToken -refreshToken')
-      .sort({ createdAt: -1 })
-      .skip((Number(page) - 1) * Number(limit))
-      .limit(Number(limit));
+    const total = await userRepository.countDocuments(query);
+    const users = await userRepository.find(query, {
+      populate: '-password -emailOTP -passwordResetToken -refreshToken',
+      sort: { createdAt: -1 },
+      skip: (Number(page) - 1) * Number(limit),
+      limit: Number(limit)
+    });
 
     res.json({
       success: true,
@@ -105,13 +105,13 @@ const getAllUsers = async (req, res) => {
 // Get single user details
 const getUserById = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id)
-      .select('-password -emailOTP -passwordResetToken -refreshToken');
+    const user = await userRepository.findById(req.params.id);
     if (!user) return res.status(404).json({ success: false, message: 'Topilmadi' });
 
-    const records = await BloodSugar.find({ user: user._id })
-      .sort({ date: -1 })
-      .limit(30);
+    const records = await bloodSugarRepository.find({ user: user._id }, {
+      sort: { date: -1 },
+      limit: 30
+    });
 
     res.json({ success: true, user, records });
   } catch (err) {
@@ -127,8 +127,7 @@ const updateUserRole = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Noto\'g\'ri rol' });
     }
 
-    const user = await User.findByIdAndUpdate(req.params.id, { role }, { new: true })
-      .select('-password -emailOTP -passwordResetToken -refreshToken');
+    const user = await userRepository.findByIdAndUpdate(req.params.id, { role });
 
     res.json({ success: true, user });
   } catch (err) {
@@ -140,7 +139,7 @@ const updateUserRole = async (req, res) => {
 const toggleBanUser = async (req, res) => {
   try {
     const { reason } = req.body;
-    const user = await User.findById(req.params.id);
+    const user = await userRepository.findById(req.params.id);
     if (!user) return res.status(404).json({ success: false, message: 'Topilmadi' });
 
     user.isBanned = !user.isBanned;
@@ -160,10 +159,13 @@ const toggleBanUser = async (req, res) => {
 // Delete user
 const deleteUser = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
+    const user = await userRepository.findById(req.params.id);
     if (!user) return res.status(404).json({ success: false, message: 'Topilmadi' });
-    await BloodSugar.deleteMany({ user: user._id });
-    await User.findByIdAndDelete(req.params.id);
+    
+    // You might want to move these to repositories as well
+    const BloodSugarModel = require('../models/BloodSugar');
+    await BloodSugarModel.deleteMany({ user: user._id });
+    await userRepository.findByIdAndDelete(req.params.id);
 
     res.json({ success: true, message: 'Foydalanuvchi o\'chirildi' });
   } catch (err) {
@@ -175,8 +177,7 @@ const deleteUser = async (req, res) => {
 const addAdminNote = async (req, res) => {
   try {
     const { notes } = req.body;
-    const user = await User.findByIdAndUpdate(req.params.id, { adminNotes: notes }, { new: true })
-      .select('-password -emailOTP -passwordResetToken -refreshToken');
+    const user = await userRepository.findByIdAndUpdate(req.params.id, { adminNotes: notes });
     res.json({ success: true, user });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Server xatosi' });
@@ -187,28 +188,26 @@ const addAdminNote = async (req, res) => {
 const getDashboardStats = async (req, res) => {
   try {
     const statsArray = await Promise.all([
-      User.countDocuments({ role: 'user' }),
-      User.countDocuments({ role: 'user', isEmailVerified: true }),
-      User.countDocuments({ isBanned: true }),
-      BloodSugar.countDocuments(),
-      User.countDocuments({ createdAt: { $gte: new Date(new Date().setHours(0, 0, 0, 0)) } }),
-      User.countDocuments({ lastSeen: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } }),
-      User.aggregate([
+      userRepository.countDocuments({ role: 'user' }),
+      userRepository.countDocuments({ role: 'user', isEmailVerified: true }),
+      userRepository.countDocuments({ isBanned: true }),
+      bloodSugarRepository.countDocuments(),
+      userRepository.countDocuments({ createdAt: { $gte: new Date(new Date().setHours(0, 0, 0, 0)) } }),
+      userRepository.countDocuments({ lastSeen: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } }),
+      userRepository.aggregate([
         { $match: { region: { $exists: true, $ne: null } } },
         { $group: { _id: '$region', count: { $sum: 1 } } },
         { $sort: { count: -1 } },
       ]),
-      User.aggregate([
+      userRepository.aggregate([
         { $match: { diabetesType: { $exists: true, $ne: null } } },
         { $group: { _id: '$diabetesType', count: { $sum: 1 } } },
       ]),
-      User.aggregate([
+      userRepository.aggregate([
         { $match: { gender: { $exists: true, $ne: null } } },
         { $group: { _id: '$gender', count: { $sum: 1 } } },
       ])
     ]);
-
-
 
     res.json({
       success: true,
@@ -229,10 +228,10 @@ const getDashboardStats = async (req, res) => {
     res.status(500).json({ success: false, message: 'Server xatosi' });
   }
 };
+
 const getUserRecords = async (req, res) => {
   try {
-    const records = await BloodSugar.find({ user: req.params.id })
-      .sort({ date: -1 });
+    const records = await bloodSugarRepository.find({ user: req.params.id }, { sort: { date: -1 } });
     res.json({ success: true, records });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Server xatosi' });

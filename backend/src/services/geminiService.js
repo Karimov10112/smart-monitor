@@ -20,9 +20,9 @@ const callGroqAPI = async (prompt) => {
     body: JSON.stringify({
       model: 'llama-3.3-70b-versatile',
       messages: [
-        { 
-          role: 'system', 
-          content: 'Siz diabet shifokorisiz. Javobingizni har doim QISQA, SODDA va TUSHUNARLI tilda bering. Yoshi kattalar ham qiynalmay o\'qishi uchun murakkab tibbiy so\'zlarni ishlatmang. Faqat eng muhim maslahatlarni yozing.' 
+        {
+          role: 'system',
+          content: 'Siz diabet shifokorisiz. Javobingizni har doim QISQA, SODDA va TUSHUNARLI tilda bering. Yoshi kattalar ham qiynalmay o\'qishi uchun murakkab tibbiy so\'zlarni ishlatmang. Faqat eng muhim maslahatlarni yozing.'
         },
         { role: 'user', content: prompt }
       ],
@@ -72,9 +72,9 @@ const callGeminiAPI = async (prompt, retries = 1) => {
 const getNutritionRecommendation = async (req, res) => {
   try {
     if (!GEMINI_API_KEY && !GROQ_API_KEY) {
-      return res.status(500).json({ 
-        success: false, 
-        message: 'AI API kalitlari (Groq yoki Gemini) sozlanmagan. Iltimos, muhit o\'zgaruvchilarini tekshiring.' 
+      return res.status(500).json({
+        success: false,
+        message: 'AI API kalitlari (Groq yoki Gemini) sozlanmagan. Iltimos, muhit o\'zgaruvchilarini tekshiring.'
       });
     }
 
@@ -100,10 +100,10 @@ const getNutritionRecommendation = async (req, res) => {
     if (height && weight) {
       const bmiVal = weight / ((height / 100) ** 2);
       bmi = bmiVal.toFixed(1);
-      if (bmiVal < 18.5)      bmiLabel = language === 'uz' ? 'kam vazn' : language === 'ru' ? 'недовес' : 'underweight';
-      else if (bmiVal < 25)   bmiLabel = language === 'uz' ? 'normal' : 'норма';
-      else if (bmiVal < 30)   bmiLabel = language === 'uz' ? 'ortiqcha vazn' : language === 'ru' ? 'избыточный вес' : 'overweight';
-      else                    bmiLabel = language === 'uz' ? 'semizlik' : language === 'ru' ? 'ожирение' : 'obese';
+      if (bmiVal < 18.5) bmiLabel = language === 'uz' ? 'kam vazn' : language === 'ru' ? 'недовес' : 'underweight';
+      else if (bmiVal < 25) bmiLabel = language === 'uz' ? 'normal' : 'норма';
+      else if (bmiVal < 30) bmiLabel = language === 'uz' ? 'ortiqcha vazn' : language === 'ru' ? 'избыточный вес' : 'overweight';
+      else bmiLabel = language === 'uz' ? 'semizlik' : language === 'ru' ? 'ожирение' : 'obese';
     }
 
     let bmr = null;
@@ -129,7 +129,7 @@ const getNutritionRecommendation = async (req, res) => {
     // Pick the absolute latest reading (fasting or post-meal from the very last record)
     const lastRec = recentRecords[0];
     const latestSugar = lastRec ? (lastRec.postMealLevel || lastRec.fastingLevel || null) : null;
-    
+
     const sugarStatus = latestSugar
       ? latestSugar >= 7 ? 'high' : latestSugar < 3.9 ? 'low' : 'normal'
       : 'unknown';
@@ -147,20 +147,20 @@ const getNutritionRecommendation = async (req, res) => {
 
     // ─── Localized diabetes labels ──────────────────────────
     const dLabels = {
-      type1:       { uz: '1-tip qandli diabet', ru: 'Диабет 1 типа', en: 'Type 1 Diabetes' },
-      type2:       { uz: '2-tip qandli diabet', ru: 'Диабет 2 типа', en: 'Type 2 Diabetes' },
-      prediabetes: { uz: 'Prediabet',           ru: 'Предиабет',     en: 'Prediabetes' },
-      gestational: { uz: 'Homiladorlik diabeti',ru: 'Гест. диабет',  en: 'Gestational Diabetes' },
-      none:        { uz: "Diabet yo'q",         ru: 'Без диабета',   en: 'No Diabetes' },
+      type1: { uz: '1-tip qandli diabet', ru: 'Диабет 1 типа', en: 'Type 1 Diabetes' },
+      type2: { uz: '2-tip qandli diabet', ru: 'Диабет 2 типа', en: 'Type 2 Diabetes' },
+      prediabetes: { uz: 'Prediabet', ru: 'Предиабет', en: 'Prediabetes' },
+      gestational: { uz: 'Homiladorlik diabeti', ru: 'Гест. диабет', en: 'Gestational Diabetes' },
+      none: { uz: "Diabet yo'q", ru: 'Без диабета', en: 'No Diabetes' },
     };
     const dLabel = dLabels[diabetesType]?.[language] || diabetesType || "noma'lum";
 
     // ─── Add urgent alert if sugar is high ────────────────────
     let urgentAlert = "";
     if (latestSugar && parseFloat(latestSugar) > 13) {
-      urgentAlert = language === 'uz' ? `\n\n!!! OGOHLANTIRISH: Qand miqdori juda yuqori (${latestSugar} mmol/l). Zudlik bilan shifokor bilan bog'laning va qandni tushirish choralarini ko'ring !!!\n` 
-                    : language === 'ru' ? `\n\n!!! ПРЕДУПРЕЖДЕНИЕ: Сахар очень высокий (${latestSugar} ммоль/л). Срочно свяжитесь с врачом !!!\n` 
-                    : `\n\n!!! URGENT WARNING: Sugar level is very high (${latestSugar} mmol/l). Contact your doctor immediately !!!\n`;
+      urgentAlert = language === 'uz' ? `\n\n!!! OGOHLANTIRISH: Qand miqdori juda yuqori (${latestSugar} mmol/l). Zudlik bilan shifokor bilan bog'laning va qandni tushirish choralarini ko'ring !!!\n`
+        : language === 'ru' ? `\n\n!!! ПРЕДУПРЕЖДЕНИЕ: Сахар очень высокий (${latestSugar} ммоль/л). Срочно свяжитесь с врачом !!!\n`
+          : `\n\n!!! URGENT WARNING: Sugar level is very high (${latestSugar} mmol/l). Contact your doctor immediately !!!\n`;
     }
 
     const genderUz = gender === 'male' ? 'Erkak' : gender === 'female' ? 'Ayol' : 'Boshqa';
@@ -169,8 +169,8 @@ const getNutritionRecommendation = async (req, res) => {
     // ─── Sugar status labels ─────────────────────────────────
     const sugarStatusLabel = {
       uz: { high: '🔴 YUQORI (xavfli)', low: '🟡 PAST (xavfli)', normal: '🟢 NORMAL' },
-      ru: { high: '🔴 ВЫСОКИЙ',         low: '🟡 НИЗКИЙ',       normal: '🟢 НОРМА'  },
-      en: { high: '🔴 HIGH',            low: '🟡 LOW',          normal: '🟢 NORMAL'  },
+      ru: { high: '🔴 ВЫСОКИЙ', low: '🟡 НИЗКИЙ', normal: '🟢 НОРМА' },
+      en: { high: '🔴 HIGH', low: '🟡 LOW', normal: '🟢 NORMAL' },
     };
     const sLabel = (sugarStatusLabel[language] || sugarStatusLabel.uz)[sugarStatus] || '';
 

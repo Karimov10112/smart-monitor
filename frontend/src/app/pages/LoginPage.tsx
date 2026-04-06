@@ -48,7 +48,17 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      const { data } = await authAPI.login({ email, password, language });
+      const trimmedEmail = email.trim().toLowerCase();
+      const isGmailRegex = /^[a-zA-Z0-9._%+-]+@gmail(\.com)?$/;
+      const isValidFormat = trimmedEmail === 'admin' || isGmailRegex.test(trimmedEmail);
+
+      if (!isValidFormat) {
+        toast.error(t.invalidEmailFormat || 'Notogri login formati');
+        setLoading(false);
+        return;
+      }
+
+      const { data } = await authAPI.login({ email: trimmedEmail, password, language });
       if (data.success) {
         login(data.token, data.refreshToken, data.user);
         toast.success(t.success);

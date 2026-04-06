@@ -1,4 +1,4 @@
-const Product = require('../models/Product');
+const productRepository = require('../repositories/ProductRepository');
 
 // Get all products with filters
 const getProducts = async (req, res) => {
@@ -18,7 +18,7 @@ const getProducts = async (req, res) => {
       ];
     }
 
-    const products = await Product.find(query).sort({ 'name.uz': 1 });
+    const products = await productRepository.find(query, { sort: { 'name.uz': 1 } });
     res.json({ success: true, products });
   } catch (err) {
     console.error('Get products error:', err.message);
@@ -29,7 +29,7 @@ const getProducts = async (req, res) => {
 // Admin: Add new product
 const addProduct = async (req, res) => {
   try {
-    const product = await Product.create({
+    const product = await productRepository.create({
       ...req.body,
       createdBy: req.user._id,
     });
@@ -43,7 +43,7 @@ const addProduct = async (req, res) => {
 // Admin: Update product
 const updateProduct = async (req, res) => {
   try {
-    const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const product = await productRepository.findByIdAndUpdate(req.params.id, req.body);
     if (!product) return res.status(404).json({ success: false, message: 'Topilmadi' });
     res.json({ success: true, product });
   } catch (err) {
@@ -54,7 +54,7 @@ const updateProduct = async (req, res) => {
 // Admin: Delete product (Soft delete)
 const deleteProduct = async (req, res) => {
   try {
-    const product = await Product.findByIdAndUpdate(req.params.id, { isActive: false }, { new: true });
+    const product = await productRepository.findByIdAndUpdate(req.params.id, { isActive: false });
     if (!product) return res.status(404).json({ success: false, message: 'Topilmadi' });
     res.json({ success: true, message: 'Mahsulot o\'chirildi' });
   } catch (err) {

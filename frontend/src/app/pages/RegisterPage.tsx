@@ -71,12 +71,26 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       const trimmedEmail = email.trim().toLowerCase();
+      const isGmailRegex = /^[a-zA-Z0-9._%+-]+@gmail(\.com)?$/;
+      const isValidFormat = trimmedEmail === 'admin' || isGmailRegex.test(trimmedEmail);
+
+      if (!isValidFormat) {
+        toast.error(t.invalidEmailFormat || 'Notogri login formati');
+        setLoading(false);
+        return;
+      }
+
       const { data } = await authAPI.register({ email: trimmedEmail, password, firstName, lastName, language });
       if (data.success && data.userId) {
-        setUserId(data.userId);
-        setEmail(trimmedEmail);
-        setStep('otp');
-        toast.success(t?.codeSent || 'Kodi yuborildi');
+        if (data.autoVerified) {
+          toast.success(data.message || t.success);
+          navigate('/login');
+        } else {
+          setUserId(data.userId);
+          setEmail(trimmedEmail);
+          setStep('otp');
+          toast.success(t?.codeSent || 'Kodi yuborildi');
+        }
       } else {
         toast.error(data.message || (language === 'uz' ? 'Xatolik' : 'Error'));
       }

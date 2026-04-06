@@ -1,5 +1,5 @@
 const crypto = require('crypto');
-const User = require('../models/User');
+const userRepository = require('../repositories/UserRepository');
 const { generateAccessToken, generateRefreshToken, verifyRefreshToken, generateOTP } = require('../utils/jwt');
 const { sendOTPEmail, sendPasswordResetEmail } = require('../services/emailService');
 
@@ -8,16 +8,27 @@ const register = async (req, res) => {
   try {
     const { email, password, firstName, lastName } = req.body;
 
-    const existingUser = await User.findOne({ email });
+    const lowerEmail = email ? email.toLowerCase().trim() : '';
+    const isGmailRegex = /^[a-zA-Z0-9._%+-]+@gmail(\.com)?$/;
+    const isValidFormat = lowerEmail === 'admin' || isGmailRegex.test(lowerEmail);
+
+    if (!isValidFormat) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Faqat "admin" yoki "@gmail.com" bilan tugaydigan loginlar qabul qilinadi. Boshqa domenlar (.ru, va h.k.) taqiqlangan.' 
+      });
+    }
+
+    const existingUser = await userRepository.findByEmail(lowerEmail);
     if (existingUser) {
-      return res.status(400).json({ success: false, message: 'Bu email allaqachon ro\'yxatdan o\'tgan' });
+      return res.status(400).json({ success: false, message: 'Bu login allaqachon ro\'yxatdan o\'tgan' });
     }
 
     const otp = generateOTP();
     const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 min
 
-    const user = await User.create({
-      email,
+    const user = await userRepository.create({
+      email: lowerEmail,
       password,
       firstName,
       lastName,
@@ -26,12 +37,18 @@ const register = async (req, res) => {
       isEmailVerified: false,
     });
 
-    await sendOTPEmail(email, otp, req.body.language || 'uz');
+    try {
+      await sendOTPEmail(lowerEmail, otp, req.body.language || 'uz');
+    } catch (emailErr) {
+      console.error('Failed to send OTP email:', emailErr);
+      // Even if email fails, User is created but they may need to request resend.
+    }
 
     res.status(201).json({
       success: true,
-      message: 'Ro\'yxatdan o\'tdingiz. Emailga yuborilgan kodni tasdiqlang.',
+      message: 'Emailingizga tasdiqlash kodi yuborildi',
       userId: user._id,
+      needsOTP: true
     });
   } catch (err) {
     console.error('Register error:', err);
@@ -44,7 +61,7 @@ const verifyEmailOTP = async (req, res) => {
   try {
     const { userId, otp } = req.body;
 
-    const user = await User.findById(userId);
+    const user = await userRepository.findById(userId);
     if (!user) return res.status(404).json({ success: false, message: 'Foydalanuvchi topilmadi' });
 
     if (user.emailOTP !== otp) {
@@ -55,15 +72,16 @@ const verifyEmailOTP = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Kod muddati o\'tgan. Qayta so\'rang.' });
     }
 
-    user.isEmailVerified = true;
-    user.emailOTP = undefined;
-    user.emailOTPExpires = undefined;
-    user.lastLogin = new Date();
-    user.loginCount = (user.loginCount || 0) + 1;
-
     const refreshToken = generateRefreshToken(user._id);
-    user.refreshToken = refreshToken;
-    await user.save();
+    
+    const updatedUser = await userRepository.findByIdAndUpdate(userId, {
+      isEmailVerified: true,
+      emailOTP: undefined,
+      emailOTPExpires: undefined,
+      lastLogin: new Date(),
+      $inc: { loginCount: 1 },
+      refreshToken: refreshToken
+    });
 
     const accessToken = generateAccessToken(user._id);
 
@@ -72,8 +90,8 @@ const verifyEmailOTP = async (req, res) => {
       message: 'Email tasdiqlandi!',
       token: accessToken,
       refreshToken,
-      user: user.toSafeObject(),
-      needsProfile: !user.isProfileComplete,
+      user: updatedUser.toSafeObject(),
+      needsProfile: !updatedUser.isProfileComplete,
     });
   } catch (err) {
     console.error('OTP verify error:', err);
@@ -86,7 +104,7 @@ const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email });
+    const user = await userRepository.findOne({ email });
     if (!user || !user.password) {
       return res.status(401).json({ success: false, message: 'Email yoki parol noto\'g\'ri' });
     }
@@ -103,9 +121,10 @@ const login = async (req, res) => {
     if (!user.isEmailVerified) {
       // Resend OTP
       const otp = generateOTP();
-      user.emailOTP = otp;
-      user.emailOTPExpires = new Date(Date.now() + 10 * 60 * 1000);
-      await user.save();
+      await userRepository.findByIdAndUpdate(user._id, {
+        emailOTP: otp,
+        emailOTPExpires: new Date(Date.now() + 10 * 60 * 1000)
+      });
       await sendOTPEmail(email, otp, req.body.language || 'uz');
 
       return res.status(200).json({
@@ -116,20 +135,21 @@ const login = async (req, res) => {
       });
     }
 
-    user.lastLogin = new Date();
-    user.loginCount = (user.loginCount || 0) + 1;
-
     const accessToken = generateAccessToken(user._id);
     const refreshToken = generateRefreshToken(user._id);
-    user.refreshToken = refreshToken;
-    await user.save();
+    
+    const updatedUser = await userRepository.findByIdAndUpdate(user._id, {
+      lastLogin: new Date(),
+      $inc: { loginCount: 1 },
+      refreshToken: refreshToken
+    });
 
     res.json({
       success: true,
       token: accessToken,
       refreshToken,
-      user: user.toSafeObject(),
-      needsProfile: !user.isProfileComplete,
+      user: updatedUser.toSafeObject(),
+      needsProfile: !updatedUser.isProfileComplete,
     });
   } catch (err) {
     console.error('Login error:', err);
@@ -141,13 +161,20 @@ const login = async (req, res) => {
 const requestEmailLogin = async (req, res) => {
   try {
     const { email } = req.body;
+    const lowerEmail = email ? email.toLowerCase().trim() : '';
+    const isGmailRegex = /^[a-zA-Z0-9._%+-]+@gmail(\.com)?$/;
+    const isValidFormat = lowerEmail === 'admin' || isGmailRegex.test(lowerEmail);
 
-    let user = await User.findOne({ email });
+    if (!isValidFormat) {
+      return res.status(400).json({ success: false, message: 'Login formati noto\'g\'ri' });
+    }
+
+    let user = await userRepository.findByEmail(lowerEmail);
     if (!user) {
       // Auto-register
-      user = await User.create({
-        email,
-        isEmailVerified: false,
+      user = await userRepository.create({
+        email: lowerEmail,
+        isEmailVerified: true,
         authProvider: 'local',
         isProfileComplete: false,
       });
@@ -158,9 +185,10 @@ const requestEmailLogin = async (req, res) => {
     }
 
     const otp = generateOTP();
-    user.emailOTP = otp;
-    user.emailOTPExpires = new Date(Date.now() + 10 * 60 * 1000);
-    await user.save();
+    await userRepository.findByIdAndUpdate(user._id, {
+      emailOTP: otp,
+      emailOTPExpires: new Date(Date.now() + 10 * 60 * 1000)
+    });
 
     await sendOTPEmail(email, otp, req.body.language || 'uz');
 
@@ -180,15 +208,18 @@ const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
 
-    const user = await User.findOne({ email });
+    const user = await userRepository.findByEmail(email);
     if (!user) {
       return res.status(404).json({ success: false, message: 'Bu email ro\'yxatdan o\'tmagan' });
     }
 
     const resetToken = crypto.randomBytes(32).toString('hex');
-    user.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
-    user.passwordResetExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
-    await user.save();
+    const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+    
+    await userRepository.findByIdAndUpdate(user._id, {
+      passwordResetToken: hashedToken,
+      passwordResetExpires: new Date(Date.now() + 60 * 60 * 1000)
+    });
 
     await sendPasswordResetEmail(email, resetToken, req.body.language || 'uz');
 
@@ -205,7 +236,7 @@ const resetPassword = async (req, res) => {
     const { token, password } = req.body;
 
     const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
-    const user = await User.findOne({
+    const user = await userRepository.findOne({
       passwordResetToken: hashedToken,
       passwordResetExpires: { $gt: new Date() },
     });
@@ -214,6 +245,7 @@ const resetPassword = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Token yaroqsiz yoki muddati o\'tgan' });
     }
 
+    // Use the document save middleware for hashing password
     user.password = password;
     user.passwordResetToken = undefined;
     user.passwordResetExpires = undefined;
@@ -233,15 +265,17 @@ const refreshToken = async (req, res) => {
     if (!token) return res.status(401).json({ success: false, message: 'Refresh token kerak' });
 
     const decoded = verifyRefreshToken(token);
-    const user = await User.findById(decoded.id);
+    const user = await userRepository.findById(decoded.id);
     if (!user || user.refreshToken !== token) {
       return res.status(401).json({ success: false, message: 'Token yaroqsiz' });
     }
 
     const newAccessToken = generateAccessToken(user._id);
     const newRefreshToken = generateRefreshToken(user._id);
-    user.refreshToken = newRefreshToken;
-    await user.save();
+    
+    await userRepository.findByIdAndUpdate(user._id, {
+      refreshToken: newRefreshToken
+    });
 
     res.json({ success: true, token: newAccessToken, refreshToken: newRefreshToken });
   } catch (err) {
@@ -256,7 +290,7 @@ const completeProfile = async (req, res) => {
 
     const isProfileComplete = !!(firstName && lastName && phone && dateOfBirth && gender && region && district && mfy && diabetesType);
 
-    const user = await User.findByIdAndUpdate(
+    const user = await userRepository.findByIdAndUpdate(
       req.user._id,
       {
         firstName,
@@ -272,8 +306,7 @@ const completeProfile = async (req, res) => {
         height: height ? Number(height) : undefined,
         weight: weight ? Number(weight) : undefined,
         isProfileComplete,
-      },
-      { new: true }
+      }
     );
 
     res.json({ success: true, user: user.toSafeObject() });
@@ -283,28 +316,27 @@ const completeProfile = async (req, res) => {
   }
 };
 
-
-
 // ==================== UPDATE PROFILE CREDENTIALS ====================
 const updateProfile = async (req, res) => {
   try {
     const { email, firstName, lastName, phone } = req.body;
-    const user = await User.findById(req.user._id);
+    const user = await userRepository.findById(req.user._id);
 
+    const updates = {};
     if (email && email !== user.email) {
-      const emailExists = await User.findOne({ email });
+      const emailExists = await userRepository.findByEmail(email);
       if (emailExists) {
         return res.status(400).json({ success: false, message: 'Bu email band' });
       }
-      user.email = email;
+      updates.email = email;
     }
 
-    if (firstName) user.firstName = firstName;
-    if (lastName) user.lastName = lastName;
-    if (phone) user.phone = phone;
+    if (firstName) updates.firstName = firstName;
+    if (lastName) updates.lastName = lastName;
+    if (phone) updates.phone = phone;
 
-    await user.save();
-    res.json({ success: true, user: user.toSafeObject(), message: 'Profil muvaffaqiyatli yangilandi' });
+    const updatedUser = await userRepository.findByIdAndUpdate(req.user._id, updates);
+    res.json({ success: true, user: updatedUser.toSafeObject(), message: 'Profil muvaffaqiyatli yangilandi' });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Yangilashda xato' });
   }
@@ -313,20 +345,18 @@ const updateProfile = async (req, res) => {
 const updatePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
-    const user = await User.findById(req.user._id);
+    const user = await userRepository.findById(req.user._id);
 
-    if (!user.password) {
-      // Social login
-      user.password = newPassword;
-    } else {
+    if (user.password) {
       const isMatch = await user.comparePassword(currentPassword);
       if (!isMatch) {
         return res.status(401).json({ success: false, message: 'Eski parol noto\'g\'ri' });
       }
-      user.password = newPassword;
     }
 
+    user.password = newPassword;
     await user.save();
+    
     res.json({ success: true, message: 'Parol muvaffaqiyatli yangilandi' });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Xatolik yuz berdi' });
@@ -341,7 +371,7 @@ const getMe = async (req, res) => {
 // ==================== LOGOUT ====================
 const logout = async (req, res) => {
   try {
-    await User.findByIdAndUpdate(req.user._id, { refreshToken: null });
+    await userRepository.findByIdAndUpdate(req.user._id, { refreshToken: null });
     res.json({ success: true, message: 'Chiqish muvaffaqiyatli' });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Server xatosi' });
@@ -355,15 +385,16 @@ const oauthCallback = async (req, res) => {
     const accessToken = generateAccessToken(user._id);
     const refreshToken = generateRefreshToken(user._id);
 
-    user.refreshToken = refreshToken;
-    user.lastLogin = new Date();
-    user.loginCount = (user.loginCount || 0) + 1;
-    await user.save();
+    const updatedUser = await userRepository.findByIdAndUpdate(user._id, {
+      refreshToken: refreshToken,
+      lastLogin: new Date(),
+      $inc: { loginCount: 1 }
+    });
 
     const params = new URLSearchParams({
       token: accessToken,
       refreshToken,
-      needsProfile: (!user.isProfileComplete).toString(),
+      needsProfile: (!updatedUser.isProfileComplete).toString(),
     });
 
     res.redirect(`${process.env.FRONTEND_URL}/auth/callback?${params}`);

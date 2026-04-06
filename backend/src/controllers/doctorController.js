@@ -1,5 +1,5 @@
-const User = require('../models/User');
-const BloodSugar = require('../models/BloodSugar');
+const userRepository = require('../repositories/UserRepository');
+const bloodSugarRepository = require('../repositories/BloodSugarRepository');
 
 // @desc    Get patients for a doctor
 // @route   GET /api/doctor/patients
@@ -20,9 +20,10 @@ exports.getPatients = async (req, res) => {
       ];
     }
 
-    const patients = await User.find(query)
-      .select('-password')
-      .sort({ createdAt: -1 });
+    const patients = await userRepository.find(query, {
+      populate: '-password',
+      sort: { createdAt: -1 }
+    });
 
     res.json({ success: true, patients });
   } catch (err) {
@@ -35,8 +36,9 @@ exports.getPatients = async (req, res) => {
 // @access  Private (Doctor)
 exports.getPatientRecords = async (req, res) => {
   try {
-    const records = await BloodSugar.find({ user: req.params.id })
-      .sort({ date: -1 });
+    const records = await bloodSugarRepository.find({ user: req.params.id }, {
+      sort: { date: -1 }
+    });
     res.json({ success: true, records });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Server xatosi' });
@@ -49,10 +51,9 @@ exports.getPatientRecords = async (req, res) => {
 exports.addNote = async (req, res) => {
   try {
     const { notes } = req.body;
-    const patient = await User.findByIdAndUpdate(
+    const patient = await userRepository.findByIdAndUpdate(
       req.params.id,
-      { doctorNotes: notes },
-      { new: true }
+      { doctorNotes: notes }
     );
     
     if (!patient) {

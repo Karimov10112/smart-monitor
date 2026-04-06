@@ -191,6 +191,7 @@ export const translations: any = {
     newPassword: "Yangi parol",
     changeCredentials: "Login va parolni o'zgartirish",
     emailBand: "Bu email band",
+    invalidEmailFormat: "Faqat 'admin' yoki '@gmail.com' bilan tugaydigan loginlar qabul qilinadi. Boshqa domenlar (.ru, va h.k.) taqiqlangan.",
     
     // Reminders
     reminders: "Eslatmalar",
@@ -446,6 +447,7 @@ export const translations: any = {
     newPassword: "Новый пароль",
     changeCredentials: "Смена логина и пароля",
     emailBand: "Этот email занят",
+    invalidEmailFormat: "Допускаются только 'admin' или логины, оканчивающиеся на '@gmail.com'. Другие домены (.ru и т.д.) запрещены.",
     
     // Reminders
     reminders: "Напоминания",
@@ -701,6 +703,7 @@ export const translations: any = {
     newPassword: "New Password",
     changeCredentials: "Change credentials",
     emailBand: "This email is taken",
+    invalidEmailFormat: "Only 'admin' or logins ending with '@gmail.com' are accepted. Other domains (.ru, etc.) are forbidden.",
     
     // Reminders
     reminders: "Reminders",
