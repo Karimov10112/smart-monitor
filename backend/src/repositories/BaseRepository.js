@@ -16,9 +16,10 @@ class BaseRepository {
   }
 
   async find(query = {}, options = {}) {
-    const { sort, limit, skip, populate } = options;
+    const { sort, limit, skip, populate, select } = options;
     let execution = this.model.find(query);
 
+    if (select) execution = execution.select(select);
     if (populate) execution = execution.populate(populate);
     if (sort) execution = execution.sort(sort);
     if (skip) execution = execution.skip(skip);

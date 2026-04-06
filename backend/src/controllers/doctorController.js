@@ -21,7 +21,7 @@ exports.getPatients = async (req, res) => {
     }
 
     const patients = await userRepository.find(query, {
-      populate: '-password',
+      select: '-password',
       sort: { createdAt: -1 }
     });
 

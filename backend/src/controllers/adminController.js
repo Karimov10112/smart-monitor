@@ -84,7 +84,7 @@ const getAllUsers = async (req, res) => {
 
     const total = await userRepository.countDocuments(query);
     const users = await userRepository.find(query, {
-      populate: '-password -emailOTP -passwordResetToken -refreshToken',
+      select: '-password -emailOTP -passwordResetToken -refreshToken',
       sort: { createdAt: -1 },
       skip: (Number(page) - 1) * Number(limit),
       limit: Number(limit)
