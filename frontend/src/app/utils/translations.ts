@@ -256,6 +256,11 @@ export const translations: any = {
     fiberLabel: "Kletchatka (g)",
     notesPlaceholder: "Izohlar qoldiring...",
     deleteWarning: "Butkul o'chirilsinmi? Bu amalni ortga qaytarib bo'lmaydi.",
+    doctorProfession: "Professional shifokor",
+    glucoseTrends: "GLYUKOZA MONITORING TRENDLARI",
+    recentActivity: "SO'NGGI FAOLIYAT",
+    ageSuffix: "yosh",
+    patientList: "BEMORLAR RO'YXATI",
   },
   ru: {
     // Tabs
@@ -514,6 +519,11 @@ export const translations: any = {
     fiberLabel: "Клетчатка (г)",
     notesPlaceholder: "Оставьте заметки...",
     deleteWarning: "Удалить навсегда? Это действие нельзя отменить.",
+    doctorProfession: "Профессиональный врач",
+    glucoseTrends: "ТРЕНДЫ МОНИТОРИНГА ГЛЮКОЗЫ",
+    recentActivity: "ПОСЛЕДНЯЯ АКТИВНОСТЬ",
+    ageSuffix: "лет",
+    patientList: "СПИСОК ПАЦИЕНТОВ",
   },
   en: {
     // Tabs
@@ -772,6 +782,11 @@ export const translations: any = {
     fiberLabel: "Fiber (g)",
     notesPlaceholder: "Leave some notes...",
     deleteWarning: "Delete permanently? This action cannot be undone.",
+    doctorProfession: "Professional Doctor",
+    glucoseTrends: "GLUCOSE MONITORING TRENDS",
+    recentActivity: "RECENT ACTIVITY",
+    ageSuffix: "y.o",
+    patientList: "PATIENT LIST",
   }
 };
 

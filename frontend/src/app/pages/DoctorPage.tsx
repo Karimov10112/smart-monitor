@@ -132,7 +132,7 @@ export default function DoctorPage() {
           <Stack direction="row" spacing={2} alignItems="center">
             <Avatar sx={{ bgcolor: 'primary.main', borderRadius: 1.5, width: 40, height: 40 }}>🩺</Avatar>
             <Box>
-              <Typography variant="subtitle2" sx={{ fontWeight: 900, lineHeight: 1 }}>{t.appName || 'Qand Nazorati'}</Typography>
+              <Typography variant="subtitle2" sx={{ fontWeight: 900, lineHeight: 1 }}>{t.appName}</Typography>
               <Typography variant="caption" sx={{ fontWeight: 900, color: 'primary.main', fontSize: 9, textTransform: 'uppercase' }}>{t.doctorPanel}</Typography>
             </Box>
           </Stack>
@@ -173,7 +173,7 @@ export default function DoctorPage() {
               <Avatar sx={{ width: 32, height: 32, borderRadius: 1, bgcolor: alpha(theme.palette.success.main, 0.1), color: 'success.main', fontWeight: 900, fontSize: 13 }}>{user?.firstName?.[0]}</Avatar>
               <Box sx={{ overflow: 'hidden' }}>
                  <Typography variant="caption" sx={{ fontWeight: 900, display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.firstName} {user?.lastName}</Typography>
-                 <Typography variant="caption" sx={{ fontSize: 8, color: 'text.secondary', display: 'block' }}>Professional Doctor</Typography>
+                 <Typography variant="caption" sx={{ fontSize: 8, color: 'text.secondary', display: 'block' }}>{t.doctorProfession}</Typography>
               </Box>
            </Stack>
            <Button fullWidth color="error" startIcon={<LogoutIcon fontSize="small" />} onClick={logout} sx={{ borderRadius: 1.5, justifyContent: 'start', py: 1, fontSize: '0.75rem', fontWeight: 800 }}>
@@ -187,7 +187,7 @@ export default function DoctorPage() {
          {currentTab === 'patients' && (
            <Box>
               <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 4 }}>
-                 <Typography variant="h5" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 2 }}>{t.myPatients || 'My Patients'}</Typography>
+                 <Typography variant="h5" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 2 }}>{t.myPatients}</Typography>
                  <TextField 
                   size="small" 
                   placeholder={t.search} 
@@ -224,7 +224,7 @@ export default function DoctorPage() {
                  {patients.length === 0 && (
                    <Box sx={{ width: '100%', py: 10, textAlign: 'center', opacity: 0.3 }}>
                       <PeopleAltIcon sx={{ fontSize: 60, mb: 2 }} />
-                      <Typography variant="h6" sx={{ fontWeight: 800 }}>{t.noPatients || 'Bemorlar topilmadi'}</Typography>
+                      <Typography variant="h6" sx={{ fontWeight: 800 }}>{t.noPatients}</Typography>
                    </Box>
                  )}
               </Grid>
@@ -233,7 +233,7 @@ export default function DoctorPage() {
 
          {currentTab === 'patient-detail' && selectedPatient && (
            <Box>
-              <Button startIcon={<ArrowBackIcon />} onClick={() => setCurrentTab('patients')} sx={{ mb: 4, fontWeight: 800 }}>{t.back || 'Bemorlar ro\'yxati'}</Button>
+              <Button startIcon={<ArrowBackIcon />} onClick={() => setCurrentTab('patients')} sx={{ mb: 4, fontWeight: 800 }}>{t.patientList}</Button>
               
               <Grid container spacing={3}>
                  <Grid size={{ xs: 12, lg: 8 }}>
@@ -249,9 +249,9 @@ export default function DoctorPage() {
                           </Stack>
                           <Grid container spacing={2} sx={{ mt: 3 }}>
                              {[
-                               { label: 'Region', val: selectedPatient.region, icon: LocationOnIcon },
-                               { label: 'Gender', val: t[selectedPatient.gender] || selectedPatient.gender, icon: TimelineIcon },
-                               { label: 'Age', val: `${selectedPatient.age || '—'} y.o`, icon: BiotechIcon },
+                               { label: t.regionLabel, val: selectedPatient.region, icon: LocationOnIcon },
+                               { label: t.gender, val: t[selectedPatient.gender] || selectedPatient.gender, icon: TimelineIcon },
+                               { label: t.age || 'Age', val: `${selectedPatient.age || '—'} ${t.ageSuffix}`, icon: BiotechIcon },
                              ].map((item, idx) => (
                                <Grid size={{ xs: 4 }} key={idx}>
                                   <Paper variant="outlined" sx={{ p: 1.5, textAlign: 'center', borderRadius: 1.5 }}>
@@ -269,7 +269,7 @@ export default function DoctorPage() {
                     {/* Chart Card */}
                     <Card elevation={0} sx={{ mb: 3 }}>
                        <Box sx={{ p: 2, px: 3, borderBottom: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.primary.main, 0.01) }}>
-                          <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5 }}>GLUCOSE MONITORING TRENDS</Typography>
+                          <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5 }}>{t.glucoseTrends}</Typography>
                        </Box>
                        <CardContent sx={{ p: 4 }}>
                           <Box sx={{ h: 300 }}>
@@ -297,7 +297,7 @@ export default function DoctorPage() {
                     {/* Note Card */}
                     <Card elevation={0}>
                        <Box sx={{ p: 2, px: 3, borderBottom: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.primary.main, 0.01) }}>
-                          <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5 }}>MEDICAL CONCLUSION</Typography>
+                          <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5 }}>{t.medicalConclusion}</Typography>
                        </Box>
                        <CardContent sx={{ p: 3 }}>
                           <TextField
@@ -332,7 +332,7 @@ export default function DoctorPage() {
 
                     <Card elevation={0}>
                        <Box sx={{ p: 2, px: 3, borderBottom: `1px solid ${theme.palette.divider}` }}>
-                          <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1 }}>RECENT ACTIVITY</Typography>
+                          <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1 }}>{t.recentActivity}</Typography>
                        </Box>
                        <TableContainer>
                           <Table size="small">
