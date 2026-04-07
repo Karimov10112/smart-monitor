@@ -56,7 +56,7 @@ const SIDEBAR_WIDTH = 280;
 type TabType = 'patients' | 'patient-detail';
 
 export default function DoctorPage() {
-  const { user, logout } = useAuth();
+  const { user, logout, isAdmin } = useAuth();
   const { language } = useApp();
   const theme = useTheme();
   const t = translations[language];
