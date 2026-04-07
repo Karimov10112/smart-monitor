@@ -141,9 +141,9 @@ export default function RegisterPage() {
         <Box sx={{ width: 64, height: 64, bgcolor: 'primary.main', borderRadius: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'center', mx: 'auto', mb: 2, color: 'white' }}>
           <ActivityIcon sx={{ fontSize: 32 }} />
         </Box>
-        <Typography variant="h4" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 2 }}>Qand Nazorati</Typography>
+        <Typography variant="h4" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 2 }}>{t.appName}</Typography>
         <Typography variant="overline" sx={{ fontWeight: 800, color: 'text.secondary', letterSpacing: 1.5 }}>
-          {t.signUp} • Join the Community
+          {t.signUp} • {t.joinCommunity}
         </Typography>
       </Box>
 
@@ -151,8 +151,8 @@ export default function RegisterPage() {
         <CardContent sx={{ p: 4 }}>
           {step === 'form' ? (
             <Box component="form" onSubmit={handleRegister}>
-              <Typography variant="h6" sx={{ fontWeight: 900, mb: 1, textTransform: 'uppercase' }}>{language === 'uz' ? 'Ro\'yxatdan o\'tish' : t.signUp}</Typography>
-              <Typography variant="caption" sx={{ fontWeight: 800, color: 'primary.main', textTransform: 'uppercase', letterSpacing: 1, display: 'block', mb: 4 }}>Yangi hisob yaratish</Typography>
+              <Typography variant="h6" sx={{ fontWeight: 900, mb: 1, textTransform: 'uppercase' }}>{t.signUp}</Typography>
+              <Typography variant="caption" sx={{ fontWeight: 800, color: 'primary.main', textTransform: 'uppercase', letterSpacing: 1, display: 'block', mb: 4 }}>{t.newAccountSubtitle}</Typography>
               
               <Stack spacing={3}>
                 <Stack direction="row" spacing={2}>

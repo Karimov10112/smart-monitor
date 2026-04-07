@@ -274,7 +274,7 @@ export default function CompleteProfilePage() {
                 <Grid size={{ xs: 12, sm: 3 }}>
                   <TextField
                     fullWidth size="small" type="number"
-                    label="Bo'y (sm) *"
+                    label={`${t.heightLabel} *`}
                     value={form.height}
                     onChange={e => handleChange('height', e.target.value)}
                     inputProps={{ min: 100, max: 250, step: 1 }}
@@ -285,7 +285,7 @@ export default function CompleteProfilePage() {
                 <Grid size={{ xs: 12, sm: 3 }}>
                   <TextField
                     fullWidth size="small" type="number"
-                    label="Vazn (kg) *"
+                    label={`${t.weightLabel} *`}
                     value={form.weight}
                     onChange={e => handleChange('weight', e.target.value)}
                     inputProps={{ min: 20, max: 300, step: 0.5 }}
@@ -302,14 +302,14 @@ export default function CompleteProfilePage() {
             <Paper elevation={0} sx={{ p: 4, bgcolor: alpha(theme.palette.primary.main, 0.02), border: `1px solid ${theme.palette.divider}`, mb: 6, borderRadius: 2 }}>
               <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 3 }}>
                 <SaveIcon sx={{ color: '#8b5cf6' }} fontSize="small" />
-                <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5 }}>Security Update</Typography>
+                <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5 }}>{t.securityUpdate}</Typography>
               </Stack>
               <Grid container spacing={3}>
                 <Grid size={{ xs: 12 }}>
                   <TextField fullWidth size="small" type="text" label={t.email} value={form.email} onChange={e => handleChange('email', e.target.value)} />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField fullWidth size="small" type="password" label={t.currentPassword} value={form.currentPassword} onChange={e => handleChange('currentPassword', e.target.value)} placeholder="••••••••" helperText="Email yoki parolni o'zgartirish uchun kerak" />
+                  <TextField fullWidth size="small" type="password" label={t.currentPassword} value={form.currentPassword} onChange={e => handleChange('currentPassword', e.target.value)} placeholder="••••••••" helperText={t.passwordRequiredForChange} />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField fullWidth size="small" type="password" label={t.newPassword} value={form.newPassword} onChange={e => handleChange('newPassword', e.target.value)} placeholder="••••••••" />
@@ -331,10 +331,10 @@ export default function CompleteProfilePage() {
                 }
                 sx={{ height: 64, fontWeight: 900, fontSize: '1rem', borderRadius: 2, boxShadow: 'none', '&:hover': { boxShadow: 'none' } }}
               >
-                {loading ? <CircularProgress size={24} color="inherit" /> : (isEditing ? 'Saqlash' : t.saveContinue)}
+                {loading ? <CircularProgress size={24} color="inherit" /> : (isEditing ? t.saveBtn : t.saveContinue)}
               </Button>
 
-              <Button fullWidth color="error" startIcon={<LogoutIcon />} onClick={logout} sx={{ fontWeight: 800 }}>Logout</Button>
+              <Button fullWidth color="error" startIcon={<LogoutIcon />} onClick={logout} sx={{ fontWeight: 800 }}>{t.logoutUser}</Button>
             </Stack>
           </Box>
         </CardContent>

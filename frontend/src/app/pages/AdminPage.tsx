@@ -228,8 +228,8 @@ export default function AdminPage() {
       {/* Header */}
       <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: isMobile ? 2 : 4 }}>
         <Box>
-          <Typography variant={isMobile ? 'h6' : 'h5'} sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: isMobile ? 1 : 2 }}>Admin Panel</Typography>
-          <Typography variant="caption" sx={{ fontWeight: 800, color: 'text.secondary', fontSize: isMobile ? 8 : 10 }}>System Management</Typography>
+          <Typography variant={isMobile ? 'h6' : 'h5'} sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: isMobile ? 1 : 2 }}>{t.adminPanel}</Typography>
+          <Typography variant="caption" sx={{ fontWeight: 800, color: 'text.secondary', fontSize: isMobile ? 8 : 10 }}>{t.systemManagement}</Typography>
         </Box>
         <Avatar src={user?.avatar} sx={{ width: isMobile ? 40 : 48, height: isMobile ? 40 : 48, borderRadius: 1.5, bgcolor: 'primary.main' }}>{user?.firstName?.[0]}</Avatar>
       </Stack>
@@ -255,7 +255,7 @@ export default function AdminPage() {
           <Tab value="users" label={t.users || 'Users'} icon={<PeopleIcon fontSize="small" />} iconPosition="start" />
           <Tab value="products" label={t.products || 'Products'} icon={<InventoryIcon fontSize="small" />} iconPosition="start" />
           {user?.role === 'superadmin' && (
-            <Tab value="audit" label="Audit" icon={<HistoryIcon fontSize="small" />} iconPosition="start" onClick={loadAuditLogs} />
+            <Tab value="audit" label={t.auditLogs} icon={<HistoryIcon fontSize="small" />} iconPosition="start" onClick={loadAuditLogs} />
           )}
           {selectedUserId && (
             <Tab
@@ -320,9 +320,9 @@ export default function AdminPage() {
                   <InputLabel>{t.role}</InputLabel>
                   <Select value={role} label={t.role} onChange={e => setRole(e.target.value)}>
                     <MenuItem value="">{t.allStatuses || 'All'}</MenuItem>
-                    <MenuItem value="user">User</MenuItem>
-                    <MenuItem value="doctor">Doctor</MenuItem>
-                    <MenuItem value="admin">Admin</MenuItem>
+                    <MenuItem value="user">{t.user}</MenuItem>
+                    <MenuItem value="doctor">{t.doctor}</MenuItem>
+                    <MenuItem value="admin">{t.admin}</MenuItem>
                   </Select>
                 </FormControl>
                 <Button variant="outlined" onClick={() => { setSearch(''); setRole(''); }} sx={{ fontWeight: 800 }}>{t.refresh}</Button>
@@ -366,7 +366,7 @@ export default function AdminPage() {
                                 <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>{u.firstName} {u.lastName}</Typography>
                                 {u.role === 'superadmin' && user?.role !== 'superadmin' && (
                                   <Chip 
-                                    label="RESTRICTED" 
+                                    label={t.restricted} 
                                     size="small" 
                                     sx={{ height: 16, fontSize: 7, fontWeight: 900, bgcolor: alpha(theme.palette.error.main, 0.1), color: 'error.main' }} 
                                   />
@@ -563,7 +563,7 @@ export default function AdminPage() {
                   <Box sx={{ flexGrow: 1 }}>
                     <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
                       <Typography variant="h5" sx={{ fontWeight: 900 }}>{selectedUser.firstName} {selectedUser.lastName}</Typography>
-                      {selectedUser.isBanned && <Chip label="BANNED" size="small" color="error" sx={{ height: 20, fontSize: 9, fontWeight: 900 }} />}
+                      {selectedUser.isBanned && <Chip label={t.banned} size="small" color="error" sx={{ height: 20, fontSize: 9, fontWeight: 900 }} />}
                     </Stack>
                     <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 700, mb: 1.5 }}>{selectedUser.email}</Typography>
                     <Stack direction="row" spacing={1}>
@@ -573,35 +573,35 @@ export default function AdminPage() {
                   </Box>
                   <Stack direction={isMobile ? 'column' : 'row'} spacing={2} sx={{ width: isMobile ? '100%' : 'auto' }}>
                      <FormControl size="small" sx={{ minWidth: 160 }}>
-                        <InputLabel>Update Role</InputLabel>
+                        <InputLabel>{t.updateRoleLabel}</InputLabel>
                         <Select
-                          value={selectedUser.role} label="Update Role"
+                          value={selectedUser.role} label={t.updateRoleLabel}
                           onChange={e => adminAPI.updateRole(selectedUser._id, e.target.value as string).then(() => loadSpecificUser(selectedUser._id))}
                           sx={{ fontWeight: 800, fontSize: 13 }}
                         >
-                          <MenuItem value="user">User</MenuItem>
-                          <MenuItem value="doctor">Doctor</MenuItem>
-                          <MenuItem value="admin">Admin</MenuItem>
+                          <MenuItem value="user">{t.user}</MenuItem>
+                          <MenuItem value="doctor">{t.doctor}</MenuItem>
+                          <MenuItem value="admin">{t.admin}</MenuItem>
                         </Select>
                      </FormControl>
 
                      <FormControl size="small" sx={{ minWidth: 180 }}>
-                        <InputLabel>Assign Doctor</InputLabel>
+                        <InputLabel>{t.assignDoctor}</InputLabel>
                         <Select
                           value={selectedUser.assignedDoctor?._id || selectedUser.assignedDoctor || ''} 
-                          label="Assign Doctor"
+                          label={t.assignDoctor}
                           disabled={selectedUser.role !== 'user'}
                           onChange={e => {
                              const docId = e.target.value;
                              adminAPI.assignDoctor(selectedUser._id, docId || null).then(() => {
-                                toast.success('Doktor muvaffaqiyatli biriktirildi');
+                                toast.success(t.doctorAssigned);
                                 loadSpecificUser(selectedUser._id);
                                 loadUsers();
                              });
                           }}
                           sx={{ fontWeight: 800, fontSize: 13 }}
                         >
-                          <MenuItem value=""><em>None</em></MenuItem>
+                          <MenuItem value=""><em>{t.none}</em></MenuItem>
                           {availableDoctors.map(doc => (
                              <MenuItem key={doc._id} value={doc._id}>
                                 {doc.firstName} {doc.lastName}
@@ -631,7 +631,7 @@ export default function AdminPage() {
               <Grid size={{ xs: 12, lg: 8 }}>
                  <Card elevation={0} sx={{ border: `1px solid ${theme.palette.divider}`, mb: 3 }}>
                     <Box sx={{ p: 2, px: 3, borderBottom: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.primary.main, 0.01) }}>
-                        <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5 }}>Full User Profile</Typography>
+                        <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5 }}>{t.fullUserProfile}</Typography>
                     </Box>
                     <CardContent sx={{ p: 4 }}>
                        <Grid container spacing={4}>
@@ -651,7 +651,7 @@ export default function AdminPage() {
                                    </Typography>
                                 </Box>
                                  <Box>
-                                   <Typography variant="caption" sx={{ display: 'block', fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', fontSize: 9 }}>Biriktirilgan Shifokor</Typography>
+                                   <Typography variant="caption" sx={{ display: 'block', fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', fontSize: 9 }}>{t.attachedDoctor}</Typography>
                                    <Typography variant="body2" sx={{ fontWeight: 900, color: 'info.main' }}>
                                       {selectedUser.assignedDoctor ? `${selectedUser.assignedDoctor.firstName} ${selectedUser.assignedDoctor.lastName}` : '—'}
                                    </Typography>
@@ -791,7 +791,7 @@ export default function AdminPage() {
                             fullWidth variant="outlined" color="error" startIcon={<DeleteIcon />}
                             disabled={selectedUser.role === 'superadmin'}
                             onClick={() => { 
-                              if (selectedUser.role === 'superadmin') return toast.error("Super Adminni o'chirib bo'lmaydi");
+                              if (selectedUser.role === 'superadmin') return toast.error(t.superAdminDeleteError);
                               if (confirm(t.deleteWarning)) adminAPI.deleteUser(selectedUser._id).then(() => { setCurrentTab('users'); setSelectedUserId(null); loadUsers(); }); 
                             }}
                             sx={{ fontWeight: 900 }}
@@ -893,7 +893,7 @@ export default function AdminPage() {
                   <TextField size="small" label={`${t.firstName} (UZ)`} value={productForm.name.uz} onChange={e => setProductForm({ ...productForm, name: { ...productForm.name, uz: e.target.value } })} required />
                   <TextField size="small" label={`${t.firstName} (RU)`} value={productForm.name.ru} onChange={e => setProductForm({ ...productForm, name: { ...productForm.name, ru: e.target.value } })} required />
                   <TextField size="small" label={`${t.firstName} (EN)`} value={productForm.name.en} onChange={e => setProductForm({ ...productForm, name: { ...productForm.name, en: e.target.value } })} />
-                  <TextField size="small" label="Emoji" value={productForm.emoji} onChange={e => setProductForm({ ...productForm, emoji: e.target.value })} sx={{ width: 100 }} />
+                  <TextField size="small" label={t.emoji} value={productForm.emoji} onChange={e => setProductForm({ ...productForm, emoji: e.target.value })} sx={{ width: 100 }} />
                   <FormControl size="small" fullWidth>
                     <InputLabel>{t.category}</InputLabel>
                     <Select value={productForm.category} label={t.category} onChange={e => setProductForm({ ...productForm, category: e.target.value })}>

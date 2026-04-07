@@ -133,7 +133,7 @@ export function Products() {
                 startIcon={<FilterListIcon fontSize="small" />}
                 sx={{ borderRadius: 1.5, fontWeight: 800, textTransform: 'uppercase', fontSize: 10 }}
               >
-                {language === 'uz' ? 'Filtrlar' : 'Фильтры'}
+                {t.filters}
               </Button>
               <Typography variant="caption" sx={{ fontWeight: 800, color: 'text.secondary', ml: 'auto', textTransform: 'uppercase', letterSpacing: 1 }}>
                 {filteredProducts.length} {t.productsCount}
@@ -180,7 +180,7 @@ export function Products() {
       {loading && products.length === 0 && (
         <Box sx={{ py: 10, textAlign: 'center', opacity: 0.5 }}>
           <CircularProgress size={30} sx={{ mb: 2 }} />
-          <Typography variant="overline" sx={{ display: 'block', fontWeight: 800, letterSpacing: 2 }}>Mahsulotlar yuklanmoqda...</Typography>
+          <Typography variant="overline" sx={{ display: 'block', fontWeight: 800, letterSpacing: 2 }}>{t.loadingProducts}</Typography>
         </Box>
       )}
 
@@ -258,7 +258,7 @@ export function Products() {
         {!loading && filteredProducts.length === 0 && (
           <Box sx={{ textAlign: 'center', py: 10, opacity: 0.3 }}>
             <SearchIcon sx={{ fontSize: 60, mb: 2 }} />
-            <Typography variant="h6" sx={{ fontWeight: 800 }}>Mahsulot topilmadi</Typography>
+            <Typography variant="h6" sx={{ fontWeight: 800 }}>{t.noProductsFound}</Typography>
           </Box>
         )}
       </Stack>
@@ -320,28 +320,28 @@ export function Products() {
                 <Grid container spacing={2} sx={{ mb: 4 }}>
                   <Grid size={{ xs: 6 }}>
                     <Box sx={{ p: 2.5, borderRadius: 3, bgcolor: alpha(theme.palette.primary.main, 0.05), border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`, height: '100%' }}>
-                      <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, display: 'block', mb: 2 }}>Glikemik indeks</Typography>
+                      <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, display: 'block', mb: 2 }}>{t.giLabel}</Typography>
                       <Typography variant="h3" sx={{ fontWeight: 800, color: 'primary.main' }}>{selectedProduct.gi}</Typography>
                     </Box>
                   </Grid>
                   <Grid size={{ xs: 6 }}>
                     <Box sx={{ p: 2.5, borderRadius: 3, bgcolor: alpha(theme.palette.secondary.main, 0.05), border: `1px solid ${alpha(theme.palette.secondary.main, 0.1)}`, height: '100%' }}>
-                      <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, display: 'block', mb: 2 }}>Glikemik yuk</Typography>
+                      <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, display: 'block', mb: 2 }}>{t.glLabel}</Typography>
                       <Typography variant="h3" sx={{ fontWeight: 800, color: 'secondary.main' }}>{selectedProduct.gl}</Typography>
                     </Box>
                   </Grid>
                 </Grid>
 
                 {/* Nutrition Grid */}
-                <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'text.primary', mb: 2 }}>Ozuqaviy ma'lumot (100g uchun)</Typography>
+                <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'text.primary', mb: 2 }}>{t.nutritionInfo100g}</Typography>
                 <Grid container spacing={1.5} sx={{ mb: 4 }}>
                    {[
-                     { label: 'Kaloriya', val: `${cal} kcal` },
-                     { label: 'Uglevodlar', val: `${carb}g` },
-                     { label: 'Shakar', val: `${sugar}g` },
-                     { label: 'Tola', val: `${fiber}g` },
-                     { label: 'Oqsil', val: `${prot}g` },
-                     { label: 'Yog\'', val: `${fat}g` },
+                     { label: t.kcal, val: `${cal} kcal` },
+                     { label: t.carbsLabel, val: `${carb}g` },
+                     { label: t.sugarLabelShort, val: `${sugar}g` },
+                     { label: t.fiberLabelShort, val: `${fiber}g` },
+                     { label: t.proteinLabel, val: `${prot}g` },
+                     { label: t.fatLabel, val: `${fat}g` },
                    ].map((item, i) => (
                      <Grid size={{ xs: 4 }} key={i}>
                        <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: 'background.default', height: '100%' }}>
@@ -353,7 +353,7 @@ export function Products() {
                 </Grid>
 
                 {/* Carbohydrate Distribution */}
-                <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'text.primary', mb: 2 }}>Uglevodlar taqsimoti</Typography>
+                <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'text.primary', mb: 2 }}>{t.carbsDistribution}</Typography>
                 <Stack spacing={3} sx={{ mb: 4 }}>
                    <Box>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
@@ -376,7 +376,7 @@ export function Products() {
                 </Stack>
 
                 {/* Main Nutrients Stacked Bar */}
-                <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'text.primary', mb: 2 }}>Asosiy ozuqa moddalari</Typography>
+                <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'text.primary', mb: 2 }}>{t.mainNutrients}</Typography>
                 <Box sx={{ mb: 4 }}>
                    <Box sx={{ height: 24, borderRadius: 12, bgcolor: 'background.default', overflow: 'hidden', display: 'flex', mb: 2 }}>
                       {total > 0 ? (
@@ -392,30 +392,30 @@ export function Products() {
                           </Box>
                         </>
                       ) : (
-                        <Box sx={{ height: '100%', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'text.secondary', fontSize: 10 }}>Ma'lumot yo'q</Box>
+                        <Box sx={{ height: '100%', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'text.secondary', fontSize: 10 }}>{t.noData}</Box>
                       )}
                    </Box>
                    <Stack direction="row" spacing={3} justifyContent="center">
                       <Stack direction="row" spacing={1} alignItems="center">
                         <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: theme.palette.primary.main }} />
-                        <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>Uglevodlar</Typography>
+                        <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>{t.carbsLabel}</Typography>
                       </Stack>
                       <Stack direction="row" spacing={1} alignItems="center">
                         <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: theme.palette.error.main }} />
-                        <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>Oqsil</Typography>
+                        <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>{t.proteinLabel}</Typography>
                       </Stack>
                       <Stack direction="row" spacing={1} alignItems="center">
                         <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: theme.palette.warning.main }} />
-                        <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>Yog'</Typography>
+                        <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>{t.fatLabel}</Typography>
                       </Stack>
                    </Stack>
                 </Box>
 
                 {/* Advice Section */}
                 <Box sx={{ p: 2.5, borderRadius: 3, bgcolor: alpha(theme.palette.info.main, 0.05), border: `1px solid ${alpha(theme.palette.info.main, 0.1)}` }}>
-                   <Typography variant="subtitle2" sx={{ fontWeight: 800, color: theme.palette.mode === 'dark' ? 'info.light' : 'info.dark', mb: 1.5 }}>Batafsil tavsiya</Typography>
+                   <Typography variant="subtitle2" sx={{ fontWeight: 800, color: theme.palette.mode === 'dark' ? 'info.light' : 'info.dark', mb: 1.5 }}>{t.detailedAdvice}</Typography>
                    <Typography variant="body2" sx={{ color: theme.palette.mode === 'dark' ? 'info.light' : 'info.dark', lineHeight: 1.6, fontWeight: 500 }}>
-                      {selectedProduct.advice?.[language] || selectedProduct.advice?.['uz'] || 'Tavsiya mavjud emas'}
+                      {selectedProduct.advice?.[language] || selectedProduct.advice?.['uz'] || t.noAdviceAvailable}
                    </Typography>
                 </Box>
               </DialogContent>

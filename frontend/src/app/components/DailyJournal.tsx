@@ -521,15 +521,15 @@ export function DailyJournal() {
               <Box sx={{ display: 'flex', gap: 2 }}>
                 <InfoIcon sx={{ color: 'primary.main', fontSize: 20 }} />
                 <Box sx={{ width: '100%' }}>
-                  <Typography variant="caption" sx={{ fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1, display: 'block', mb: 2 }}>Qand darajasi normasi</Typography>
+                  <Typography variant="caption" sx={{ fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1, display: 'block', mb: 2 }}>{t.sugarNorms}</Typography>
                   <Stack spacing={1.5}>
                     <Paper elevation={0} sx={{ p: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center', bgcolor: 'background.paper', borderRadius: 1 }}>
                       <Typography variant="caption" sx={{ fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase' }}>{t.fasting}</Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 800, color: 'primary.main' }}>3.9 — 5.5 <Typography component="span" variant="caption" sx={{ fontSize: 9 }}>mmol/l</Typography></Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 800, color: 'primary.main' }}>3.9 — 5.5 <Typography component="span" variant="caption" sx={{ fontSize: 9 }}>{t.mmol}</Typography></Typography>
                     </Paper>
                     <Paper elevation={0} sx={{ p: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center', bgcolor: 'background.paper', borderRadius: 1 }}>
                       <Typography variant="caption" sx={{ fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase' }}>{t.postMeal}</Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 800, color: 'primary.main' }}>{'< 7.8'} <Typography component="span" variant="caption" sx={{ fontSize: 9 }}>mmol/l</Typography></Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 800, color: 'primary.main' }}>{'< 7.8'} <Typography component="span" variant="caption" sx={{ fontSize: 9 }}>{t.mmol}</Typography></Typography>
                     </Paper>
                   </Stack>
                 </Box>

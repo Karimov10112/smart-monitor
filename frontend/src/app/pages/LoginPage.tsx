@@ -121,7 +121,7 @@ export default function LoginPage() {
             <StorageIcon sx={{ fontSize: 32 }} />
           </Box>
           <Typography variant="h4" sx={{ fontWeight: 800, mb: 1 }}>
-            Qand <Box component="span" sx={{ color: 'primary.main' }}>Nazorati</Box>
+            {t.appName.split(' ')[0]} <Box component="span" sx={{ color: 'primary.main' }}>{t.appName.split(' ')[1] || ''}</Box>
           </Typography>
           <Typography variant="overline" sx={{ fontWeight: 800, letterSpacing: 2, color: 'text.secondary', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
             <AutoAwesomeIcon sx={{ fontSize: 14, color: 'primary.main' }} /> {t.appName || 'Smart Monitor System'}
@@ -139,7 +139,7 @@ export default function LoginPage() {
           {/* Official Banner */}
           <Box sx={{ bgcolor: alpha(theme.palette.primary.main, 0.02), p: 3, textAlign: 'center', borderBottom: `1px solid ${theme.palette.divider}` }}>
             <Typography variant="caption" sx={{ display: 'block', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1, mb: 2, color: 'text.secondary' }}>
-              {t.noAccount || "Akkauntingiz yo'qmi?"}
+              {t.noAccount}
             </Typography>
             <Button
               component={RouterLink}
@@ -150,14 +150,14 @@ export default function LoginPage() {
               endIcon={<ArrowForwardIcon />}
               sx={{ borderRadius: 1.5, px: 3 }}
             >
-              {t.signUp || "Ro'yxatdan o'tish"}
+              {t.signUp}
             </Button>
           </Box>
 
           <Box component="form" onSubmit={handleSubmit} sx={{ p: { xs: 4, md: 6 } }}>
             <Stack spacing={3}>
               <TextField
-                label="Email Address"
+                label={t.emailAddress}
                 placeholder="admin yoki email@mail.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -172,7 +172,7 @@ export default function LoginPage() {
               />
 
               <TextField
-                label="Password"
+                label={t.passwordLabel}
                 type="password"
                 placeholder="••••••••"
                 value={password}
