@@ -811,27 +811,27 @@ export default function AdminPage() {
           <Box>
             <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 4 }}>
                <Box>
-                  <Typography variant="h6" sx={{ fontWeight: 900 }}>Audit Logs</Typography>
-                  <Typography variant="caption" sx={{ fontWeight: 800, color: 'text.secondary' }}>System activity history ({auditTotal} events)</Typography>
+                  <Typography variant="h6" sx={{ fontWeight: 900 }}>{t.auditLogs}</Typography>
+                  <Typography variant="caption" sx={{ fontWeight: 800, color: 'text.secondary' }}>{t.systemHistory} ({auditTotal} {t.events})</Typography>
                </Box>
-               <Button variant="outlined" size="small" onClick={loadAuditLogs} startIcon={auditLoading ? <CircularProgress size={14} /> : <HistoryIcon fontSize="small" />} sx={{ fontWeight: 800 }}>Refresh</Button>
+               <Button variant="outlined" size="small" onClick={loadAuditLogs} startIcon={auditLoading ? <CircularProgress size={14} /> : <HistoryIcon fontSize="small" />} sx={{ fontWeight: 800 }}>{t.refresh}</Button>
             </Stack>
 
             <TableContainer component={Paper} elevation={0} sx={{ border: `1px solid ${theme.palette.divider}`, maxHeight: 700 }}>
               <Table stickyHeader size="small">
                 <TableHead>
                   <TableRow>
-                     <TableCell sx={{ fontWeight: 900, textTransform: 'uppercase', fontSize: 10 }}>Admin</TableCell>
-                     <TableCell sx={{ fontWeight: 900, textTransform: 'uppercase', fontSize: 10 }}>Action</TableCell>
-                     <TableCell sx={{ fontWeight: 900, textTransform: 'uppercase', fontSize: 10 }}>Details</TableCell>
-                     <TableCell sx={{ fontWeight: 900, textTransform: 'uppercase', fontSize: 10 }}>Date</TableCell>
+                     <TableCell sx={{ fontWeight: 900, textTransform: 'uppercase', fontSize: 10 }}>{t.admin}</TableCell>
+                     <TableCell sx={{ fontWeight: 900, textTransform: 'uppercase', fontSize: 10 }}>{t.actions}</TableCell>
+                     <TableCell sx={{ fontWeight: 900, textTransform: 'uppercase', fontSize: 10 }}>{t.details}</TableCell>
+                     <TableCell sx={{ fontWeight: 900, textTransform: 'uppercase', fontSize: 10 }}>{t.date}</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                    {auditLoading ? (
                      <TableRow><TableCell colSpan={4} align="center" sx={{ py: 10 }}><CircularProgress /></TableCell></TableRow>
                    ) : auditLogs.length === 0 ? (
-                     <TableRow><TableCell colSpan={4} align="center" sx={{ py: 10 }}><Typography variant="body2" sx={{ opacity: 0.5 }}>No logs found</Typography></TableCell></TableRow>
+                     <TableRow><TableCell colSpan={4} align="center" sx={{ py: 10 }}><Typography variant="body2" sx={{ opacity: 0.5 }}>{t.noLogs}</Typography></TableCell></TableRow>
                    ) : (
                      auditLogs.map(log => (
                        <TableRow key={log._id} hover>

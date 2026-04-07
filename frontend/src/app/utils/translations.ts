@@ -261,6 +261,11 @@ export const translations: any = {
     recentActivity: "SO'NGGI FAOLIYAT",
     ageSuffix: "yosh",
     patientList: "BEMORLAR RO'YXATI",
+    auditLogs: "Audit jurnallari",
+    systemHistory: "Tizim faoliyati tarixi",
+    events: "hodisalar",
+    details: "Batafsil",
+    noLogs: "Jurnallar topilmadi",
   },
   ru: {
     // Tabs
@@ -524,6 +529,11 @@ export const translations: any = {
     recentActivity: "ПОСЛЕДНЯЯ АКТИВНОСТЬ",
     ageSuffix: "лет",
     patientList: "СПИСОК ПАЦИЕНТОВ",
+    auditLogs: "Логи аудита",
+    systemHistory: "История системной активности",
+    events: "событий",
+    details: "Детали",
+    noLogs: "Логи не найдены",
   },
   en: {
     // Tabs
@@ -787,6 +797,11 @@ export const translations: any = {
     recentActivity: "RECENT ACTIVITY",
     ageSuffix: "y.o",
     patientList: "PATIENT LIST",
+    auditLogs: "Audit Logs",
+    systemHistory: "System activity history",
+    events: "events",
+    details: "Details",
+    noLogs: "No logs found",
   }
 };
 
