@@ -247,9 +247,12 @@ function App() {
               selected={!isReminderModalOpen && location.pathname === '/' && activeTab === item.id}
               onClick={() => { setIsSidebarOpen(false); setIsReminderModalOpen(false); }}
               sx={{
-                borderRadius: 1.5,
-                py: 1,
-                '&.Mui-selected': { bgcolor: alpha(theme.palette.primary.main, 0.08), color: 'primary.main', '& .MuiListItemIcon-root': { color: 'primary.main' } },
+                borderRadius: 8,
+                mb: 1,
+                py: 1.5,
+                bgcolor: theme.palette.background.paper,
+                boxShadow: theme.palette.mode === 'dark' ? '4px 4px 10px rgba(0,0,0,0.4)' : '4px 4px 12px rgba(0,0,0,0.05), -4px -4px 12px rgba(255,255,255,0.8)',
+                '&.Mui-selected': { bgcolor: alpha(theme.palette.primary.main, 0.1), color: 'primary.main', '& .MuiListItemIcon-root': { color: 'primary.main' } },
               }}
             >
               <ListItemIcon sx={{ minWidth: 40 }}>{item.icon}</ListItemIcon>
@@ -266,9 +269,12 @@ function App() {
               selected={!isReminderModalOpen && location.pathname === '/admin'}
               onClick={() => { setIsSidebarOpen(false); setIsReminderModalOpen(false); }} 
               sx={{ 
-                borderRadius: 1.5, 
-                py: 1,
-                '&.Mui-selected': { bgcolor: alpha(theme.palette.primary.main, 0.08), color: 'primary.main', '& .MuiListItemIcon-root': { color: 'primary.main' } },
+                borderRadius: 8, 
+                mb: 1,
+                py: 1.5,
+                bgcolor: theme.palette.background.paper,
+                boxShadow: theme.palette.mode === 'dark' ? '4px 4px 10px rgba(0,0,0,0.4)' : '4px 4px 12px rgba(0,0,0,0.05), -4px -4px 12px rgba(255,255,255,0.8)',
+                '&.Mui-selected': { bgcolor: alpha(theme.palette.primary.main, 0.1), color: 'primary.main', '& .MuiListItemIcon-root': { color: 'primary.main' } },
               }}
             >
               <ListItemIcon sx={{ minWidth: 40 }}><AdminPanelSettingsIcon fontSize="small" /></ListItemIcon>
@@ -285,9 +291,12 @@ function App() {
               selected={!isReminderModalOpen && location.pathname === '/doctor'}
               onClick={() => { setIsSidebarOpen(false); setIsReminderModalOpen(false); }} 
               sx={{ 
-                borderRadius: 1.5, 
-                py: 1,
-                '&.Mui-selected': { bgcolor: alpha(theme.palette.primary.main, 0.08), color: 'primary.main', '& .MuiListItemIcon-root': { color: 'primary.main' } },
+                borderRadius: 8, 
+                mb: 1,
+                py: 1.5,
+                bgcolor: theme.palette.background.paper,
+                boxShadow: theme.palette.mode === 'dark' ? '4px 4px 10px rgba(0,0,0,0.4)' : '4px 4px 12px rgba(0,0,0,0.05), -4px -4px 12px rgba(255,255,255,0.8)',
+                '&.Mui-selected': { bgcolor: alpha(theme.palette.primary.main, 0.1), color: 'primary.main', '& .MuiListItemIcon-root': { color: 'primary.main' } },
               }}
             >
               <ListItemIcon sx={{ minWidth: 40 }}><MedicalServicesIcon fontSize="small" /></ListItemIcon>
@@ -302,9 +311,12 @@ function App() {
               onClick={openReminders} 
               selected={isReminderModalOpen}
               sx={{ 
-                borderRadius: 1.5, 
-                py: 1,
-                '&.Mui-selected': { bgcolor: alpha(theme.palette.primary.main, 0.08), color: 'primary.main', '& .MuiListItemIcon-root': { color: 'primary.main' } },
+                borderRadius: 8, 
+                mb: 1,
+                py: 1.5,
+                bgcolor: theme.palette.background.paper,
+                boxShadow: theme.palette.mode === 'dark' ? '4px 4px 10px rgba(0,0,0,0.4)' : '4px 4px 12px rgba(0,0,0,0.05), -4px -4px 12px rgba(255,255,255,0.8)',
+                '&.Mui-selected': { bgcolor: alpha(theme.palette.primary.main, 0.1), color: 'primary.main', '& .MuiListItemIcon-root': { color: 'primary.main' } },
               }}
             >
               <ListItemIcon sx={{ minWidth: 40 }}><AccessTimeIcon fontSize="small" /></ListItemIcon>
@@ -317,13 +329,13 @@ function App() {
       {/* Footer Area */}
       <Box sx={{ mt: 'auto', pt: 3 }}>
         <Stack spacing={1}>
-          <MuiButton fullWidth startIcon={<ManageAccountsIcon />} onClick={() => navigate('/complete-profile')} sx={{ borderRadius: 1.5, justifyContent: 'start', py: 1, color: 'text.secondary', fontWeight: 700 }}>{t.editProfile}</MuiButton>
+          <MuiButton fullWidth startIcon={<ManageAccountsIcon />} onClick={() => navigate('/complete-profile')} sx={{ borderRadius: 8, justifyContent: 'start', py: 1.5, px: 3, mb: 1, color: 'text.secondary', fontWeight: 800, bgcolor: theme.palette.background.paper, boxShadow: theme.palette.mode === 'dark' ? '4px 4px 10px rgba(0,0,0,0.4)' : '4px 4px 12px rgba(0,0,0,0.05), -4px -4px 12px rgba(255,255,255,0.8)' }}>{t.editProfile}</MuiButton>
           
           <MuiButton 
             fullWidth 
             startIcon={<LanguageIcon />} 
             onClick={handleLanguageClick}
-            sx={{ borderRadius: 1.5, justifyContent: 'start', py: 1, color: 'text.secondary', fontWeight: 700 }}
+            sx={{ borderRadius: 8, justifyContent: 'start', py: 1.5, px: 3, mb: 1, color: 'text.secondary', fontWeight: 800, bgcolor: theme.palette.background.paper, boxShadow: theme.palette.mode === 'dark' ? '4px 4px 10px rgba(0,0,0,0.4)' : '4px 4px 12px rgba(0,0,0,0.05), -4px -4px 12px rgba(255,255,255,0.8)' }}
           >
             {language.toUpperCase()}
           </MuiButton>
@@ -337,7 +349,7 @@ function App() {
             fullWidth 
             startIcon={isDarkMode ? <LightModeIcon /> : <DarkModeIcon />} 
             onClick={handleThemeClick}
-            sx={{ borderRadius: 1.5, justifyContent: 'start', py: 1, color: 'text.secondary', fontWeight: 700 }}
+            sx={{ borderRadius: 8, justifyContent: 'start', py: 1.5, px: 3, mb: 1, color: 'text.secondary', fontWeight: 800, bgcolor: theme.palette.background.paper, boxShadow: theme.palette.mode === 'dark' ? '4px 4px 10px rgba(0,0,0,0.4)' : '4px 4px 12px rgba(0,0,0,0.05), -4px -4px 12px rgba(255,255,255,0.8)' }}
           >
             {isDarkMode ? t.darkMode : t.lightMode}
           </MuiButton>
@@ -375,11 +387,13 @@ function App() {
             </Paper>
           )}
 
-          <MuiButton fullWidth color="error" startIcon={<LogoutIcon />} onClick={logout} sx={{ borderRadius: 1.5, justifyContent: 'start', py: 1, fontWeight: 700 }}>{t.logoutUser}</MuiButton>
+          <MuiButton fullWidth color="error" startIcon={<LogoutIcon />} onClick={logout} sx={{ borderRadius: 8, justifyContent: 'start', py: 1.5, px: 3, mt: 1, fontWeight: 800, bgcolor: theme.palette.background.paper, boxShadow: theme.palette.mode === 'dark' ? '4px 4px 10px rgba(0,0,0,0.4)' : '4px 4px 12px rgba(0,0,0,0.05), -4px -4px 12px rgba(255,255,255,0.8)' }}>{t.logoutUser}</MuiButton>
         </Stack>
       </Box>
     </Box>
   );
+
+
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
@@ -433,7 +447,7 @@ function App() {
           </Routes>
         </Box>
 
-        {/* Footer (Simplified) */}
+        {/* Footer */}
         <Box sx={{ p: 4, textAlign: 'center', opacity: 0.5, borderTop: `1px solid ${theme.palette.divider}` }}>
            <Typography variant="overline" sx={{ fontWeight: 800, color: 'text.secondary', letterSpacing: 2, fontSize: 10 }}>
               © {new Date().getFullYear()} QAND NAZORATI. PROFESSIONAL VERSION.

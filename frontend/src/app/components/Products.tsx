@@ -38,6 +38,82 @@ import CloseIcon from '@mui/icons-material/Close';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import StarIcon from '@mui/icons-material/Star';
 
+const AsyncProductImage = ({ product, language, themeMode }: any) => {
+  const [imgUrl, setImgUrl] = useState<string | null>(null);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    const urlsToTry = [
+      `https://www.themealdb.com/images/ingredients/${encodeURIComponent(product.name.en)}.png`,
+      `https://spoonacular.com/cdn/ingredients_250x250/${encodeURIComponent(product.name.en.toLowerCase().replace(/ /g, '-'))}.jpg`,
+      `https://spoonacular.com/cdn/ingredients_250x250/${encodeURIComponent(product.name.en.toLowerCase().split(' ')[0])}.jpg`
+    ];
+
+    const tryImage = async (index: number) => {
+      if (!isMounted) return;
+      if (index >= urlsToTry.length) {
+        // Try Wikipedia as the ultimate fallback for rare items
+        try {
+           const res = await fetch(`https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(product.name.en.split(' (')[0])}&prop=pageimages&format=json&pithumbsize=250&origin=*`);
+           const data = await res.json();
+           const pages = data?.query?.pages;
+           if (pages && isMounted) {
+             const key = Object.keys(pages)[0];
+             if (key !== '-1' && pages[key]?.thumbnail?.source) {
+               setImgUrl(pages[key].thumbnail.source);
+               return;
+             }
+           }
+        } catch (e) {
+           console.error("Wikipedia image fetch failed", e);
+        }
+        if (isMounted) setError(true);
+        return;
+      }
+
+      const img = new Image();
+      img.onload = () => { if (isMounted) setImgUrl(urlsToTry[index]); };
+      img.onerror = () => tryImage(index + 1);
+      img.src = urlsToTry[index];
+    };
+
+    setImgUrl(null);
+    setError(false);
+    tryImage(0);
+
+    return () => { isMounted = false; };
+  }, [product.name.en]);
+
+  if (error || !imgUrl) {
+    return (
+      <Typography sx={{ position: 'absolute', fontSize: error ? 100 : 120, opacity: error ? 1 : 0.2, filter: error ? 'drop-shadow(0 12px 24px rgba(0,0,0,0.15))' : 'blur(4px)', transform: error ? 'scale(1)' : 'scale(1.2)', transition: 'all 0.5s', zIndex: 1 }}>
+        {product.emoji}
+      </Typography>
+    );
+  }
+
+  return (
+    <>
+       <Typography sx={{ position: 'absolute', fontSize: 120, opacity: 0.1, filter: 'blur(4px)', transform: 'scale(1.2)', zIndex: 0 }}>
+         {product.emoji}
+       </Typography>
+       <Box 
+         component="img"
+         src={imgUrl} 
+         alt={product.name[language as keyof typeof product.name]}
+         sx={{ 
+            width: 140, height: 140, objectFit: 'contain', position: 'relative', zIndex: 1, 
+            mixBlendMode: themeMode === 'dark' ? 'normal' : 'multiply',
+            filter: themeMode === 'dark' ? 'drop-shadow(0 12px 16px rgba(0,0,0,0.5))' : 'drop-shadow(0 12px 16px rgba(0,0,0,0.1))',
+            animation: 'fadeIn 0.5s ease-out',
+            '@keyframes fadeIn': { from: { opacity: 0, transform: 'scale(0.9)' }, to: { opacity: 1, transform: 'scale(1)' } }
+         }} 
+       />
+    </>
+  );
+};
+
 export function Products() {
   const { language, currentFasting, currentPostMeal } = useApp();
   const theme = useTheme();
@@ -211,39 +287,59 @@ export function Products() {
                       onClick={() => setSelectedProduct(product)}
                       sx={{
                         cursor: 'pointer',
-                        transition: 'all 0.2s',
-                        '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.02), border: `1px solid ${theme.palette.primary.main}` }
+                        transition: 'transform 0.3s, box-shadow 0.3s',
+                        borderRadius: 3,
+                        bgcolor: theme.palette.background.paper,
+                        boxShadow: theme.palette.mode === 'dark' ? '0 8px 24px rgba(0,0,0,0.4)' : '0 8px 24px rgba(0,0,0,0.06)',
+                        overflow: 'hidden',
+                        position: 'relative',
+                        '&:hover': { 
+                           transform: 'translateY(-6px)',
+                           boxShadow: theme.palette.mode === 'dark' ? '0 12px 32px rgba(0,0,0,0.6)' : '0 12px 32px rgba(99,102,241,0.15)' 
+                        }
                       }}
                     >
-                      <CardContent sx={{ p: 2.5 }}>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                          <Box sx={{ width: 44, height: 44, bgcolor: 'background.default', borderRadius: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>
-                            {product.emoji}
-                          </Box>
-                          <Chip
-                            label={info?.text}
-                            size="small"
-                            color={info?.color as any}
-                            variant="outlined"
-                            sx={{ height: 22, fontSize: 9, fontWeight: 900, textTransform: 'uppercase', px: 0.5 }}
-                          />
-                        </Box>
-
-                        <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 2, textTransform: 'lowercase', '&:first-letter': { textTransform: 'uppercase' }, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {/* Image/Emoji Area */}
+                      <Box 
+                        sx={{ 
+                          height: 160, 
+                          position: 'relative', 
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          background: `linear-gradient(135deg, ${alpha(theme.palette.primary.light, 0.15)} 0%, ${alpha(theme.palette.secondary.light, 0.15)} 100%)`, 
+                          overflow: 'hidden'
+                        }}
+                      >
+                         <AsyncProductImage product={product} language={language} themeMode={theme.palette.mode} />
+                         
+                         {/* Status Chip overlay */}
+                         <Box sx={{ position: 'absolute', top: 12, right: 12, zIndex: 2 }}>
+                           <Chip
+                             label={info?.text}
+                             size="small"
+                             sx={{ 
+                                bgcolor: info?.color === 'success' ? alpha(theme.palette.success.main, 0.9) : info?.color === 'warning' ? alpha(theme.palette.warning.main, 0.9) : alpha(theme.palette.error.main, 0.9), 
+                                color: '#fff', 
+                                height: 24, fontSize: 10, fontWeight: 900, textTransform: 'uppercase', px: 1,
+                                backdropFilter: 'blur(4px)',
+                                border: '1px solid rgba(255,255,255,0.2)'
+                             }}
+                           />
+                         </Box>
+                      </Box>
+                      
+                      <CardContent sx={{ p: 2.5, pt: 3, position: 'relative' }}>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 900, mb: 2, textTransform: 'capitalize', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {product.name[language] || product.name['uz']}
                         </Typography>
 
-                        <Divider sx={{ mb: 1.5, opacity: 0.5 }} />
-
-                        <Stack direction="row" spacing={3}>
-                          <Box sx={{ textAlign: 'center', flex: 1 }}>
-                            <Typography variant="caption" sx={{ display: 'block', fontWeight: 800, color: 'text.secondary', fontSize: 8 }}>GI</Typography>
-                            <Typography variant="body2" sx={{ fontWeight: 800, color: 'primary.main' }}>{product.gi}</Typography>
+                        <Stack direction="row" spacing={2} divider={<Box sx={{ width: '1px', bgcolor: 'divider' }} />}>
+                          <Box sx={{ flex: 1 }}>
+                            <Typography variant="caption" sx={{ display: 'block', fontWeight: 800, color: 'text.secondary', fontSize: 9, textTransform: 'uppercase' }}>Glycemic Index</Typography>
+                            <Typography variant="body1" sx={{ fontWeight: 900, color: info?.color ? `${info.color}.main` : 'text.primary' }}>{product.gi}</Typography>
                           </Box>
-                          <Box sx={{ width: 1, bgcolor: 'divider' }} />
-                          <Box sx={{ textAlign: 'center', flex: 1 }}>
-                            <Typography variant="caption" sx={{ display: 'block', fontWeight: 800, color: 'text.secondary', fontSize: 8 }}>GL</Typography>
-                            <Typography variant="body2" sx={{ fontWeight: 800, color: 'text.secondary' }}>{product.gl}</Typography>
+                          <Box sx={{ flex: 1 }}>
+                            <Typography variant="caption" sx={{ display: 'block', fontWeight: 800, color: 'text.secondary', fontSize: 9, textTransform: 'uppercase' }}>Glycemic Load</Typography>
+                            <Typography variant="body1" sx={{ fontWeight: 900, color: 'text.primary' }}>{product.gl}</Typography>
                           </Box>
                         </Stack>
                       </CardContent>

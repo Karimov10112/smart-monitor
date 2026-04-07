@@ -4,10 +4,10 @@ import { useAuth } from '../contexts/AuthContext';
 import { useApp } from '../contexts/AppContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { translations } from '../utils/translations';
-import { categories } from '../data/products';
 import { toast, Toaster } from 'sonner';
 import { format } from 'date-fns';
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // MUI Components
 import {
@@ -59,18 +59,19 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
-import BlockIcon from '@mui/icons-material/Block';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import TimelineIcon from '@mui/icons-material/Timeline';
-import SaveIcon from '@mui/icons-material/Save';
-
 import HistoryIcon from '@mui/icons-material/History';
+import MenuIcon from '@mui/icons-material/Menu';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
+import NotificationsIcon from '@mui/icons-material/Notifications';
 
 type TabType = 'dashboard' | 'users' | 'products' | 'audit';
 
 export default function AdminPage() {
   const { user } = useAuth();
-  const { language, socket } = useApp();
+  const { language } = useApp();
   const [searchParams] = useSearchParams();
   const theme = useTheme();
   const navigate = useNavigate();
@@ -81,6 +82,7 @@ export default function AdminPage() {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isMini, setIsMini] = useState(false);
 
   // Users State
   const [users, setUsers] = useState<any[]>([]);
@@ -89,6 +91,7 @@ export default function AdminPage() {
   const [userLoading, setUserLoading] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [selectedUserRecords, setSelectedUserRecords] = useState<any[]>([]);
+  const [userTab, setUserTab] = useState<'info' | 'manage' | 'analytics'>('info');
 
   // Products State
   const [products, setProducts] = useState<any[]>([]);
@@ -127,7 +130,6 @@ export default function AdminPage() {
     } catch (err) { }
     finally { setLoading(false); }
   };
-
 
   const loadStats = async () => {
     try {
@@ -218,735 +220,473 @@ export default function AdminPage() {
   };
 
   if (loading) return (
-    <Box sx={{ display: 'flex', height: '80vh', alignItems: 'center', justifyContent: 'center' }}>
+    <Box sx={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', bgcolor: 'background.default' }}>
       <CircularProgress />
     </Box>
   );
 
+  const menuItems = [
+    { id: 'dashboard', label: t.dashboard, icon: <DashboardIcon /> },
+    { id: 'users', label: t.users, icon: <PeopleIcon /> },
+    { id: 'products', label: t.products, icon: <InventoryIcon /> },
+    { id: 'audit', label: t.auditLogs, icon: <HistoryIcon />, hidden: user?.role !== 'superadmin' },
+  ];
+
+  const sidebarWidth = 280;
+  const miniWidth = 88;
+
+  const fastingRecords = selectedUserRecords.filter(r => r.category === 'fasting' || r.type === 'fasting').map(r => ({
+    date: format(new Date(r.date), 'dd/MM'),
+    level: r.level || r.fastingLevel || 0
+  })).reverse();
+
+  const postMealRecords = selectedUserRecords.filter(r => r.category === 'post_meal' || r.type === 'post_meal' || r.postMealLevel).map(r => ({
+    date: format(new Date(r.date), 'dd/MM'),
+    level: r.level || r.postMealLevel || 0
+  })).reverse();
+
   return (
-    <Box sx={{ width: '100%', mb: 10 }}>
-      {/* Header */}
-      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: isMobile ? 2 : 4 }}>
-        <Box>
-          <Typography variant={isMobile ? 'h6' : 'h5'} sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: isMobile ? 1 : 2 }}>{t.adminPanel}</Typography>
-          <Typography variant="caption" sx={{ fontWeight: 800, color: 'text.secondary', fontSize: isMobile ? 8 : 10 }}>{t.systemManagement}</Typography>
-        </Box>
-        <Avatar src={user?.avatar} sx={{ width: isMobile ? 40 : 48, height: isMobile ? 40 : 48, borderRadius: 1.5, bgcolor: 'primary.main' }}>{user?.firstName?.[0]}</Avatar>
-      </Stack>
-
-      {/* Tabs */}
-      <Paper elevation={0} sx={{ borderBottom: `1px solid ${theme.palette.divider}`, mb: 4, borderRadius: 0, bgcolor: 'transparent' }}>
-        <Tabs
-          value={selectedUserId ? 'user-detail' : currentTab}
-          onChange={(_, val) => {
-            if (val === 'user-detail') return;
-            setCurrentTab(val as TabType);
-            setSelectedUserId(null);
-            setSelectedUser(null);
+    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
+      {/* Sidebar - FIXED */}
+      <Box
+        component="nav"
+        sx={{
+          width: { md: isMini ? miniWidth : sidebarWidth },
+          transition: theme.transitions.create('width', { duration: 300 }),
+          display: { xs: 'none', md: 'block' }
+        }}
+      >
+          <Paper
+          elevation={0}
+          sx={{
+            width: isMini ? miniWidth : sidebarWidth,
+            height: '100vh',
+            position: 'sticky',
+            top: 0,
+            borderRight: `1px solid ${theme.palette.divider}`,
+            bgcolor: alpha(theme.palette.background.paper, 0.8),
+            backdropFilter: 'blur(20px)',
+            display: 'flex',
+            flexDirection: 'column',
+            transition: theme.transitions.create('width', { duration: 300 }),
+            zIndex: theme.zIndex.drawer + 2,
           }}
-          variant="scrollable"
-          scrollButtons="auto"
-          allowScrollButtonsMobile
-          textColor="primary"
-          indicatorColor="primary"
-          sx={{ '& .MuiTab-root': { fontWeight: 800, textTransform: 'uppercase', fontSize: isMobile ? 9 : 11, letterSpacing: 1.5, minHeight: isMobile ? 48 : 64 } }}
         >
-          <Tab value="dashboard" label={t.dashboard || 'Dashboard'} icon={<DashboardIcon fontSize="small" />} iconPosition="start" />
-          <Tab value="users" label={t.users || 'Users'} icon={<PeopleIcon fontSize="small" />} iconPosition="start" />
-          <Tab value="products" label={t.products || 'Products'} icon={<InventoryIcon fontSize="small" />} iconPosition="start" />
-          {user?.role === 'superadmin' && (
-            <Tab value="audit" label={t.auditLogs} icon={<HistoryIcon fontSize="small" />} iconPosition="start" onClick={loadAuditLogs} />
-          )}
-          {selectedUserId && (
-            <Tab
-              value="user-detail"
-              label={selectedUser?.firstName || 'User'}
-              icon={<ArrowBackIcon fontSize="small" />}
-              iconPosition="start"
-              onClick={() => { setSelectedUserId(null); setSelectedUser(null); }}
-            />
-          )}
-        </Tabs>
-      </Paper>
-
-      <Box>
-        {/* Dashboard Tab */}
-        {currentTab === 'dashboard' && !selectedUserId && (
-          <Grid container spacing={3}>
-            {[
-              { icon: PeopleIcon, label: t.totalUsers || 'Total Users', val: stats?.totalUsers ?? 0, color: theme.palette.primary.main },
-              { icon: TimelineIcon, label: t.activeToday || 'Active Today', val: stats?.activeToday ?? 0, color: '#10b981' },
-              { icon: InventoryIcon, label: 'Total Products', val: products.length, color: '#8b5cf6' },
-            ].map((s, idx) => (
-              <Grid size={{ xs: 12, sm: 6, md: 4 }} key={idx}>
-                <Card elevation={0}>
-                  <CardContent sx={{ p: 3 }}>
-                    <Stack direction="row" spacing={2} alignItems="center">
-                      <Avatar sx={{ bgcolor: alpha(s.color, 0.08), color: s.color, borderRadius: 1.5 }}>
-                        <s.icon fontSize="small" />
-                      </Avatar>
-                      <Box>
-                        <Typography variant="h5" sx={{ fontWeight: 900 }}>{s.val}</Typography>
-                        <Typography variant="caption" sx={{ fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', fontSize: 9 }}>{s.label}</Typography>
-                      </Box>
-                    </Stack>
-                  </CardContent>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
-        )}
-
-
-        {/* Users Tab */}
-        {currentTab === 'users' && !selectedUserId && (
-          <Box sx={{ mt: isMobile ? -1 : 0 }}>
-            <Stack direction={isMobile ? 'column' : 'row'} spacing={isMobile ? 1.5 : 2} sx={{ mb: isMobile ? 2 : 4 }}>
-              <TextField
-                placeholder={t.searchUsers}
-                fullWidth={isMobile}
-                size="small"
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                onKeyDown={handleSearchKeyDown}
-                sx={{ flexGrow: 1 }}
-                InputProps={{ 
-                  startAdornment: <SearchIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />,
-                  endAdornment: userLoading && <CircularProgress size={16} />
-                }}
-              />
-              <Box sx={{ display: 'flex', gap: 2 }}>
-                <FormControl size="small" sx={{ flexGrow: 1, minWidth: isMobile ? 0 : 150 }}>
-                  <InputLabel>{t.role}</InputLabel>
-                  <Select value={role} label={t.role} onChange={e => setRole(e.target.value)}>
-                    <MenuItem value="">{t.allStatuses || 'All'}</MenuItem>
-                    <MenuItem value="user">{t.user}</MenuItem>
-                    <MenuItem value="doctor">{t.doctor}</MenuItem>
-                    <MenuItem value="admin">{t.admin}</MenuItem>
-                  </Select>
-                </FormControl>
-                <Button variant="outlined" onClick={() => { setSearch(''); setRole(''); }} sx={{ fontWeight: 800 }}>{t.refresh}</Button>
-              </Box>
-            </Stack>
-
-            {!isMobile ? (
-              <TableContainer component={Paper} elevation={0} sx={{ border: `1px solid ${theme.palette.divider}`, maxHeight: 600, overflowY: 'auto' }}>
-                <Table size="medium" stickyHeader>
-                  <TableHead sx={{ bgcolor: alpha(theme.palette.primary.main, 0.01) }}>
-                    <TableRow>
-                      <TableCell sx={{ fontWeight: 900, textTransform: 'uppercase', fontSize: 10, letterSpacing: 1 }}>{t.user || 'User'}</TableCell>
-                      <TableCell sx={{ fontWeight: 900, textTransform: 'uppercase', fontSize: 10, letterSpacing: 1 }}>{t.regionLabel || 'Region'}</TableCell>
-                      <TableCell align="right"></TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {users.map(u => (
-                      <TableRow
-                        key={u._id}
-                        hover
-                        sx={{ 
-                          cursor: (u.role === 'superadmin' && user?.role !== 'superadmin') ? 'default' : 'pointer',
-                          opacity: (u.role === 'superadmin' && user?.role !== 'superadmin') ? 0.8 : 1
-                        }}
-                        onClick={() => { 
-                          if (u.role === 'superadmin' && user?.role !== 'superadmin') {
-                            return toast.error("Super Admin ma'lumotlarini ko'rish taqiqlangan");
-                          }
-                          setSelectedUserId(u._id); 
-                          loadSpecificUser(u._id); 
-                        }}
-                      >
-                        <TableCell>
-                          <Stack direction="row" spacing={2} alignItems="center">
-                            <Avatar sx={{ borderRadius: 1.5, bgcolor: alpha(theme.palette.primary.main, 0.1), color: 'primary.main', fontWeight: 800 }}>
-                              {u.firstName?.[0]}
-                            </Avatar>
-                            <Box>
-                              <Stack direction="row" spacing={1} alignItems="center">
-                                <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>{u.firstName} {u.lastName}</Typography>
-                                {u.role === 'superadmin' && user?.role !== 'superadmin' && (
-                                  <Chip 
-                                    label={t.restricted} 
-                                    size="small" 
-                                    sx={{ height: 16, fontSize: 7, fontWeight: 900, bgcolor: alpha(theme.palette.error.main, 0.1), color: 'error.main' }} 
-                                  />
-                                )}
-                              </Stack>
-                              <Typography variant="caption" color="text.secondary">{u.email}</Typography>
-                            </Box>
-                          </Stack>
-                        </TableCell>
-                        <TableCell>
-                          <Box>
-                             <Typography variant="caption" sx={{ fontWeight: 800, display: 'block' }}>{u.region || '—'}</Typography>
-                             <Chip 
-                              label={u.role.toUpperCase()} 
-                              size="small" 
-                              sx={{ height: 16, fontSize: 8, fontWeight: 900, borderRadius: 1, bgcolor: alpha(theme.palette.primary.main, 0.1), color: 'primary.main' }} 
-                             />
-                          </Box>
-                        </TableCell>
-                        <TableCell align="right">
-                          <Stack direction="row" spacing={1} justifyContent="flex-end">
-                            <Chip
-                              label={u.isBanned ? 'BANNED' : 'ACTIVE'}
-                              size="small"
-                              color={u.isBanned ? 'error' : 'success'}
-                              sx={{ fontWeight: 900, fontSize: 9, borderRadius: 1 }}
-                            />
-                            <IconButton
-                              size="small"
-                              color="error"
-                              disabled={u.role === 'superadmin' && user?.role !== 'superadmin'}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (u.role === 'superadmin') return toast.error("Super Adminni o'chirib bo'lmaydi");
-                                if (confirm("O'chirilsinmi?")) adminAPI.deleteUser(u._id).then(() => loadUsers());
-                              }}
-                            >
-                              <DeleteIcon fontSize="small" />
-                            </IconButton>
-                          </Stack>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            ) : (
-              <Stack spacing={2}>
-                {users.map(u => (
-                    <Card 
-                      key={u._id} 
-                      elevation={0} 
-                      sx={{ 
-                        border: `1px solid ${theme.palette.divider}`, 
-                        borderRadius: 2,
-                        cursor: (u.role === 'superadmin' && user?.role !== 'superadmin') ? 'default' : 'pointer',
-                        opacity: (u.role === 'superadmin' && user?.role !== 'superadmin') ? 0.8 : 1
-                      }}
-                      onClick={() => { 
-                        if (u.role === 'superadmin' && user?.role !== 'superadmin') {
-                          return toast.error("Super Admin ma'lumotlarini ko'rish taqiqlangan");
-                        }
-                        setSelectedUserId(u._id); 
-                        loadSpecificUser(u._id); 
-                      }}
-                    >
-                    <CardContent sx={{ p: 2 }}>
-                       <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
-                          <Avatar sx={{ borderRadius: 1.5, bgcolor: alpha(theme.palette.primary.main, 0.1), color: 'primary.main', fontWeight: 800 }}>
-                            {u.firstName?.[0]}
-                          </Avatar>
-                          <Box sx={{ flexGrow: 1 }}>
-                            <Stack direction="row" spacing={1} alignItems="center">
-                              <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>{u.firstName} {u.lastName}</Typography>
-                              {u.role === 'superadmin' && user?.role !== 'superadmin' && (
-                                <Box component="span" sx={{ color: 'error.main', display: 'flex' }}><BlockIcon sx={{ fontSize: 12 }} /></Box>
-                              )}
-                            </Stack>
-                            <Typography variant="caption" color="text.secondary">{u.email}</Typography>
-                          </Box>
-                          <Chip 
-                            label={u.isBanned ? 'BANNED' : 'ACTIVE'} 
-                            size="small" 
-                            color={u.isBanned ? 'error' : 'success'}
-                            sx={{ fontWeight: 900, fontSize: 8, borderRadius: 1 }}
-                          />
-                       </Stack>
-                       <Stack direction="row" justifyContent="space-between" alignItems="center">
-                          <Box>
-                             <Typography variant="caption" sx={{ display: 'block', fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', fontSize: 8 }}>{t.regionLabel} • {t.role}</Typography>
-                             <Typography variant="body2" sx={{ fontWeight: 800 }}>{u.region || '—'} • {u.role.toUpperCase()}</Typography>
-                          </Box>
-                          <IconButton
-                              size="small" color="error"
-                              disabled={u.role === 'superadmin' && user?.role !== 'superadmin'}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (u.role === 'superadmin') return toast.error("Super Adminni o'chirib bo'lmaydi");
-                                if (confirm("O'chirilsinmi?")) adminAPI.deleteUser(u._id).then(() => loadUsers());
-                              }}
-                              sx={{ border: `1px solid ${alpha(theme.palette.error.main, 0.1)}`, borderRadius: 1 }}
-                            >
-                              <DeleteIcon fontSize="small" />
-                          </IconButton>
-                       </Stack>
-                    </CardContent>
-                  </Card>
-                ))}
+          <Box sx={{ p: 3, display: 'flex', alignItems: 'center', justifyContent: isMini ? 'center' : 'space-between' }}>
+            {!isMini && (
+              <Stack direction="row" spacing={1.5} alignItems="center">
+                <Box sx={{ p: 1, bgcolor: 'primary.main', borderRadius: 1.5, display: 'flex', color: 'white' }}>
+                  <AdminPanelSettingsIcon />
+                </Box>
+                <Typography variant="h6" sx={{ fontWeight: 900, fontSize: 16 }}>ADMIN</Typography>
               </Stack>
             )}
+            <IconButton onClick={() => setIsMini(!isMini)} size="small" sx={{ bgcolor: alpha(theme.palette.primary.main, 0.05) }}>
+              {isMini ? <MenuIcon /> : <ChevronLeftIcon />}
+            </IconButton>
           </Box>
-        )}
-
-        {/* Products Tab */}
-        {currentTab === 'products' && (
-          <Box>
-            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 4 }}>
-              <Typography variant="h6" sx={{ fontWeight: 900 }}>{t.productCatalog} ({products.length})</Typography>
-              <Button
-                variant="contained"
-                startIcon={<AddIcon />}
-                onClick={() => {
-                  setEditingProduct(null);
-                  setProductForm({ name: { uz: '', ru: '', en: '' }, category: 'vegetables', emoji: '🥗', gi: 0, gl: 0, carbs: 0, calories: 0, protein: 0, fats: 0, sugar: 0, fiber: 0, advice: { uz: '', ru: '', en: '' } });
-                  setIsProductModalOpen(true);
+          <Divider sx={{ mx: 2, mb: 2, opacity: 0.5 }} />
+          <List sx={{ px: 2, flexGrow: 1 }}>
+            {menuItems.filter(m => !m.hidden).map((item) => (
+              <ListItem key={item.id} disablePadding sx={{ mb: 1 }}>
+                <ListItemButton
+                  onClick={() => {
+                    setCurrentTab(item.id as TabType);
+                    setSelectedUserId(null);
+                    if (item.id === 'audit') loadAuditLogs();
+                  }}
+                  selected={currentTab === item.id && !selectedUserId}
+                  sx={{
+                    borderRadius: 8,
+                    mb: 1,
+                    py: 1.5,
+                    boxShadow: theme.palette.mode === 'dark' ? '4px 4px 10px rgba(0,0,0,0.4)' : '4px 4px 12px rgba(0,0,0,0.05), -4px -4px 12px rgba(255,255,255,0.8)',
+                    px: isMini ? 1.5 : 2,
+                    justifyContent: isMini ? 'center' : 'flex-start',
+                    color: (currentTab === item.id && !selectedUserId) ? 'primary.main' : 'text.secondary',
+                    bgcolor: (currentTab === item.id && !selectedUserId) ? alpha(theme.palette.primary.main, 0.1) : theme.palette.background.paper,
+                  }}
+                >
+                  <Box sx={{ minWidth: isMini ? 0 : 40 }}>{item.icon}</Box>
+                  {!isMini && <Typography sx={{ fontWeight: (currentTab === item.id && !selectedUserId) ? 800 : 700, fontSize: 13 }}>{item.label}</Typography>}
+                </ListItemButton>
+              </ListItem>
+            ))}
+          </List>
+          {/* Back to Home Button */}
+          <Box sx={{ px: 2, pb: 3, mt: 'auto' }}>
+            <Divider sx={{ mb: 2, opacity: 0.5 }} />
+            <ListItem disablePadding>
+              <ListItemButton
+                onClick={() => navigate('/')}
+                sx={{
+                  borderRadius: 8,
+                  py: 1.5,
+                  boxShadow: theme.palette.mode === 'dark' ? '4px 4px 10px rgba(0,0,0,0.4)' : '4px 4px 12px rgba(0,0,0,0.05), -4px -4px 12px rgba(255,255,255,0.8)',
+                  bgcolor: theme.palette.background.paper,
+                  px: isMini ? 1.5 : 2,
+                  justifyContent: isMini ? 'center' : 'flex-start',
+                  color: 'text.secondary',
+                  '&:hover': { color: 'primary.main', bgcolor: alpha(theme.palette.primary.main, 0.06) },
                 }}
-                sx={{ fontWeight: 800 }}
               >
-                {t.addProduct}
-              </Button>
-            </Stack>
-            <Grid container spacing={2}>
-              {products.map(p => (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={p._id}>
-                  <Card elevation={0}>
-                    <CardContent sx={{ p: 2.5 }}>
-                      <Stack direction="row" justifyContent="space-between" alignItems="start" sx={{ mb: 2 }}>
-                        <Box sx={{ width: 44, height: 44, border: `1px solid ${theme.palette.divider}`, borderRadius: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>
-                          {p.emoji}
-                        </Box>
-                        <Stack direction="row" spacing={1}>
-                          <IconButton
-                            size="small"
-                            onClick={() => { setEditingProduct(p); setProductForm(p); setIsProductModalOpen(true); }}
-                            sx={{ border: `1px solid ${theme.palette.divider}`, borderRadius: 1 }}
-                          >
-                            <EditIcon fontSize="small" />
-                          </IconButton>
-                          <IconButton
-                            size="small"
-                            color="error"
-                            onClick={() => { if (confirm("O'chirilsinmi?")) productAPI.delete(p._id).then(() => loadProducts()); }}
-                            sx={{ border: `1px solid ${theme.palette.divider}`, borderRadius: 1 }}
-                          >
-                            <DeleteIcon fontSize="small" />
-                          </IconButton>
-                        </Stack>
-                      </Stack>
-                      <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>{p.name?.[language] || p.name?.uz || p.name}</Typography>
-                      <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 1, fontSize: 8, fontWeight: 800 }}>{p.category}</Typography>
-                      <Divider sx={{ my: 1.5 }} />
-                      <Stack direction="row" spacing={3}>
-                        <Box>
-                          <Typography variant="caption" sx={{ display: 'block', fontSize: 8, fontWeight: 800, color: 'text.secondary' }}>GI</Typography>
-                          <Typography variant="body2" sx={{ fontWeight: 900, color: 'primary.main' }}>{p.gi}</Typography>
-                        </Box>
-                        <Box>
-                          <Typography variant="caption" sx={{ display: 'block', fontSize: 8, fontWeight: 800, color: 'text.secondary' }}>GL</Typography>
-                          <Typography variant="body2" sx={{ fontWeight: 900, color: 'text.secondary' }}>{p.gl}</Typography>
-                        </Box>
-                        <Box>
-                          <Typography variant="caption" sx={{ display: 'block', fontSize: 8, fontWeight: 800, color: 'text.secondary' }}>Kcal</Typography>
-                          <Typography variant="body2" sx={{ fontWeight: 900 }}>{p.calories}</Typography>
-                        </Box>
-                      </Stack>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              ))}
-            </Grid>
+                <Box sx={{ minWidth: isMini ? 0 : 40, display: 'flex' }}>
+                  <ArrowBackIcon fontSize="small" />
+                </Box>
+                {!isMini && <Typography sx={{ fontWeight: 700, fontSize: 13 }}>Asosiy sahifa</Typography>}
+              </ListItemButton>
+            </ListItem>
           </Box>
-        )}
-
-        {/* User Detail View */}
-        {selectedUserId && selectedUser && (
-          <Box>
-            {/* Top Profile Header Card */}
-            <Card elevation={0} sx={{ mb: 2, border: `1px solid ${theme.palette.divider}` }}>
-              <CardContent sx={{ p: isMobile ? 2 : 3 }}>
-                <Stack direction={isMobile ? 'column' : 'row'} spacing={3} alignItems={isMobile ? 'start' : 'center'}>
-                  <Avatar sx={{ width: 80, height: 80, borderRadius: 3, bgcolor: 'primary.main', fontSize: 32, fontWeight: 900, boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.2)}` }}>
-                    {selectedUser.firstName?.[0]}
-                  </Avatar>
-                  <Box sx={{ flexGrow: 1 }}>
-                    <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
-                      <Typography variant="h5" sx={{ fontWeight: 900 }}>{selectedUser.firstName} {selectedUser.lastName}</Typography>
-                      {selectedUser.isBanned && <Chip label={t.banned} size="small" color="error" sx={{ height: 20, fontSize: 9, fontWeight: 900 }} />}
-                    </Stack>
-                    <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 700, mb: 1.5 }}>{selectedUser.email}</Typography>
-                    <Stack direction="row" spacing={1}>
-                       <Chip label={selectedUser.role} size="small" variant="outlined" sx={{ fontWeight: 800, textTransform: 'uppercase', fontSize: 10 }} />
-                       <Chip label={`Joined ${format(new Date(selectedUser.createdAt), 'MMM yyyy')}`} size="small" sx={{ fontWeight: 800, fontSize: 10, bgcolor: alpha(theme.palette.divider, 0.5) }} />
-                    </Stack>
-                  </Box>
-                  <Stack direction={isMobile ? 'column' : 'row'} spacing={2} sx={{ width: isMobile ? '100%' : 'auto' }}>
-                     <FormControl size="small" sx={{ minWidth: 160 }}>
-                        <InputLabel>{t.updateRoleLabel}</InputLabel>
-                        <Select
-                          value={selectedUser.role} label={t.updateRoleLabel}
-                          onChange={e => adminAPI.updateRole(selectedUser._id, e.target.value as string).then(() => loadSpecificUser(selectedUser._id))}
-                          sx={{ fontWeight: 800, fontSize: 13 }}
-                        >
-                          <MenuItem value="user">{t.user}</MenuItem>
-                          <MenuItem value="doctor">{t.doctor}</MenuItem>
-                          <MenuItem value="admin">{t.admin}</MenuItem>
-                        </Select>
-                     </FormControl>
-
-                     <FormControl size="small" sx={{ minWidth: 180 }}>
-                        <InputLabel>{t.assignDoctor}</InputLabel>
-                        <Select
-                          value={selectedUser.assignedDoctor?._id || selectedUser.assignedDoctor || ''} 
-                          label={t.assignDoctor}
-                          disabled={selectedUser.role !== 'user'}
-                          onChange={e => {
-                             const docId = e.target.value;
-                             adminAPI.assignDoctor(selectedUser._id, docId || null).then(() => {
-                                toast.success(t.doctorAssigned);
-                                loadSpecificUser(selectedUser._id);
-                                loadUsers();
-                             });
-                          }}
-                          sx={{ fontWeight: 800, fontSize: 13 }}
-                        >
-                          <MenuItem value=""><em>{t.none}</em></MenuItem>
-                          {availableDoctors.map(doc => (
-                             <MenuItem key={doc._id} value={doc._id}>
-                                {doc.firstName} {doc.lastName}
-                             </MenuItem>
-                          ))}
-                        </Select>
-                     </FormControl>
-                     <Button 
-                       variant="outlined" 
-                       color={selectedUser.isBanned ? 'success' : 'warning'} 
-                       disabled={selectedUser.role === 'superadmin'}
-                       onClick={() => {
-                         if (selectedUser.role === 'superadmin') return toast.error("Super Adminni bloklash mumkin emas");
-                         adminAPI.toggleBan(selectedUser._id).then(() => loadSpecificUser(selectedUser._id));
-                       }}
-                       sx={{ fontWeight: 800, minWidth: 100 }}
-                     >
-                       {selectedUser.isBanned ? 'Unban' : 'Ban'}
-                     </Button>
-                  </Stack>
-                </Stack>
-              </CardContent>
-            </Card>
-
-            <Grid container spacing={3}>
-              {/* Detailed Personal & Medical Info */}
-              <Grid size={{ xs: 12, lg: 8 }}>
-                 <Card elevation={0} sx={{ border: `1px solid ${theme.palette.divider}`, mb: 3 }}>
-                    <Box sx={{ p: 2, px: 3, borderBottom: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.primary.main, 0.01) }}>
-                        <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5 }}>{t.fullUserProfile}</Typography>
-                    </Box>
-                    <CardContent sx={{ p: 4 }}>
-                       <Grid container spacing={4}>
-                          {/* Medical Section */}
-                          <Grid size={{ xs: 12, md: 4 }}>
-                             <Typography variant="overline" sx={{ fontWeight: 900, color: 'primary.main', display: 'block', mb: 2, letterSpacing: 1 }}>{t.medicalStatus}</Typography>
-                             <Stack spacing={2.5}>
-                                <Box>
-                                   <Typography variant="caption" sx={{ display: 'block', fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', fontSize: 9 }}>{t.diabetesTypeLabel}</Typography>
-                                   <Typography variant="body2" sx={{ fontWeight: 900, color: 'primary.main' }}>{selectedUser.diabetesType?.toUpperCase() || '—'}</Typography>
-                                </Box>
-                                <Box>
-                                   <Typography variant="caption" sx={{ display: 'block', fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', fontSize: 9 }}>{t.genderAndAge}</Typography>
-                                   <Typography variant="body2" sx={{ fontWeight: 900 }}>
-                                      {t[selectedUser.gender] || selectedUser.gender}
-                                      {selectedUser.dateOfBirth && ` • ${new Date().getFullYear() - new Date(selectedUser.dateOfBirth).getFullYear()} ${language === 'uz' ? 'yosh' : language === 'ru' ? 'лет' : 'years'}`}
-                                   </Typography>
-                                </Box>
-                                 <Box>
-                                   <Typography variant="caption" sx={{ display: 'block', fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', fontSize: 9 }}>{t.attachedDoctor}</Typography>
-                                   <Typography variant="body2" sx={{ fontWeight: 900, color: 'info.main' }}>
-                                      {selectedUser.assignedDoctor ? `${selectedUser.assignedDoctor.firstName} ${selectedUser.assignedDoctor.lastName}` : '—'}
-                                   </Typography>
-                                </Box>
-                                <Box>
-                                   <Typography variant="caption" sx={{ display: 'block', fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', fontSize: 9 }}>{t.doctorNameLabel} (User input)</Typography>
-                                   <Typography variant="body2" sx={{ fontWeight: 900 }}>{selectedUser.doctorName || '—'}</Typography>
-                                </Box>
-                             </Stack>
-                          </Grid>
-
-                          {/* Location Section */}
-                          <Grid size={{ xs: 12, md: 4 }}>
-                             <Typography variant="overline" sx={{ fontWeight: 900, color: 'primary.main', display: 'block', mb: 2, letterSpacing: 1 }}>{t.locationDetails}</Typography>
-                             <Stack spacing={2.5}>
-                                <Box>
-                                   <Typography variant="caption" sx={{ display: 'block', fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', fontSize: 9 }}>{t.regionLabel}</Typography>
-                                   <Typography variant="body2" sx={{ fontWeight: 900 }}>{selectedUser.region || '—'}</Typography>
-                                </Box>
-                                <Box>
-                                   <Typography variant="caption" sx={{ display: 'block', fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', fontSize: 9 }}>{t.districtLabel}</Typography>
-                                   <Typography variant="body2" sx={{ fontWeight: 900 }}>{selectedUser.district || '—'}</Typography>
-                                </Box>
-                                <Box>
-                                   <Typography variant="caption" sx={{ display: 'block', fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', fontSize: 9 }}>{t.mfyLabel}</Typography>
-                                   <Typography variant="body2" sx={{ fontWeight: 900 }}>{selectedUser.mfy || '—'}</Typography>
-                                </Box>
-                             </Stack>
-                          </Grid>
-
-                          {/* Contact Section */}
-                          <Grid size={{ xs: 12, md: 4 }}>
-                             <Typography variant="overline" sx={{ fontWeight: 900, color: 'primary.main', display: 'block', mb: 2, letterSpacing: 1 }}>{t.contactInfo}</Typography>
-                             <Stack spacing={2.5}>
-                                <Box>
-                                   <Typography variant="caption" sx={{ display: 'block', fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', fontSize: 9 }}>{t.phoneNumberLabel}</Typography>
-                                   <Typography variant="body2" sx={{ fontWeight: 900, color: 'primary.main' }}>{selectedUser.phone || '—'}</Typography>
-                                </Box>
-                                <Box>
-                                   <Typography variant="caption" sx={{ display: 'block', fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', fontSize: 9 }}>{t.telegramLabel}</Typography>
-                                   <Typography variant="body2" sx={{ fontWeight: 900, color: 'info.main' }}>
-                                      {selectedUser.telegramUsername ? (
-                                        <a href={selectedUser.telegramUsername.startsWith('@') ? `https://t.me/${selectedUser.telegramUsername.substring(1)}` : selectedUser.telegramUsername} target="_blank" rel="noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>
-                                          {selectedUser.telegramUsername}
-                                        </a>
-                                      ) : '—'}
-                                   </Typography>
-                                </Box>
-                             </Stack>
-                          </Grid>
-                       </Grid>
-                    </CardContent>
-                 </Card>
-
-                 {/* Glucose Analytics Section */}
-                 <Card elevation={0} sx={{ border: `1px solid ${theme.palette.divider}` }}>
-                    <Box sx={{ p: 2, px: 3, borderBottom: `1px solid ${theme.palette.divider}` }}>
-                      <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5 }}>{t.glucoseAnalytics}</Typography>
-                    </Box>
-                    <CardContent sx={{ p: 4 }}>
-                      {selectedUserRecords.length > 0 ? (
-                        <Grid container spacing={4}>
-                          <Grid size={{ xs: 12, lg: 6 }}>
-                             <Typography variant="overline" sx={{ fontWeight: 800, color: 'primary.main', display: 'block', mb: 2 }}>{t.fastingChart}</Typography>
-                             <Box sx={{ height: 260, width: '100%' }}>
-                                <ResponsiveContainer width="100%" height={260}>
-                                  <AreaChart data={selectedUserRecords.map(r => ({ date: format(new Date(r.date), 'dd/MM HH:mm'), fasting: r.fastingLevel ?? (r.category === 'fasting' ? r.level : 0) ?? 0 })).reverse()}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme.palette.divider} />
-                                    <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: theme.palette.text.secondary }} />
-                                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: theme.palette.text.secondary }} />
-                                    <Tooltip contentStyle={{ borderRadius: 8, border: `none`, backgroundColor: theme.palette.background.paper, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }} />
-                                    <Area type="monotone" dataKey="fasting" stroke={theme.palette.primary.main} fill={theme.palette.primary.main} fillOpacity={0.1} strokeWidth={3} connectNulls={true} />
-                                  </AreaChart>
-                                </ResponsiveContainer>
-                             </Box>
-                          </Grid>
-                          <Grid size={{ xs: 12, lg: 6 }}>
-                             <Typography variant="overline" sx={{ fontWeight: 800, color: 'secondary.main', display: 'block', mb: 2 }}>{t.postMealChart}</Typography>
-                             <Box sx={{ height: 260, width: '100%' }}>
-                                <ResponsiveContainer width="100%" height={260}>
-                                  <AreaChart data={selectedUserRecords.filter(r => r.postMealLevel != null || (r.category === 'post-meal' && r.level != null)).map(r => ({ date: format(new Date(r.date), 'dd/MM HH:mm'), postMeal: r.postMealLevel ?? (r.category === 'post-meal' ? r.level : null) ?? null })).reverse()}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme.palette.divider} />
-                                    <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: theme.palette.text.secondary }} />
-                                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: theme.palette.text.secondary }} />
-                                    <Tooltip contentStyle={{ borderRadius: 8, border: `none`, backgroundColor: theme.palette.background.paper, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }} />
-                                    <Area type="monotone" dataKey="postMeal" stroke={theme.palette.secondary.main} fill={theme.palette.secondary.main} fillOpacity={0.1} strokeWidth={3} connectNulls={true} />
-                                  </AreaChart>
-                                </ResponsiveContainer>
-                             </Box>
-                          </Grid>
-                        </Grid>
-                      ) : (
-                        <Box sx={{ py: 6, textAlign: 'center', opacity: 0.3 }}>
-                          <TimelineIcon sx={{ fontSize: 40, mb: 1 }} />
-                          <Typography variant="caption" sx={{ display: 'block', fontWeight: 800 }}>{t.noRecords}</Typography>
-                        </Box>
-                      )}
-                    </CardContent>
-                 </Card>
-              </Grid>
-
-              {/* Administrative Section */}
-              <Grid size={{ xs: 12, lg: 4 }}>
-                 <Stack spacing={3}>
-                    {/* Admin Notes */}
-                    <Card elevation={0} sx={{ border: `1px solid ${theme.palette.divider}` }}>
-                       <Box sx={{ p: 2, px: 3, borderBottom: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.warning.main, 0.02) }}>
-                          <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5 }}>{t.administrativeNotes}</Typography>
-                       </Box>
-                       <CardContent sx={{ p: 3 }}>
-                          <TextField 
-                            fullWidth multiline rows={6} 
-                            placeholder={t.notesPlaceholder} 
-                            value={selectedUser.adminNotes || ''} 
-                            onChange={e => setSelectedUser({...selectedUser, adminNotes: e.target.value})}
-                            sx={{ mb: 2, '& .MuiOutlinedInput-root': { fontWeight: 600, fontSize: 13 } }}
-                          />
-                          <Button 
-                            fullWidth variant="contained" 
-                            color="primary" startIcon={<SaveIcon />}
-                            onClick={() => handleSaveAdminNotes(selectedUser._id, selectedUser.adminNotes)}
-                            sx={{ fontWeight: 900 }}
-                          >
-                            {t.saveNotes}
-                          </Button>
-                       </CardContent>
-                    </Card>
-
-                    {/* Danger Zone */}
-                    <Card elevation={0} sx={{ border: `1px solid ${alpha(theme.palette.error.main, 0.2)}`, bgcolor: alpha(theme.palette.error.main, 0.01) }}>
-                       <Box sx={{ p: 2, px: 3, borderBottom: `1px solid ${alpha(theme.palette.error.main, 0.1)}` }}>
-                          <Typography variant="caption" sx={{ fontWeight: 900, color: 'error.main', textTransform: 'uppercase', letterSpacing: 1.5 }}>{t.dangerZone}</Typography>
-                       </Box>
-                       <CardContent sx={{ p: 3 }}>
-                          <Typography variant="caption" sx={{ fontWeight: 800, color: 'text.secondary', display: 'block', mb: 2 }}>{t.deleteWarning}</Typography>
-                          <Button 
-                            fullWidth variant="outlined" color="error" startIcon={<DeleteIcon />}
-                            disabled={selectedUser.role === 'superadmin'}
-                            onClick={() => { 
-                              if (selectedUser.role === 'superadmin') return toast.error(t.superAdminDeleteError);
-                              if (confirm(t.deleteWarning)) adminAPI.deleteUser(selectedUser._id).then(() => { setCurrentTab('users'); setSelectedUserId(null); loadUsers(); }); 
-                            }}
-                            sx={{ fontWeight: 900 }}
-                          >
-                            {t.deleteAccountLabel}
-                          </Button>
-                       </CardContent>
-                    </Card>
-                 </Stack>
-              </Grid>
-            </Grid>
-          </Box>
-        )}
-
-        {/* Audit Tab */}
-        {currentTab === 'audit' && user?.role === 'superadmin' && (
-          <Box>
-            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 4 }}>
-               <Box>
-                  <Typography variant="h6" sx={{ fontWeight: 900 }}>{t.auditLogs}</Typography>
-                  <Typography variant="caption" sx={{ fontWeight: 800, color: 'text.secondary' }}>{t.systemHistory} ({auditTotal} {t.events})</Typography>
-               </Box>
-               <Button variant="outlined" size="small" onClick={loadAuditLogs} startIcon={auditLoading ? <CircularProgress size={14} /> : <HistoryIcon fontSize="small" />} sx={{ fontWeight: 800 }}>{t.refresh}</Button>
-            </Stack>
-
-            <TableContainer component={Paper} elevation={0} sx={{ border: `1px solid ${theme.palette.divider}`, maxHeight: 700 }}>
-              <Table stickyHeader size="small">
-                <TableHead>
-                  <TableRow>
-                     <TableCell sx={{ fontWeight: 900, textTransform: 'uppercase', fontSize: 10 }}>{t.admin}</TableCell>
-                     <TableCell sx={{ fontWeight: 900, textTransform: 'uppercase', fontSize: 10 }}>{t.actions}</TableCell>
-                     <TableCell sx={{ fontWeight: 900, textTransform: 'uppercase', fontSize: 10 }}>{t.details}</TableCell>
-                     <TableCell sx={{ fontWeight: 900, textTransform: 'uppercase', fontSize: 10 }}>{t.date}</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                   {auditLoading ? (
-                     <TableRow><TableCell colSpan={4} align="center" sx={{ py: 10 }}><CircularProgress /></TableCell></TableRow>
-                   ) : auditLogs.length === 0 ? (
-                     <TableRow><TableCell colSpan={4} align="center" sx={{ py: 10 }}><Typography variant="body2" sx={{ opacity: 0.5 }}>{t.noLogs}</Typography></TableCell></TableRow>
-                   ) : (
-                     auditLogs.map(log => (
-                       <TableRow key={log._id} hover>
-                         <TableCell>
-                            <Typography variant="body2" sx={{ fontWeight: 800 }}>{log.adminId?.firstName} {log.adminId?.lastName}</Typography>
-                            <Typography variant="caption" color="text.secondary">{log.adminId?.email}</Typography>
-                         </TableCell>
-                         <TableCell>
-                            <Chip 
-                              label={log.action} 
-                              size="small" 
-                              sx={{ 
-                                fontWeight: 900, fontSize: 8, borderRadius: 1,
-                                bgcolor: log.action.includes('DELETE') || log.action.includes('BAN') ? alpha(theme.palette.error.main, 0.08) : alpha(theme.palette.primary.main, 0.08),
-                                color: log.action.includes('DELETE') || log.action.includes('BAN') ? 'error.main' : 'primary.main'
-                              }} 
-                            />
-                         </TableCell>
-                         <TableCell>
-                            <Box sx={{ maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                               <Typography variant="caption" sx={{ fontWeight: 700, whiteSpace: 'pre-wrap' }}>
-                                 {Object.entries(log.details || {}).map(([key, val]) => `${key}: ${val}`).join(', ')}
-                               </Typography>
-                               {log.ipAddress && <Typography variant="caption" display="block" color="text.secondary" sx={{ fontSize: 7 }}>IP: {log.ipAddress}</Typography>}
-                            </Box>
-                         </TableCell>
-                         <TableCell>
-                            <Typography variant="caption" sx={{ fontWeight: 800 }}>{format(new Date(log.createdAt), 'dd.MM.yyyy')}</Typography>
-                            <Typography variant="caption" display="block" color="text.secondary">{format(new Date(log.createdAt), 'HH:mm:ss')}</Typography>
-                         </TableCell>
-                       </TableRow>
-                     ))
-                   )}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Box>
-        )}
+        </Paper>
       </Box>
 
-      {/* Product Add/Edit Modal */}
-      <Dialog
-        open={isProductModalOpen}
-        onClose={() => setIsProductModalOpen(false)}
-        fullWidth
-        maxWidth="md"
-        fullScreen={isMobile}
-        PaperProps={{ sx: { borderRadius: isMobile ? 0 : 2 } }}
+      {/* Main Content Area - FIXED OVERLAP */}
+      <Box 
+        component="main" 
+        sx={{ 
+          flexGrow: 1, 
+          p: { xs: 2, md: 5 }, 
+          overflow: 'auto',
+          minWidth: 0,
+        }}
       >
-        <DialogTitle sx={{ borderBottom: `1px solid ${theme.palette.divider}` }}>
-          {editingProduct ? 'Edit Product' : 'Add New Product'}
-        </DialogTitle>
-        <form onSubmit={handleSaveProduct}>
-          <DialogContent sx={{ p: 4 }}>
-            <Grid container spacing={3}>
-              {/* Left Column - Basic Info */}
-              <Grid size={{ xs: 12, md: 6 }}>
-                <Stack spacing={2}>
-                  <TextField size="small" label={`${t.firstName} (UZ)`} value={productForm.name.uz} onChange={e => setProductForm({ ...productForm, name: { ...productForm.name, uz: e.target.value } })} required />
-                  <TextField size="small" label={`${t.firstName} (RU)`} value={productForm.name.ru} onChange={e => setProductForm({ ...productForm, name: { ...productForm.name, ru: e.target.value } })} required />
-                  <TextField size="small" label={`${t.firstName} (EN)`} value={productForm.name.en} onChange={e => setProductForm({ ...productForm, name: { ...productForm.name, en: e.target.value } })} />
-                  <TextField size="small" label={t.emoji} value={productForm.emoji} onChange={e => setProductForm({ ...productForm, emoji: e.target.value })} sx={{ width: 100 }} />
-                  <FormControl size="small" fullWidth>
-                    <InputLabel>{t.category}</InputLabel>
-                    <Select value={productForm.category} label={t.category} onChange={e => setProductForm({ ...productForm, category: e.target.value })}>
-                      {categories.map(c => <MenuItem key={c.id} value={c.id}>{c.emoji} {t[c.id] || c.id}</MenuItem>)}
-                    </Select>
-                  </FormControl>
-                  <TextField size="small" multiline rows={3} label={`${t.advice} (UZ)`} value={productForm.advice.uz} onChange={e => setProductForm({ ...productForm, advice: { ...productForm.advice, uz: e.target.value } })} />
-                  <TextField size="small" multiline rows={3} label={`${t.advice} (RU)`} value={productForm.advice.ru} onChange={e => setProductForm({ ...productForm, advice: { ...productForm.advice, ru: e.target.value } })} />
-                </Stack>
-              </Grid>
+        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 4 }}>
+          <Box>
+             <Typography variant="h5" sx={{ fontWeight: 900 }}>
+               {selectedUserId ? t.userDetail : t[currentTab] || currentTab}
+             </Typography>
+             <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary' }}>Admin / {currentTab}</Typography>
+          </Box>
+          <Stack direction="row" spacing={2} alignItems="center">
+            <IconButton sx={{ bgcolor: alpha(theme.palette.divider, 0.4) }}><NotificationsIcon fontSize="small" /></IconButton>
+            <Avatar src={user?.avatar} sx={{ width: 44, height: 44, borderRadius: 2, bgcolor: 'primary.main', fontWeight: 900 }}>{user?.firstName?.[0]}</Avatar>
+          </Stack>
+        </Stack>
 
-              {/* Right Column - Nutrition */}
-              <Grid size={{ xs: 12, md: 6 }}>
-                <Stack spacing={2}>
-                  <Typography variant="caption" sx={{ fontWeight: 900, color: 'primary.main', textTransform: 'uppercase' }}>{t.nutritionalData}</Typography>
-                  <Grid container spacing={2}>
-                    <Grid size={{ xs: 6 }}>
-                      <TextField fullWidth size="small" type="number" label={t.giIndex} value={productForm.gi} onChange={e => setProductForm({ ...productForm, gi: Number(e.target.value) })} />
-                    </Grid>
-                    <Grid size={{ xs: 6 }}>
-                      <TextField fullWidth size="small" type="number" label={t.glLoad} value={productForm.gl} onChange={e => setProductForm({ ...productForm, gl: Number(e.target.value) })} />
-                    </Grid>
-                    <Grid size={{ xs: 6 }}>
-                      <TextField fullWidth size="small" type="number" label={t.caloriesLabel} value={productForm.calories} onChange={e => setProductForm({ ...productForm, calories: Number(e.target.value) })} />
-                    </Grid>
-                    <Grid size={{ xs: 6 }}>
-                      <TextField fullWidth size="small" type="number" label={t.carbsLabel} value={productForm.carbs} onChange={e => setProductForm({ ...productForm, carbs: Number(e.target.value) })} />
-                    </Grid>
-                    <Grid size={{ xs: 6 }}>
-                      <TextField fullWidth size="small" type="number" label={t.proteinLabel} value={productForm.protein} onChange={e => setProductForm({ ...productForm, protein: Number(e.target.value) })} />
-                    </Grid>
-                    <Grid size={{ xs: 6 }}>
-                      <TextField fullWidth size="small" type="number" label={t.fatsLabel} value={productForm.fats} onChange={e => setProductForm({ ...productForm, fats: Number(e.target.value) })} />
-                    </Grid>
-                    <Grid size={{ xs: 6 }}>
-                      <TextField fullWidth size="small" type="number" label={t.sugarLabel} value={productForm.sugar} onChange={e => setProductForm({ ...productForm, sugar: Number(e.target.value) })} />
-                    </Grid>
-                    <Grid size={{ xs: 6 }}>
-                      <TextField fullWidth size="small" type="number" label={t.fiberLabel} value={productForm.fiber} onChange={e => setProductForm({ ...productForm, fiber: Number(e.target.value) })} />
-                    </Grid>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={selectedUserId ? `user-${selectedUserId}` : currentTab}
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            transition={{ duration: 0.3 }}
+          >
+            {currentTab === 'dashboard' && !selectedUserId && (
+              <Grid container spacing={3}>
+                {[
+                  { icon: PeopleIcon, label: t.totalUsers, val: stats?.totalUsers ?? 0, color: theme.palette.primary.main },
+                  { icon: TimelineIcon, label: t.activeToday, val: stats?.activeToday ?? 0, color: theme.palette.success.main },
+                  { icon: InventoryIcon, label: t.products, val: products.length, color: theme.palette.secondary.main },
+                ].map((s, idx) => (
+                  <Grid size={{ xs: 12, sm: 4 }} key={idx}>
+                    <Card elevation={0} sx={{ p: 3.5, borderRadius: 2, bgcolor: alpha(theme.palette.background.paper, 0.6), backdropFilter: 'blur(10px)', border: `1px solid ${theme.palette.divider}` }}>
+                      <Stack direction="column" spacing={2}>
+                        <Avatar sx={{ bgcolor: alpha(s.color, 0.12), color: s.color, borderRadius: 1.5, width: 52, height: 52 }}><s.icon /></Avatar>
+                        <Box>
+                          <Typography variant="h3" sx={{ fontWeight: 900, lineHeight: 1 }}>{s.val}</Typography>
+                          <Typography variant="body2" sx={{ fontWeight: 800, color: 'text.secondary', mt: 0.5, whiteSpace: 'normal', wordBreak: 'break-word' }}>{s.label}</Typography>
+                        </Box>
+                      </Stack>
+                    </Card>
                   </Grid>
-                </Stack>
+                ))}
               </Grid>
-            </Grid>
-          </DialogContent>
-          <DialogActions sx={{ p: 3, borderTop: `1px solid ${theme.palette.divider}` }}>
-            <Button onClick={() => setIsProductModalOpen(false)} sx={{ fontWeight: 800 }}>{t.reminderCancel}</Button>
-            <Button type="submit" variant="contained" sx={{ fontWeight: 800, px: 4 }}>{t.save}</Button>
-          </DialogActions>
-        </form>
-      </Dialog>
+            )}
 
-      <Toaster position="top-right" richColors />
+            {currentTab === 'users' && !selectedUserId && (
+              <Box>
+                <Paper elevation={0} sx={{ p: 2.5, mb: 4, borderRadius: 2, bgcolor: alpha(theme.palette.background.paper, 0.4), backdropFilter: 'blur(10px)', border: `1px solid ${theme.palette.divider}` }}>
+                  <Stack direction={isMobile ? 'column' : 'row'} spacing={2}>
+                    <TextField
+                      placeholder={t.searchUsers}
+                      fullWidth
+                      size="small"
+                      value={search}
+                      onChange={e => setSearch(e.target.value)}
+                      onKeyDown={handleSearchKeyDown}
+                      InputProps={{ startAdornment: <SearchIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} /> }}
+                    />
+                    <FormControl size="small" sx={{ minWidth: 200 }}>
+                      <InputLabel>{t.role}</InputLabel>
+                      <Select value={role} label={t.role} onChange={e => setRole(e.target.value)}>
+                        <MenuItem value="">{t.allStatuses || 'All'}</MenuItem>
+                        <MenuItem value="user">{t.user}</MenuItem>
+                        <MenuItem value="doctor">{t.doctor}</MenuItem>
+                        <MenuItem value="admin">{t.admin}</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Stack>
+                </Paper>
+
+                <TableContainer component={Paper} elevation={0} sx={{ borderRadius: 2, border: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.background.paper, 0.4), backdropFilter: 'blur(10px)' }}>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell sx={{ fontWeight: 900 }}>{t.user}</TableCell>
+                        <TableCell sx={{ fontWeight: 900 }}>{t.regionLabel}</TableCell>
+                        <TableCell align="right"></TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {users.map(u => (
+                        <TableRow key={u._id} hover onClick={() => { if (u.role === 'superadmin' && user?.role !== 'superadmin') return; setSelectedUserId(u._id); loadSpecificUser(u._id); setUserTab('info'); }} sx={{ cursor: 'pointer' }}>
+                          <TableCell>
+                            <Stack direction="row" spacing={2} alignItems="center">
+                              <Avatar src={u.avatar} sx={{ borderRadius: 1.5, bgcolor: alpha(theme.palette.primary.main, 0.1), color: 'primary.main', fontWeight: 900 }}>{u.firstName?.[0]}</Avatar>
+                              <Box>
+                                <Typography variant="body2" sx={{ fontWeight: 800 }}>{u.firstName} {u.lastName}</Typography>
+                                <Typography variant="caption" color="text.secondary">{u.email}</Typography>
+                              </Box>
+                            </Stack>
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body2" sx={{ fontWeight: 700 }}>{u.region || '—'}</Typography>
+                            <Chip label={u.role.toUpperCase()} size="small" sx={{ height: 16, fontSize: 8, fontWeight: 900 }} />
+                          </TableCell>
+                          <TableCell align="right">
+                            <Stack direction="row" spacing={1} justifyContent="flex-end">
+                              <IconButton size="small" color="primary"><EditIcon fontSize="small" /></IconButton>
+                              <IconButton size="small" color="error" onClick={(e) => { e.stopPropagation(); if (confirm("Delete?")) adminAPI.deleteUser(u._id).then(() => loadUsers()); }}><DeleteIcon fontSize="small" /></IconButton>
+                            </Stack>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Box>
+            )}
+
+            {currentTab === 'products' && (
+              <Box>
+                <Stack direction="row" justifyContent="space-between" sx={{ mb: 4 }}>
+                  <Box>
+                    <Typography variant="h6" sx={{ fontWeight: 900 }}>{t.productCatalog}</Typography>
+                    <Typography variant="caption" color="text.secondary">{products.length} products</Typography>
+                  </Box>
+                  <Button variant="contained" startIcon={<AddIcon />} onClick={() => { setEditingProduct(null); setIsProductModalOpen(true); }} sx={{ borderRadius: 1.5, fontWeight: 900 }}>{t.addProduct}</Button>
+                </Stack>
+                <Grid container spacing={2.5}>
+                  {products.map(p => (
+                    <Grid size={{ xs: 12, sm: 4, lg: 3 }} key={p._id}>
+                      <Card elevation={0} sx={{ borderRadius: 2, border: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.background.paper, 0.4), backdropFilter: 'blur(10px)', p: 2 }}>
+                        <Stack direction="row" justifyContent="space-between" alignItems="start" sx={{ mb: 2 }}>
+                          <Box sx={{ width: 48, height: 48, borderRadius: 2, bgcolor: alpha(theme.palette.primary.main, 0.1), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>{p.emoji}</Box>
+                          <Stack direction="row" spacing={0.5}>
+                            <IconButton size="small" onClick={() => { setEditingProduct(p); setProductForm(p); setIsProductModalOpen(true); }}><EditIcon fontSize="small" /></IconButton>
+                            <IconButton size="small" color="error" onClick={() => { if (confirm("Delete?")) productAPI.delete(p._id).then(() => loadProducts()); }}><DeleteIcon fontSize="small" /></IconButton>
+                          </Stack>
+                        </Stack>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 900 }}>{p.name?.[language] || p.name?.uz || p.name}</Typography>
+                        <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>{p.category}</Typography>
+                        <Grid container spacing={1}>
+                          <Grid size={{ xs: 4 }}><Box textAlign="center" p={0.5} borderRadius={1} bgcolor="rgba(0,0,0,0.02)"><Typography variant="caption" display="block">GI</Typography><Typography variant="body2" sx={{ fontWeight: 900 }}>{p.gi}</Typography></Box></Grid>
+                          <Grid size={{ xs: 4 }}><Box textAlign="center" p={0.5} borderRadius={1} bgcolor="rgba(0,0,0,0.02)"><Typography variant="caption" display="block">GL</Typography><Typography variant="body2" sx={{ fontWeight: 900 }}>{p.gl}</Typography></Box></Grid>
+                          <Grid size={{ xs: 4 }}><Box textAlign="center" p={0.5} borderRadius={1} bgcolor="rgba(0,0,0,0.02)"><Typography variant="caption" display="block">KCal</Typography><Typography variant="body2" sx={{ fontWeight: 900 }}>{p.calories}</Typography></Box></Grid>
+                        </Grid>
+                      </Card>
+                    </Grid>
+                  ))}
+                </Grid>
+              </Box>
+            )}
+
+            {selectedUserId && selectedUser && (
+              <Box>
+                 {/* TAB BO'LIMLARI */}
+                 <Stack direction="row" spacing={2} sx={{ mb: 3 }} overflow="auto">
+                    <Button variant={userTab === 'info' ? 'contained' : 'outlined'} onClick={() => setUserTab('info')} sx={{ borderRadius: 1.5, fontWeight: 900, px: 3 }}>Ma'lumotlar</Button>
+                    <Button variant={userTab === 'manage' ? 'contained' : 'outlined'} onClick={() => setUserTab('manage')} sx={{ borderRadius: 1.5, fontWeight: 900, px: 3 }}>Boshqaruv</Button>
+                    <Button variant={userTab === 'analytics' ? 'contained' : 'outlined'} onClick={() => setUserTab('analytics')} sx={{ borderRadius: 1.5, fontWeight: 900, px: 3 }}>Tahlillar</Button>
+                 </Stack>
+
+                 {/* === 1. SHAXSIY MA'LUMOTLAR === */}
+                 {userTab === 'info' && (
+                <Card elevation={0} sx={{ mb: 3, borderRadius: 2, bgcolor: alpha(theme.palette.background.paper, 0.6), backdropFilter: 'blur(20px)', border: `1px solid ${theme.palette.divider}` }}>
+                   <Box sx={{ p: 4 }}>
+                      <Stack direction={isMobile ? 'column' : 'row'} spacing={4} alignItems={isMobile ? 'flex-start' : 'center'} justifyContent="space-between">
+                         <Stack direction="row" spacing={3} alignItems="center">
+                            <Avatar src={selectedUser.avatar} sx={{ width: 80, height: 80, borderRadius: 2, bgcolor: 'primary.main', fontSize: 32, fontWeight: 900 }}>{selectedUser.firstName?.[0]}</Avatar>
+                            <Box>
+                               <Typography variant="h5" sx={{ fontWeight: 900 }}>{selectedUser.firstName} {selectedUser.lastName}</Typography>
+                               <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 700 }}>{selectedUser.email}</Typography>
+                               <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+                                  <Chip label={selectedUser.role.toUpperCase()} size="small" color="primary" sx={{ fontWeight: 900 }} />
+                                  <Chip label={selectedUser.isBanned ? 'BANNED' : 'ACTIVE'} size="small" color={selectedUser.isBanned ? 'error' : 'success'} sx={{ fontWeight: 900 }} />
+                               </Stack>
+                            </Box>
+                         </Stack>
+                         <Stack direction={isMobile ? 'row' : 'column'} spacing={1.5}>
+                            <Button variant="contained" color={selectedUser.isBanned ? 'success' : 'error'} onClick={() => adminAPI.toggleBan(selectedUser._id).then(() => loadSpecificUser(selectedUser._id))} sx={{ borderRadius: 2, fontWeight: 900 }}>{selectedUser.isBanned ? 'Unban' : 'Ban'}</Button>
+                            <Button variant="outlined" startIcon={<ArrowBackIcon />} onClick={() => setSelectedUserId(null)} sx={{ borderRadius: 2, fontWeight: 900 }}>{t.backToList}</Button>
+                         </Stack>
+                      </Stack>
+
+                      <Divider sx={{ my: 3 }} />
+
+                      <Grid container spacing={4}>
+                         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800, textTransform: 'uppercase', display: 'block', mb: 0.5 }}>{t.diabetesTypeLabel}</Typography>
+                            <Typography variant="body1" sx={{ fontWeight: 900 }}>{selectedUser.diabetesType || '—'}</Typography>
+                         </Grid>
+                         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800, textTransform: 'uppercase', display: 'block', mb: 0.5 }}>{t.genderAndAge}</Typography>
+                            <Typography variant="body1" sx={{ fontWeight: 900 }}>{t[selectedUser.gender] || selectedUser.gender} • {selectedUser.dateOfBirth ? `${new Date().getFullYear() - new Date(selectedUser.dateOfBirth).getFullYear()} yosh` : '—'}</Typography>
+                         </Grid>
+                         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800, textTransform: 'uppercase', display: 'block', mb: 0.5 }}>{t.phoneNumberLabel || 'Telefon'}</Typography>
+                            <Typography variant="body1" sx={{ fontWeight: 900 }}>{selectedUser.phone || '—'}</Typography>
+                         </Grid>
+                         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800, textTransform: 'uppercase', display: 'block', mb: 0.5 }}>{t.regionLabel || 'Viloyat'}</Typography>
+                            <Typography variant="body1" sx={{ fontWeight: 900 }}>{[selectedUser.region, selectedUser.district].filter(Boolean).join(', ') || '—'}</Typography>
+                         </Grid>
+                      </Grid>
+                   </Box>
+                </Card>
+                 )}
+
+                {/* === 2. BOSHQARUV AMALLARI === */}
+                 {userTab === 'manage' && (
+                <Card elevation={0} sx={{ mb: 3, borderRadius: 2, bgcolor: alpha(theme.palette.background.paper, 0.4), backdropFilter: 'blur(20px)', border: `1px solid ${theme.palette.divider}` }}>
+                   <Box sx={{ p: 3, px: 4, borderBottom: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.secondary.main, 0.03) }}>
+                      <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5, color: 'secondary.main' }}>{t.managementActions || 'Boshqaruv'}</Typography>
+                   </Box>
+                   <Box sx={{ p: 4 }}>
+                      <Grid container spacing={4}>
+                         <Grid size={{ xs: 12, md: 6 }}>
+                            <Typography variant="caption" sx={{ fontWeight: 800, mb: 1.5, display: 'block', textTransform: 'uppercase' }}>{t.assignDoctor}</Typography>
+                            <FormControl fullWidth size="small">
+                               <Select value={selectedUser.assignedDoctor?._id || selectedUser.assignedDoctor || ''} onChange={e => adminAPI.assignDoctor(selectedUser._id, e.target.value || null).then(() => { toast.success('Doktor biriktirildi'); loadSpecificUser(selectedUser._id); })} sx={{ borderRadius: 2 }}>
+                                  <MenuItem value=""><em>Biriktirish</em></MenuItem>
+                                  {availableDoctors.map(doc => <MenuItem key={doc._id} value={doc._id}>{doc.firstName} {doc.lastName}</MenuItem>)}
+                               </Select>
+                            </FormControl>
+                            {selectedUser.assignedDoctor && (
+                               <Typography variant="caption" color="success.main" sx={{ fontWeight: 800, mt: 1, display: 'block' }}>
+                                  ✓ {typeof selectedUser.assignedDoctor === 'object' ? `${selectedUser.assignedDoctor.firstName} ${selectedUser.assignedDoctor.lastName}` : 'Biriktirilgan'}
+                               </Typography>
+                            )}
+                         </Grid>
+                         <Grid size={{ xs: 12, md: 6 }}>
+                            <Typography variant="caption" sx={{ fontWeight: 800, mb: 1.5, display: 'block', textTransform: 'uppercase' }}>{t.updateRoleLabel || 'Rol'}</Typography>
+                            <FormControl fullWidth size="small">
+                               <Select value={selectedUser.role} onChange={e => adminAPI.updateRole(selectedUser._id, e.target.value).then(() => { toast.success('Rol o\'zgartirildi'); loadSpecificUser(selectedUser._id); })} sx={{ borderRadius: 2 }}>
+                                  <MenuItem value="user">{t.user || 'Foydalanuvchi'}</MenuItem>
+                                  <MenuItem value="doctor">{t.doctor || 'Shifokor'}</MenuItem>
+                                  <MenuItem value="admin">{t.admin || 'Admin'}</MenuItem>
+                               </Select>
+                            </FormControl>
+                         </Grid>
+                      </Grid>
+                   </Box>
+                </Card>
+                 )}
+
+                {/* === 3. GLYUKOZA VA IZOHLAR === */}
+                 {userTab === 'analytics' && (
+                <Grid container spacing={3}>
+                   <Grid size={{ xs: 12, md: 8 }}>
+                      <Card elevation={0} sx={{ p: 4, mb: 3, borderRadius: 2, border: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.background.paper, 0.4), backdropFilter: 'blur(10px)' }}>
+                         <Typography variant="h6" color="primary" sx={{ fontWeight: 900, mb: 3, borderLeft: `4px solid ${theme.palette.primary.main}`, pl: 1.5 }}>Och Qoringa (Fasting)</Typography>
+                         <Box sx={{ height: 240 }}>
+                           {fastingRecords.length > 0 ? (
+                              <ResponsiveContainer width="100%" height="100%">
+                                 <AreaChart data={fastingRecords}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme.palette.divider} />
+                                    <XAxis dataKey="date" tick={{ fontSize: 10, fontWeight: 700 }} />
+                                    <YAxis tick={{ fontSize: 10, fontWeight: 700 }} />
+                                    <Tooltip />
+                                    <Area type="monotone" dataKey="level" stroke={theme.palette.primary.main} fill={theme.palette.primary.main} fillOpacity={0.1} strokeWidth={3} />
+                                 </AreaChart>
+                              </ResponsiveContainer>
+                           ) : <Box sx={{ py: 6, textAlign: 'center', opacity: 0.4 }}><TimelineIcon sx={{ fontSize: 40, mb: 1 }} /><Typography variant="caption" display="block">Ma'lumot topilmadi</Typography></Box>}
+                         </Box>
+                      </Card>
+
+                      <Card elevation={0} sx={{ p: 4, borderRadius: 2, border: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.background.paper, 0.4), backdropFilter: 'blur(10px)' }}>
+                         <Typography variant="h6" color="secondary" sx={{ fontWeight: 900, mb: 3, borderLeft: `4px solid ${theme.palette.secondary.main}`, pl: 1.5 }}>To'q Qoringa (Post-meal)</Typography>
+                         <Box sx={{ height: 240 }}>
+                           {postMealRecords.length > 0 ? (
+                              <ResponsiveContainer width="100%" height="100%">
+                                 <AreaChart data={postMealRecords}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme.palette.divider} />
+                                    <XAxis dataKey="date" tick={{ fontSize: 10, fontWeight: 700 }} />
+                                    <YAxis tick={{ fontSize: 10, fontWeight: 700 }} />
+                                    <Tooltip />
+                                    <Area type="monotone" dataKey="level" stroke={theme.palette.secondary.main} fill={theme.palette.secondary.main} fillOpacity={0.1} strokeWidth={3} />
+                                 </AreaChart>
+                              </ResponsiveContainer>
+                           ) : <Box sx={{ py: 6, textAlign: 'center', opacity: 0.4 }}><TimelineIcon sx={{ fontSize: 40, mb: 1 }} /><Typography variant="caption" display="block">Ma'lumot topilmadi</Typography></Box>}
+                         </Box>
+                      </Card>
+                   </Grid>
+                   
+                   <Grid size={{ xs: 12, md: 4 }}>
+                      <Card elevation={0} sx={{ p: 4, borderRadius: 2, border: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.background.paper, 0.4), backdropFilter: 'blur(10px)', height: '100%', display: 'flex', flexDirection: 'column' }}>
+                         <Typography variant="caption" sx={{ fontWeight: 900, color: 'warning.main', textTransform: 'uppercase', mb: 2, display: 'block' }}>{t.administrativeNotes || 'Admin Izohi'}</Typography>
+                         <TextField fullWidth multiline rows={7} variant="outlined" placeholder="Izoh yozing..." value={selectedUser.adminNotes || ''} onChange={e => setSelectedUser({...selectedUser, adminNotes: e.target.value})} sx={{ mb: 3, flexGrow: 1, '& .MuiOutlinedInput-root': { borderRadius: 2, bgcolor: alpha(theme.palette.background.default, 0.5) } }} />
+                         <Button fullWidth variant="contained" onClick={() => handleSaveAdminNotes(selectedUserId!, selectedUser.adminNotes)} sx={{ borderRadius: 1.5, fontWeight: 900, py: 1.5 }}>{t.saveNotes || 'Izohni saqlash'}</Button>
+                      </Card>
+                   </Grid>
+                </Grid>
+                 )}
+              </Box>
+            )}
+
+            {currentTab === 'audit' && user?.role === 'superadmin' && (
+              <Box>
+                <Stack direction="row" justifyContent="space-between" sx={{ mb: 4 }}>
+                   <Typography variant="h6" sx={{ fontWeight: 900 }}>Audit Logs</Typography>
+                   <Button variant="outlined" onClick={loadAuditLogs} startIcon={<HistoryIcon />} sx={{ borderRadius: 2 }}>Refresh</Button>
+                </Stack>
+                <TableContainer component={Paper} elevation={0} sx={{ borderRadius: 2, border: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.background.paper, 0.4), backdropFilter: 'blur(10px)' }}>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell sx={{ fontWeight: 900 }}>Admin</TableCell>
+                        <TableCell sx={{ fontWeight: 900 }}>Action</TableCell>
+                        <TableCell sx={{ fontWeight: 900 }}>Details</TableCell>
+                        <TableCell align="right" sx={{ fontWeight: 900 }}>Date</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {auditLogs.map(log => (
+                        <TableRow key={log._id}>
+                          <TableCell><Typography variant="body2" fontWeight={800}>{log.adminId?.firstName} {log.adminId?.lastName}</Typography></TableCell>
+                          <TableCell><Chip label={log.action} size="small" /></TableCell>
+                          <TableCell><Typography variant="caption">{JSON.stringify(log.details)}</Typography></TableCell>
+                          <TableCell align="right"><Typography variant="caption">{format(new Date(log.createdAt), 'dd.MM HH:mm')}</Typography></TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Box>
+            )}
+          </motion.div>
+        </AnimatePresence>
+
+        <Dialog open={isProductModalOpen} onClose={() => setIsProductModalOpen(false)} fullWidth maxWidth="md" PaperProps={{ sx: { borderRadius: 2 } }}>
+          <DialogTitle sx={{ fontWeight: 900 }}>{editingProduct ? 'Edit Product' : 'Add Product'}</DialogTitle>
+          <form onSubmit={handleSaveProduct}>
+            <DialogContent>
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 6 }}><TextField fullWidth label="UZ Name" value={productForm.name.uz} onChange={e => setProductForm({...productForm, name: {...productForm.name, uz: e.target.value}})} /></Grid>
+                <Grid size={{ xs: 6 }}><TextField fullWidth label="RU Name" value={productForm.name.ru} onChange={e => setProductForm({...productForm, name: {...productForm.name, ru: e.target.value}})} /></Grid>
+                <Grid size={{ xs: 4 }}><TextField fullWidth label="GI" type="number" value={productForm.gi} onChange={e => setProductForm({...productForm, gi: Number(e.target.value)})} /></Grid>
+                <Grid size={{ xs: 4 }}><TextField fullWidth label="GL" type="number" value={productForm.gl} onChange={e => setProductForm({...productForm, gl: Number(e.target.value)})} /></Grid>
+                <Grid size={{ xs: 4 }}><TextField fullWidth label="KCal" type="number" value={productForm.calories} onChange={e => setProductForm({...productForm, calories: Number(e.target.value)})} /></Grid>
+              </Grid>
+            </DialogContent>
+            <DialogActions sx={{ p: 3 }}>
+              <Button onClick={() => setIsProductModalOpen(false)} sx={{ fontWeight: 800 }}>Cancel</Button>
+              <Button type="submit" variant="contained" sx={{ fontWeight: 900, px: 4, borderRadius: 2 }}>Save</Button>
+            </DialogActions>
+          </form>
+        </Dialog>
+        <Toaster position="top-right" richColors />
+      </Box>
     </Box>
   );
 }

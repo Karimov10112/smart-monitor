@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { doctorAPI } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useApp } from '../contexts/AppContext';
-import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { translations } from '../utils/translations';
-import { toast } from 'sonner';
+import { toast, Toaster } from 'sonner';
 import { format } from 'date-fns';
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // MUI Components
 import {
@@ -28,15 +29,13 @@ import {
   List,
   ListItem,
   ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  InputAdornment,
+  useMediaQuery,
   Table,
   TableBody,
   TableCell,
   TableContainer,
-  TableHead,
-  TableRow
+  TableRow,
+  Chip
 } from '@mui/material';
 
 // MUI Icons
@@ -45,13 +44,13 @@ import SearchIcon from '@mui/icons-material/Search';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import TimelineIcon from '@mui/icons-material/Timeline';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
-import LogoutIcon from '@mui/icons-material/Logout';
-import DescriptionIcon from '@mui/icons-material/Description';
 import BiotechIcon from '@mui/icons-material/Biotech';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SaveIcon from '@mui/icons-material/Save';
-
-const SIDEBAR_WIDTH = 280;
+import MenuIcon from '@mui/icons-material/Menu';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
+import NotificationsIcon from '@mui/icons-material/Notifications';
 
 type TabType = 'patients' | 'patient-detail';
 
@@ -61,6 +60,7 @@ export default function DoctorPage() {
   const theme = useTheme();
   const t = translations[language];
   const navigate = useNavigate();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const [currentTab, setCurrentTab] = useState<TabType>('patients');
   const [patients, setPatients] = useState<any[]>([]);
@@ -69,6 +69,7 @@ export default function DoctorPage() {
   const [search, setSearch] = useState('');
   const [doctorNote, setDoctorNote] = useState('');
   const [loading, setLoading] = useState(true);
+  const [isMini, setIsMini] = useState(false);
 
   useEffect(() => {
     loadPatients();
@@ -79,21 +80,21 @@ export default function DoctorPage() {
       setLoading(true);
       const { data } = await doctorAPI.getPatients({ search });
       setPatients(data.patients || []);
-    } catch { }
+    } catch {}
     finally { setLoading(false); }
   };
 
   const openPatient = async (patient: any) => {
     try {
       const { data } = await doctorAPI.getPatientRecords(patient._id);
-      const sortedRecords = data.records.sort((a: any, b: any) => 
+      const sortedRecords = (data.records || []).sort((a: any, b: any) =>
         new Date(a.date).getTime() - new Date(b.date).getTime()
       );
       setRecords(sortedRecords);
       setSelectedPatient(patient);
       setDoctorNote(patient.doctorNotes || '');
       setCurrentTab('patient-detail');
-    } catch { }
+    } catch {}
   };
 
   const handleSaveNote = async () => {
@@ -101,257 +102,399 @@ export default function DoctorPage() {
       await doctorAPI.addNote(selectedPatient._id, doctorNote);
       toast.success(t.success || 'Saqlandi');
       setPatients(prev => prev.map(p => p._id === selectedPatient._id ? { ...p, doctorNotes: doctorNote } : p));
-    } catch { }
+    } catch {}
   };
 
-  const chartData = records.map(r => ({
-    date: format(new Date(r.date), 'dd/MM'),
-    fasting: r.fastingLevel,
-    postMeal: r.postMealLevel || 0,
-  }));
+  const fastingRecords = records
+    .filter(r => r.category === 'fasting' || r.type === 'fasting' || r.fastingLevel)
+    .map(r => ({
+      date: format(new Date(r.date), 'dd/MM'),
+      level: r.fastingLevel || r.level || 0,
+    }));
+
+  const postMealRecords = records
+    .filter(r => r.category === 'post_meal' || r.type === 'post_meal' || r.postMealLevel)
+    .map(r => ({
+      date: format(new Date(r.date), 'dd/MM'),
+      level: r.postMealLevel || r.level || 0,
+    }));
 
   if (loading && patients.length === 0) return (
-    <Box sx={{ display: 'flex', h: '80vh', alignItems: 'center', justifyContent: 'center' }}>
+    <Box sx={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', bgcolor: 'background.default' }}>
       <CircularProgress />
     </Box>
   );
 
+  const sidebarWidth = 280;
+  const miniWidth = 88;
+
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
-      {/* Sidebar (Local) */}
-      <Box sx={{ 
-        width: SIDEBAR_WIDTH, 
-        borderRight: `1px solid ${theme.palette.divider}`, 
-        bgcolor: 'background.paper', 
-        display: { xs: 'none', lg: 'flex' }, 
-        flexDirection: 'column', 
-        p: 3,
-        flexShrink: 0
-      }}>
-        <Box sx={{ mb: 4, px: 1 }}>
-          <Stack direction="row" spacing={2} alignItems="center">
-            <Avatar sx={{ bgcolor: 'primary.main', borderRadius: 1.5, width: 40, height: 40 }}>🩺</Avatar>
-            <Box>
-              <Typography variant="subtitle2" sx={{ fontWeight: 900, lineHeight: 1 }}>{t.appName}</Typography>
-              <Typography variant="caption" sx={{ fontWeight: 900, color: 'primary.main', fontSize: 9, textTransform: 'uppercase' }}>{t.doctorPanel}</Typography>
-            </Box>
-          </Stack>
-        </Box>
-
-        <Divider sx={{ mb: 3 }} />
-
-        <List sx={{ flexGrow: 1 }}>
-          <ListItem disablePadding>
-            <ListItemButton 
-              selected={currentTab === 'patients' || currentTab === 'patient-detail'} 
-              onClick={() => setCurrentTab('patients')}
-              sx={{ borderRadius: 1.5, py: 1, '&.Mui-selected': { bgcolor: alpha(theme.palette.primary.main, 0.05) } }}
-            >
-              <ListItemIcon sx={{ minWidth: 40 }}><PeopleAltIcon fontSize="small" /></ListItemIcon>
-              <ListItemText primary={t.patients} primaryTypographyProps={{ fontWeight: 800, fontSize: '0.8125rem' }} />
-            </ListItemButton>
-          </ListItem>
-        </List>
-
-        <Box sx={{ mt: 'auto' }}>
-           <Divider sx={{ mb: 2 }} />
-
-           {/* Navigation back for Admins */}
-           {isAdmin && (
-             <Button 
-               fullWidth 
-               variant="outlined"
-               startIcon={<ArrowBackIcon fontSize="small" />} 
-               onClick={() => navigate('/admin')} 
-               sx={{ borderRadius: 1.5, mb: 1, justifyContent: 'start', py: 1, fontSize: '0.75rem', fontWeight: 800, borderStyle: 'dashed' }}
-             >
-               {t.adminPanel || 'Admin Panel'}
-             </Button>
-           )}
-
-           <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 2, px: 1 }}>
-              <Avatar sx={{ width: 32, height: 32, borderRadius: 1, bgcolor: alpha(theme.palette.success.main, 0.1), color: 'success.main', fontWeight: 900, fontSize: 13 }}>{user?.firstName?.[0]}</Avatar>
-              <Box sx={{ overflow: 'hidden' }}>
-                 <Typography variant="caption" sx={{ fontWeight: 900, display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.firstName} {user?.lastName}</Typography>
-                 <Typography variant="caption" sx={{ fontSize: 8, color: 'text.secondary', display: 'block' }}>{t.doctorProfession}</Typography>
-              </Box>
-           </Stack>
-           <Button fullWidth color="error" startIcon={<LogoutIcon fontSize="small" />} onClick={logout} sx={{ borderRadius: 1.5, justifyContent: 'start', py: 1, fontSize: '0.75rem', fontWeight: 800 }}>
-             {t.logoutUser || 'Logout'}
-           </Button>
-        </Box>
-      </Box>
-
-      {/* Main Content */}
-      <Box component="main" sx={{ flexGrow: 1, p: { xs: 2, sm: 3, lg: 5 } }}>
-         {currentTab === 'patients' && (
-           <Box>
-              <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 4 }}>
-                 <Typography variant="h5" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 2 }}>{t.myPatients}</Typography>
-                 <TextField 
-                  size="small" 
-                  placeholder={t.search} 
-                  value={search} 
-                  onChange={e => setSearch(e.target.value)}
-                  sx={{ width: 300 }}
-                  InputProps={{ startAdornment: <SearchIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} /> }}
-                 />
+      {/* Sidebar - FIXED */}
+      <Box
+        component="nav"
+        sx={{
+          width: { md: isMini ? miniWidth : sidebarWidth },
+          transition: theme.transitions.create('width', { duration: 300 }),
+          display: { xs: 'none', md: 'block' }
+        }}
+      >
+        <Paper
+          elevation={0}
+          sx={{
+            width: isMini ? miniWidth : sidebarWidth,
+            height: '100vh',
+            position: 'sticky',
+            top: 0,
+            borderRight: `1px solid ${theme.palette.divider}`,
+            bgcolor: alpha(theme.palette.background.paper, 0.8),
+            backdropFilter: 'blur(20px)',
+            display: 'flex',
+            flexDirection: 'column',
+            transition: theme.transitions.create('width', { duration: 300 }),
+            zIndex: theme.zIndex.drawer + 2,
+          }}
+        >
+          <Box sx={{ p: 3, display: 'flex', alignItems: 'center', justifyContent: isMini ? 'center' : 'space-between' }}>
+            {!isMini && (
+              <Stack direction="row" spacing={1.5} alignItems="center">
+                <Box sx={{ p: 1, bgcolor: 'secondary.main', borderRadius: 1.5, display: 'flex', color: 'white' }}>
+                  <BiotechIcon />
+                </Box>
+                <Typography variant="h6" sx={{ fontWeight: 900, fontSize: 16, letterSpacing: 1 }}>DOCTOR</Typography>
               </Stack>
+            )}
+            <IconButton onClick={() => setIsMini(!isMini)} size="small" sx={{ bgcolor: alpha(theme.palette.secondary.main, 0.05) }}>
+              {isMini ? <MenuIcon /> : <ChevronLeftIcon />}
+            </IconButton>
+          </Box>
+          <Divider sx={{ mx: 2, mb: 2, opacity: 0.5 }} />
+          <List sx={{ px: 2, flexGrow: 1 }}>
+            <ListItem disablePadding sx={{ mb: 1 }}>
+              <ListItemButton
+                onClick={() => { setCurrentTab('patients'); setSelectedPatient(null); }}
+                selected={currentTab === 'patients' || currentTab === 'patient-detail'}
+                sx={{
+                  borderRadius: 8,
+                  py: 1.5,
+                  boxShadow: theme.palette.mode === 'dark' ? '4px 4px 10px rgba(0,0,0,0.4)' : '4px 4px 12px rgba(0,0,0,0.05), -4px -4px 12px rgba(255,255,255,0.8)',
+                  px: isMini ? 1.5 : 2,
+                  justifyContent: isMini ? 'center' : 'flex-start',
+                  color: (currentTab === 'patients' || currentTab === 'patient-detail') ? 'secondary.main' : 'text.secondary',
+                  bgcolor: (currentTab === 'patients' || currentTab === 'patient-detail') ? alpha(theme.palette.secondary.main, 0.1) : theme.palette.background.paper,
+                }}
+              >
+                <Box sx={{ minWidth: isMini ? 0 : 40 }}><PeopleAltIcon /></Box>
+                {!isMini && <Typography sx={{ fontWeight: 800, fontSize: 13, textTransform: 'uppercase' }}>{t.patients}</Typography>}
+              </ListItemButton>
+            </ListItem>
 
-              <Grid container spacing={3}>
-                 {patients.map(p => (
-                   <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={p._id}>
-                      <Card elevation={0} onClick={() => openPatient(p)} sx={{ cursor: 'pointer', transition: 'all 0.2s', '&:hover': { border: `1px solid ${theme.palette.primary.main}`, bgcolor: alpha(theme.palette.primary.main, 0.01) } }}>
-                         <CardContent sx={{ p: 3 }}>
-                            <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 3 }}>
-                               <Avatar sx={{ borderRadius: 2, width: 48, height: 48, bgcolor: alpha(theme.palette.primary.main, 0.1), color: 'primary.main', fontWeight: 900 }}>{p.firstName?.[0]}</Avatar>
-                               <Box>
-                                  <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>{p.firstName} {p.lastName}</Typography>
-                                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800, textTransform: 'uppercase', fontSize: 10 }}>{p.diabetesType || '—'}</Typography>
-                               </Box>
-                            </Stack>
-                            <Divider sx={{ my: 1.5, opacity: 0.5 }} />
-                            <Stack direction="row" justifyContent="space-between" alignItems="center">
-                               <Typography variant="caption" sx={{ fontWeight: 800, color: 'text.secondary', display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                  <LocationOnIcon sx={{ fontSize: 14 }} /> {p.region || '—'}
-                               </Typography>
-                               <ChevronRightIcon sx={{ color: 'divider' }} />
-                            </Stack>
-                         </CardContent>
-                      </Card>
-                   </Grid>
-                 ))}
-                 {patients.length === 0 && (
-                   <Box sx={{ width: '100%', py: 10, textAlign: 'center', opacity: 0.3 }}>
-                      <PeopleAltIcon sx={{ fontSize: 60, mb: 2 }} />
-                      <Typography variant="h6" sx={{ fontWeight: 800 }}>{t.noPatients}</Typography>
-                   </Box>
-                 )}
-              </Grid>
-           </Box>
-         )}
-
-         {currentTab === 'patient-detail' && selectedPatient && (
-           <Box>
-              <Button startIcon={<ArrowBackIcon />} onClick={() => setCurrentTab('patients')} sx={{ mb: 4, fontWeight: 800 }}>{t.patientList}</Button>
-              
-              <Grid container spacing={3}>
-                 <Grid size={{ xs: 12, lg: 8 }}>
-                    {/* Patient Profile */}
-                    <Card elevation={0} sx={{ mb: 3 }}>
-                       <CardContent sx={{ p: 4 }}>
-                          <Stack direction="row" spacing={3} alignItems="center">
-                             <Avatar sx={{ width: 64, height: 64, borderRadius: 2, bgcolor: 'primary.main', fontWeight: 900, fontSize: 24 }}>{selectedPatient.firstName?.[0]}</Avatar>
-                             <Box>
-                                <Typography variant="h5" sx={{ fontWeight: 900 }}>{selectedPatient.firstName} {selectedPatient.lastName}</Typography>
-                                <Typography variant="subtitle2" color="primary" sx={{ fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1 }}>{selectedPatient.diabetesType}</Typography>
-                             </Box>
-                          </Stack>
-                          <Grid container spacing={2} sx={{ mt: 3 }}>
-                             {[
-                               { label: t.regionLabel, val: selectedPatient.region, icon: LocationOnIcon },
-                               { label: t.gender, val: t[selectedPatient.gender] || selectedPatient.gender, icon: TimelineIcon },
-                               { label: t.age || 'Age', val: `${selectedPatient.age || '—'} ${t.ageSuffix}`, icon: BiotechIcon },
-                             ].map((item, idx) => (
-                               <Grid size={{ xs: 4 }} key={idx}>
-                                  <Paper variant="outlined" sx={{ p: 1.5, textAlign: 'center', borderRadius: 1.5 }}>
-                                     <Typography variant="caption" sx={{ fontWeight: 800, color: 'text.secondary', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5, mb: 0.5 }}>
-                                        <item.icon fontSize="inherit" /> {item.label}
-                                     </Typography>
-                                     <Typography variant="body2" sx={{ fontWeight: 800 }}>{item.val}</Typography>
-                                  </Paper>
-                               </Grid>
-                             ))}
-                          </Grid>
-                       </CardContent>
-                    </Card>
-
-                    {/* Chart Card */}
-                    <Card elevation={0} sx={{ mb: 3 }}>
-                       <Box sx={{ p: 2, px: 3, borderBottom: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.primary.main, 0.01) }}>
-                          <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5 }}>{t.glucoseTrends}</Typography>
-                       </Box>
-                       <CardContent sx={{ p: 4 }}>
-                          <Box sx={{ h: 300 }}>
-                             {records.length > 0 ? (
-                               <ResponsiveContainer width="100%" height={300}>
-                                  <AreaChart data={chartData}>
-                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme.palette.divider} />
-                                     <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700 }} />
-                                     <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700 }} />
-                                     <Tooltip contentStyle={{ borderRadius: 4, border: `1px solid ${theme.palette.divider}` }} />
-                                     <Area type="monotone" dataKey="fasting" stroke={theme.palette.primary.main} strokeWidth={2.5} fill={alpha(theme.palette.primary.main, 0.05)} />
-                                     <Area type="monotone" dataKey="postMeal" stroke={theme.palette.secondary.main} strokeWidth={2.5} fill={alpha(theme.palette.secondary.main, 0.05)} />
-                                  </AreaChart>
-                               </ResponsiveContainer>
-                             ) : (
-                               <Box sx={{ py: 10, textAlign: 'center', opacity: 0.3 }}>
-                                  <TimelineIcon sx={{ fontSize:40, mb: 1 }} />
-                                  <Typography variant="caption" sx={{ display: 'block', fontWeight: 800 }}>{t.noRecords}</Typography>
-                               </Box>
-                             )}
-                          </Box>
-                       </CardContent>
-                    </Card>
-
-                    {/* Note Card */}
-                    <Card elevation={0}>
-                       <Box sx={{ p: 2, px: 3, borderBottom: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.primary.main, 0.01) }}>
-                          <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5 }}>{t.medicalConclusion}</Typography>
-                       </Box>
-                       <CardContent sx={{ p: 3 }}>
-                          <TextField
-                            fullWidth
-                            multiline
-                            rows={6}
-                            placeholder={t.writeNote + '...'}
-                            value={doctorNote}
-                            onChange={e => setDoctorNote(e.target.value)}
-                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
-                          />
-                          <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
-                             <Button variant="contained" startIcon={<SaveIcon />} onClick={handleSaveNote} sx={{ fontWeight: 800, borderRadius: 1.5 }}>{t.save}</Button>
-                          </Box>
-                       </CardContent>
-                    </Card>
-                 </Grid>
-
-                 {/* Side Summary */}
-                 <Grid size={{ xs: 12, lg: 4 }}>
-                    <Card elevation={0} sx={{ bgcolor: alpha(theme.palette.primary.main, 0.02), mb: 3 }}>
-                       <CardContent sx={{ p: 4 }}>
-                          <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5, color: 'text.secondary', display: 'block', mb: 1 }}>{t.totalRecords}</Typography>
-                          <Typography variant="h3" sx={{ fontWeight: 900, color: 'primary.main' }}>{records.length}</Typography>
-                          <Divider sx={{ my: 3, opacity: 0.5 }} />
-                          <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5, color: 'text.secondary', display: 'block', mb: 1 }}>{t.avgSugar}</Typography>
-                          <Typography variant="h4" sx={{ fontWeight: 900 }}>
-                            {(records.reduce((acc, curr) => acc + curr.fastingLevel, 0) / (records.length || 1)).toFixed(1)} <Typography component="span" variant="caption">mmol/l</Typography>
-                          </Typography>
-                       </CardContent>
-                    </Card>
-
-                    <Card elevation={0}>
-                       <Box sx={{ p: 2, px: 3, borderBottom: `1px solid ${theme.palette.divider}` }}>
-                          <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1 }}>{t.recentActivity}</Typography>
-                       </Box>
-                       <TableContainer>
-                          <Table size="small">
-                             <TableBody>
-                                {records.slice(-5).reverse().map(r => (
-                                  <TableRow key={r._id}>
-                                     <TableCell sx={{ fontSize: 10, fontWeight: 700, color: 'text.secondary' }}>{format(new Date(r.date), 'dd MMM')}</TableCell>
-                                     <TableCell align="right" sx={{ fontWeight: 900 }}>{r.fastingLevel} <Typography component="span" variant="caption" sx={{ fontSize: 8 }}>mmol/l</Typography></TableCell>
-                                  </TableRow>
-                                ))}
-                             </TableBody>
-                          </Table>
-                       </TableContainer>
-                    </Card>
-                 </Grid>
-              </Grid>
-           </Box>
-         )}
+            {isAdmin && (
+              <ListItem disablePadding sx={{ mt: 2 }}>
+                <ListItemButton
+                  onClick={() => navigate('/admin')}
+                  sx={{ borderRadius: 8, py: 1.5, bgcolor: theme.palette.background.paper, boxShadow: theme.palette.mode === 'dark' ? '4px 4px 10px rgba(0,0,0,0.4)' : '4px 4px 12px rgba(0,0,0,0.05), -4px -4px 12px rgba(255,255,255,0.8)', px: isMini ? 1.5 : 2, justifyContent: isMini ? 'center' : 'flex-start' }}
+                >
+                  <Box sx={{ minWidth: isMini ? 0 : 40, color: 'text.secondary' }}><AdminPanelSettingsIcon /></Box>
+                  {!isMini && <Typography sx={{ fontWeight: 700, fontSize: 13, color: 'text.secondary' }}>Admin Panel</Typography>}
+                </ListItemButton>
+              </ListItem>
+            )}
+          </List>
+          {/* Back to Home Button */}
+          <Box sx={{ px: 2, pb: 3, mt: 'auto' }}>
+            <Divider sx={{ mb: 2, opacity: 0.5 }} />
+            <ListItem disablePadding>
+              <ListItemButton
+                onClick={() => navigate('/')}
+                sx={{
+                  borderRadius: 8,
+                  py: 1.5,
+                  boxShadow: theme.palette.mode === 'dark' ? '4px 4px 10px rgba(0,0,0,0.4)' : '4px 4px 12px rgba(0,0,0,0.05), -4px -4px 12px rgba(255,255,255,0.8)',
+                  bgcolor: theme.palette.background.paper,
+                  px: isMini ? 1.5 : 2,
+                  justifyContent: isMini ? 'center' : 'flex-start',
+                  color: 'text.secondary',
+                  '&:hover': { color: 'secondary.main', bgcolor: alpha(theme.palette.secondary.main, 0.06) },
+                }}
+              >
+                <Box sx={{ minWidth: isMini ? 0 : 40, display: 'flex' }}>
+                  <ArrowBackIcon fontSize="small" />
+                </Box>
+                {!isMini && <Typography sx={{ fontWeight: 700, fontSize: 13 }}>Asosiy sahifa</Typography>}
+              </ListItemButton>
+            </ListItem>
+          </Box>
+        </Paper>
       </Box>
+
+      {/* Main Content - NO OVERLAP */}
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          p: { xs: 2, md: 5 },
+          overflow: 'auto',
+          minWidth: 0,
+        }}
+      >
+        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 4 }}>
+          <Box>
+            <Typography variant="h5" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 2 }}>
+              {currentTab === 'patient-detail' ? t.userDetail : t.myPatients}
+            </Typography>
+            <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', display: 'block' }}>
+              Doctor / {currentTab === 'patient-detail' ? 'Detail' : 'Patients'}
+            </Typography>
+          </Box>
+          <Stack direction="row" spacing={2} alignItems="center">
+            <IconButton sx={{ bgcolor: alpha(theme.palette.divider, 0.4) }}><NotificationsIcon fontSize="small" /></IconButton>
+            <Avatar src={user?.avatar} sx={{ width: 44, height: 44, borderRadius: 2, bgcolor: 'secondary.main', fontWeight: 900 }}>{user?.firstName?.[0]}</Avatar>
+          </Stack>
+        </Stack>
+
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentTab === 'patient-detail' ? `patient-${selectedPatient?._id}` : 'patients-list'}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            {/* ===== PATIENT LIST ===== */}
+            {currentTab === 'patients' && (
+              <Box>
+                <Paper elevation={0} sx={{ p: 2.5, mb: 4, borderRadius: 2, bgcolor: alpha(theme.palette.background.paper, 0.4), backdropFilter: 'blur(20px)', border: `1px solid ${theme.palette.divider}` }}>
+                  <TextField
+                    placeholder={t.search}
+                    fullWidth
+                    size="small"
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    InputProps={{ startAdornment: <SearchIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} /> }}
+                    sx={{ '& .MuiOutlinedInput-root': { bgcolor: alpha(theme.palette.background.default, 0.5) } }}
+                  />
+                </Paper>
+
+                <Grid container spacing={3}>
+                  {patients.map((p, idx) => (
+                    <Grid size={{ xs: 12, sm: 6, md: 4 }} key={p._id}>
+                      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }}>
+                        <Card
+                          elevation={0}
+                          onClick={() => openPatient(p)}
+                          sx={{
+                            cursor: 'pointer',
+                            borderRadius: 2,
+                            bgcolor: alpha(theme.palette.background.paper, 0.6),
+                            backdropFilter: 'blur(10px)',
+                            border: `1px solid ${theme.palette.divider}`,
+                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                            '&:hover': {
+                              transform: 'translateY(-5px)',
+                              boxShadow: `0 12px 24px -10px ${alpha(theme.palette.secondary.main, 0.2)}`,
+                              border: `1px solid ${alpha(theme.palette.secondary.main, 0.3)}`,
+                            }
+                          }}
+                        >
+                          <CardContent sx={{ p: 3 }}>
+                            <Stack direction="row" spacing={2.5} alignItems="center" sx={{ mb: 3 }}>
+                              <Avatar sx={{ borderRadius: 1.5, width: 56, height: 56, bgcolor: alpha(theme.palette.secondary.main, 0.1), color: 'secondary.main', fontWeight: 900, fontSize: 20 }}>{p.firstName?.[0]}</Avatar>
+                              <Box>
+                                <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>{p.firstName} {p.lastName}</Typography>
+                                <Chip label={p.diabetesType || 'Unknown'} size="small" sx={{ height: 20, fontSize: 10, fontWeight: 900, bgcolor: alpha(theme.palette.secondary.main, 0.1), color: 'secondary.main', border: 'none', mt: 0.5 }} />
+                              </Box>
+                            </Stack>
+                            <Divider sx={{ my: 2, opacity: 0.5 }} />
+                            <Stack direction="row" justifyContent="space-between" alignItems="center">
+                              <Box display="flex" alignItems="center" gap={1}>
+                                <LocationOnIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
+                                <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary' }}>{p.region || '—'}</Typography>
+                              </Box>
+                              <IconButton size="small" sx={{ bgcolor: alpha(theme.palette.secondary.main, 0.05) }}><ChevronRightIcon /></IconButton>
+                            </Stack>
+                          </CardContent>
+                        </Card>
+                      </motion.div>
+                    </Grid>
+                  ))}
+                </Grid>
+
+                {patients.length === 0 && (
+                  <Box sx={{ py: 15, textAlign: 'center', opacity: 0.2 }}>
+                    <PeopleAltIcon sx={{ fontSize: 80, mb: 2 }} />
+                    <Typography variant="h6" sx={{ fontWeight: 800 }}>{t.noPatients}</Typography>
+                  </Box>
+                )}
+              </Box>
+            )}
+
+            {/* ===== PATIENT DETAIL ===== */}
+            {currentTab === 'patient-detail' && selectedPatient && (
+              <Box>
+                <Button startIcon={<ArrowBackIcon />} onClick={() => setCurrentTab('patients')} sx={{ mb: 4, fontWeight: 900, borderRadius: 2, px: 3 }}>{t.patientList}</Button>
+
+                <Grid container spacing={4}>
+                  <Grid size={{ xs: 12, lg: 8 }}>
+                    {/* Patient Header Card */}
+                    <Card elevation={0} sx={{ mb: 4, borderRadius: 2, bgcolor: alpha(theme.palette.background.paper, 0.6), backdropFilter: 'blur(20px)', border: `2px solid ${alpha(theme.palette.secondary.main, 0.1)}`, p: 4 }}>
+                      <Stack direction={isMobile ? 'column' : 'row'} spacing={4} alignItems="center">
+                        <Avatar sx={{ width: 88, height: 88, borderRadius: 2, bgcolor: 'secondary.main', fontWeight: 900, fontSize: 32, boxShadow: `0 8px 16px ${alpha(theme.palette.secondary.main, 0.2)}` }}>{selectedPatient.firstName?.[0]}</Avatar>
+                        <Box sx={{ flexGrow: 1, textAlign: isMobile ? 'center' : 'left' }}>
+                          <Typography variant="h4" sx={{ fontWeight: 900, mb: 1 }}>{selectedPatient.firstName} {selectedPatient.lastName}</Typography>
+                          <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'secondary.main', textTransform: 'uppercase', letterSpacing: 1.5 }}>{selectedPatient.diabetesType}</Typography>
+                        </Box>
+                        <Stack direction="row" spacing={3}>
+                          <Box textAlign="center" px={2}>
+                            <Typography variant="caption" display="block" sx={{ fontWeight: 900, color: 'text.secondary' }}>GENDER</Typography>
+                            <Typography variant="body1" sx={{ fontWeight: 900 }}>{t[selectedPatient.gender] || selectedPatient.gender}</Typography>
+                          </Box>
+                          <Divider orientation="vertical" flexItem />
+                          <Box textAlign="center" px={2}>
+                            <Typography variant="caption" display="block" sx={{ fontWeight: 900, color: 'text.secondary' }}>AGE</Typography>
+                            <Typography variant="body1" sx={{ fontWeight: 900 }}>{selectedPatient.age || '—'}</Typography>
+                          </Box>
+                        </Stack>
+                      </Stack>
+                    </Card>
+
+                    {/* Fasting Chart */}
+                    <Card elevation={0} sx={{ mb: 4, borderRadius: 2, border: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.background.paper, 0.4), backdropFilter: 'blur(10px)' }}>
+                      <Box sx={{ p: 2.5, px: 4, borderBottom: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.primary.main, 0.05) }}>
+                        <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 2, color: 'primary.main' }}>Och Qoringa (Fasting)</Typography>
+                      </Box>
+                      <CardContent sx={{ p: 4 }}>
+                        <Box sx={{ height: 260 }}>
+                          {fastingRecords.length > 0 ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                              <AreaChart data={fastingRecords}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme.palette.divider} />
+                                <XAxis dataKey="date" tick={{ fontSize: 10, fontWeight: 700 }} />
+                                <YAxis tick={{ fontSize: 10, fontWeight: 700 }} />
+                                <Tooltip />
+                                <Area type="monotone" dataKey="level" stroke={theme.palette.primary.main} fill={theme.palette.primary.main} fillOpacity={0.1} strokeWidth={3} />
+                              </AreaChart>
+                            </ResponsiveContainer>
+                          ) : (
+                            <Box sx={{ py: 4, textAlign: 'center', opacity: 0.4 }}>
+                              <TimelineIcon sx={{ fontSize: 40, mb: 1 }} />
+                              <Typography variant="caption" display="block">Yozuvlar topilmadi</Typography>
+                            </Box>
+                          )}
+                        </Box>
+                      </CardContent>
+                    </Card>
+
+                    {/* Post-Meal Chart */}
+                    <Card elevation={0} sx={{ mb: 4, borderRadius: 2, border: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.background.paper, 0.4), backdropFilter: 'blur(10px)' }}>
+                      <Box sx={{ p: 2.5, px: 4, borderBottom: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.secondary.main, 0.05) }}>
+                        <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 2, color: 'secondary.main' }}>To'q Qoringa (Post-meal)</Typography>
+                      </Box>
+                      <CardContent sx={{ p: 4 }}>
+                        <Box sx={{ height: 260 }}>
+                          {postMealRecords.length > 0 ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                              <AreaChart data={postMealRecords}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme.palette.divider} />
+                                <XAxis dataKey="date" tick={{ fontSize: 10, fontWeight: 700 }} />
+                                <YAxis tick={{ fontSize: 10, fontWeight: 700 }} />
+                                <Tooltip />
+                                <Area type="monotone" dataKey="level" stroke={theme.palette.secondary.main} fill={theme.palette.secondary.main} fillOpacity={0.1} strokeWidth={3} />
+                              </AreaChart>
+                            </ResponsiveContainer>
+                          ) : (
+                            <Box sx={{ py: 4, textAlign: 'center', opacity: 0.4 }}>
+                              <TimelineIcon sx={{ fontSize: 40, mb: 1 }} />
+                              <Typography variant="caption" display="block">Yozuvlar topilmadi</Typography>
+                            </Box>
+                          )}
+                        </Box>
+                      </CardContent>
+                    </Card>
+
+                    {/* Medical Notes */}
+                    <Card elevation={0} sx={{ borderRadius: 2, border: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.background.paper, 0.4), backdropFilter: 'blur(10px)' }}>
+                      <Box sx={{ p: 2.5, px: 4, borderBottom: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.primary.main, 0.02) }}>
+                        <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 2 }}>{t.medicalConclusion || 'Tibbiy Xulosa'}</Typography>
+                      </Box>
+                      <CardContent sx={{ p: 4 }}>
+                        <TextField
+                          fullWidth
+                          multiline
+                          rows={6}
+                          placeholder={`${t.writeNote || 'Xulosa yozing'}...`}
+                          value={doctorNote}
+                          onChange={e => setDoctorNote(e.target.value)}
+                          sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2, bgcolor: alpha(theme.palette.background.default, 0.4) } }}
+                        />
+                        <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
+                          <Button variant="contained" color="secondary" startIcon={<SaveIcon />} onClick={handleSaveNote} sx={{ fontWeight: 900, borderRadius: 2, px: 5, py: 1.2, boxShadow: `0 8px 16px ${alpha(theme.palette.secondary.main, 0.2)}` }}>{t.save || 'Saqlash'}</Button>
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+
+                  {/* Stats Sidebar */}
+                  <Grid size={{ xs: 12, lg: 4 }}>
+                    <Card elevation={0} sx={{ mb: 4, borderRadius: 2, bgcolor: alpha(theme.palette.secondary.main, 0.08), border: `1px solid ${alpha(theme.palette.secondary.main, 0.15)}`, p: 4 }}>
+                      <Stack spacing={4}>
+                        <Box>
+                          <Typography variant="caption" sx={{ fontWeight: 900, color: 'secondary.main', textTransform: 'uppercase', letterSpacing: 1.5, display: 'block', mb: 1 }}>{t.totalRecords || 'Jami Yozuvlar'}</Typography>
+                          <Typography variant="h2" sx={{ fontWeight: 900 }}>{records.length}</Typography>
+                        </Box>
+                        <Divider />
+                        <Box>
+                          <Typography variant="caption" sx={{ fontWeight: 900, color: 'secondary.main', textTransform: 'uppercase', letterSpacing: 1.5, display: 'block', mb: 1 }}>{t.avgSugar || "O'rtacha Qand"}</Typography>
+                          <Typography variant="h3" sx={{ fontWeight: 900 }}>
+                            {records.length > 0
+                              ? (records.reduce((acc, curr) => acc + (curr.fastingLevel || curr.level || 0), 0) / records.length).toFixed(1)
+                              : '—'}
+                            <Typography component="span" variant="h6" sx={{ ml: 1, color: 'text.secondary' }}>mmol/l</Typography>
+                          </Typography>
+                        </Box>
+                      </Stack>
+                    </Card>
+
+                    <Card elevation={0} sx={{ borderRadius: 2, border: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.background.paper, 0.4), backdropFilter: 'blur(10px)' }}>
+                      <Box sx={{ p: 2.5, px: 4, borderBottom: `1px solid ${theme.palette.divider}` }}>
+                        <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5 }}>{t.recentActivity || 'Oxirgi Yozuvlar'}</Typography>
+                      </Box>
+                      <TableContainer>
+                        <Table size="medium">
+                          <TableBody>
+                            {records.slice(-5).reverse().map((r) => (
+                              <TableRow key={r._id} sx={{ '&:last-child td': { border: 0 } }}>
+                                <TableCell sx={{ py: 2.5 }}>
+                                  <Typography variant="body2" sx={{ fontWeight: 800 }}>{format(new Date(r.date), 'dd MMMM')}</Typography>
+                                  <Typography variant="caption" color="text.secondary">{format(new Date(r.date), 'HH:mm')}</Typography>
+                                </TableCell>
+                                <TableCell align="right" sx={{ py: 2.5 }}>
+                                  <Typography variant="subtitle2" sx={{ fontWeight: 900, color: (r.fastingLevel || r.level) > 7 ? 'error.main' : 'success.main' }}>
+                                    {r.fastingLevel || r.level || 0}
+                                    <Typography component="span" variant="caption" sx={{ fontSize: 9, ml: 0.5 }}>mmol/l</Typography>
+                                  </Typography>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                            {records.length === 0 && (
+                              <TableRow>
+                                <TableCell colSpan={2} align="center" sx={{ py: 4, opacity: 0.4 }}>
+                                  <Typography variant="caption">Yozuvlar mavjud emas</Typography>
+                                </TableCell>
+                              </TableRow>
+                            )}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    </Card>
+                  </Grid>
+                </Grid>
+              </Box>
+            )}
+          </motion.div>
+        </AnimatePresence>
+      </Box>
+      <Toaster position="top-right" richColors />
     </Box>
   );
 }
