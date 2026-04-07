@@ -36,7 +36,8 @@ const requireRole = (...roles) => {
   };
 };
 
-const requireSuperAdmin = requireRole('superadmin');
-const requireDoctor = requireRole('superadmin', 'doctor');
+const requireSuperAdmin = requireRole('superadmin', 'admin');
+const requireStrictSuperAdmin = requireRole('superadmin');
+const requireDoctor = requireRole('superadmin', 'admin', 'doctor');
 
-module.exports = { protect, requireRole, requireSuperAdmin, requireDoctor };
+module.exports = { protect, requireRole, requireSuperAdmin, requireStrictSuperAdmin, requireDoctor };

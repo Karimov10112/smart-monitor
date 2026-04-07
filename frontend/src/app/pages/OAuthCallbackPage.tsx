@@ -22,7 +22,8 @@ export default function OAuthCallbackPage() {
       authAPI.getMe().then(({ data }) => {
         login(token, refreshToken, data.user);
         if (needsProfile) navigate('/complete-profile');
-        else if (data.user.role === 'superadmin') navigate('/admin');
+        else if (['superadmin', 'admin'].includes(data.user.role)) navigate('/admin');
+        else if (data.user.role === 'doctor') navigate('/doctor');
         else navigate('/');
       }).catch(() => navigate('/login?error=oauth_failed'));
     } else {

@@ -1,15 +1,15 @@
 const userRepository = require('../repositories/UserRepository');
 const bloodSugarRepository = require('../repositories/BloodSugarRepository');
+const { logAction } = require('../utils/auditLogger');
+const AuditLog = require('../models/AuditLog');
 
 const getAdminContacts = async (req, res) => {
   try {
-    const admin = await userRepository.findOne({ role: 'superadmin' });
+    const Config = require('../models/Config');
+    const contacts = await Config.findOne({ key: 'admin_contacts' });
     res.json({
       success: true,
-      contacts: {
-        phone: admin?.phone || '',
-        telegramUsername: admin?.telegramUsername || ''
-      }
+      contacts: contacts?.value || { phone: '', telegramUsername: '' }
     });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Server xatosi' });
@@ -18,20 +18,21 @@ const getAdminContacts = async (req, res) => {
 
 const updateAdminContacts = async (req, res) => {
   try {
+    const Config = require('../models/Config');
     const { phone, telegramUsername } = req.body;
     
-    const admin = await userRepository.updateOne(
-       { role: 'superadmin' }, 
-       { phone, telegramUsername }
-    );
+    let config = await Config.findOne({ key: 'admin_contacts' });
+    if (!config) {
+      config = new Config({ key: 'admin_contacts', value: {} });
+    }
+    
+    config.value = { ...config.value, phone, telegramUsername };
+    await config.save();
     
     res.json({ 
       success: true, 
       message: 'Sozlamalar yangilandi',
-      contacts: { 
-        phone: admin.phone, 
-        telegramUsername: admin.telegramUsername
-      }
+      contacts: config.value
     });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Server xatosi' });
@@ -87,7 +88,8 @@ const getAllUsers = async (req, res) => {
       select: '-password -emailOTP -passwordResetToken -refreshToken',
       sort: { createdAt: -1 },
       skip: (Number(page) - 1) * Number(limit),
-      limit: Number(limit)
+      limit: Number(limit),
+      populate: { path: 'assignedDoctor', select: 'firstName lastName' }
     });
 
     res.json({
@@ -105,8 +107,15 @@ const getAllUsers = async (req, res) => {
 // Get single user details
 const getUserById = async (req, res) => {
   try {
-    const user = await userRepository.findById(req.params.id);
+    const user = await userRepository.findById(req.params.id, {
+      populate: { path: 'assignedDoctor', select: 'firstName lastName' }
+    });
     if (!user) return res.status(404).json({ success: false, message: 'Topilmadi' });
+
+    // Restriction: Non-superadmins cannot view superadmin data
+    if (user.role === 'superadmin' && req.user.role !== 'superadmin') {
+      return res.status(403).json({ success: false, message: 'Super Admin ma\'lumotlarini ko\'rish taqiqlangan' });
+    }
 
     const records = await bloodSugarRepository.find({ user: user._id }, {
       sort: { date: -1 },
@@ -119,17 +128,55 @@ const getUserById = async (req, res) => {
   }
 };
 
+const getUserRecords = async (req, res) => {
+  try {
+    const targetUser = await userRepository.findById(req.params.id);
+    if (!targetUser) return res.status(404).json({ success: false, message: 'Topilmadi' });
+
+    // Restriction: Non-superadmins cannot view superadmin records
+    if (targetUser.role === 'superadmin' && req.user.role !== 'superadmin') {
+      return res.status(403).json({ success: false, message: 'Super Admin tahlillarini ko\'rish taqiqlangan' });
+    }
+
+    const records = await bloodSugarRepository.find({ user: req.params.id }, {
+      sort: { date: -1 },
+      limit: 100
+    });
+    res.json({ success: true, records });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Server xatosi' });
+  }
+};
+
 // Update user role
 const updateUserRole = async (req, res) => {
   try {
     const { role } = req.body;
-    if (!['user', 'doctor', 'superadmin'].includes(role)) {
-      return res.status(400).json({ success: false, message: 'Noto\'g\'ri rol' });
+    if (!['user', 'doctor', 'admin'].includes(role)) {
+      return res.status(400).json({ success: false, message: 'Noto\'g\'ri rol yoki Super Admin tayinlash mumkin emas' });
     }
 
-    const user = await userRepository.findByIdAndUpdate(req.params.id, { role });
+    const targetUser = await userRepository.findById(req.params.id);
+    if (!targetUser) return res.status(404).json({ success: false, message: 'Topilmadi' });
 
-    res.json({ success: true, user });
+    // Restriction: Cannot change Super Admin role
+    if (targetUser.role === 'superadmin') {
+      return res.status(403).json({ success: false, message: 'Super Admin rolini o\'zgartirib bo\'lmaydi' });
+    }
+
+    const oldRole = targetUser.role;
+    targetUser.role = role;
+    await targetUser.save();
+
+    // Log the action
+    await logAction(req.user._id, 'UPDATE_USER_ROLE', {
+      targetId: targetUser._id,
+      targetType: 'User',
+      details: { oldRole, newRole: role, userEmail: targetUser.email },
+      req
+    });
+
+    res.json({ success: true, user: targetUser });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Server xatosi' });
   }
@@ -142,9 +189,22 @@ const toggleBanUser = async (req, res) => {
     const user = await userRepository.findById(req.params.id);
     if (!user) return res.status(404).json({ success: false, message: 'Topilmadi' });
 
+    // Restriction: Cannot ban Super Admin
+    if (user.role === 'superadmin') {
+      return res.status(403).json({ success: false, message: 'Super Adminni bloklash mumkin emas' });
+    }
+
     user.isBanned = !user.isBanned;
     user.banReason = user.isBanned ? reason : undefined;
     await user.save();
+
+    // Log the action
+    await logAction(req.user._id, user.isBanned ? 'BAN_USER' : 'UNBAN_USER', {
+      targetId: user._id,
+      targetType: 'User',
+      details: { userEmail: user.email, reason },
+      req
+    });
 
     res.json({
       success: true,
@@ -162,10 +222,22 @@ const deleteUser = async (req, res) => {
     const user = await userRepository.findById(req.params.id);
     if (!user) return res.status(404).json({ success: false, message: 'Topilmadi' });
     
-    // You might want to move these to repositories as well
+    // Restriction: Cannot delete Super Admin
+    if (user.role === 'superadmin') {
+      return res.status(403).json({ success: false, message: 'Super Adminni o\'chirib bo\'lmaydi' });
+    }
+
     const BloodSugarModel = require('../models/BloodSugar');
     await BloodSugarModel.deleteMany({ user: user._id });
     await userRepository.findByIdAndDelete(req.params.id);
+
+    // Log the action
+    await logAction(req.user._id, 'DELETE_USER', {
+      targetId: user._id,
+      targetType: 'User',
+      details: { userEmail: user.email },
+      req
+    });
 
     res.json({ success: true, message: 'Foydalanuvchi o\'chirildi' });
   } catch (err) {
@@ -229,10 +301,58 @@ const getDashboardStats = async (req, res) => {
   }
 };
 
-const getUserRecords = async (req, res) => {
+const getAuditLogs = async (req, res) => {
   try {
-    const records = await bloodSugarRepository.find({ user: req.params.id }, { sort: { date: -1 } });
-    res.json({ success: true, records });
+    const { page = 1, limit = 50 } = req.query;
+
+    const logs = await AuditLog.find()
+      .populate('adminId', 'firstName lastName email role')
+      .sort({ createdAt: -1 })
+      .skip((Number(page) - 1) * Number(limit))
+      .limit(Number(limit));
+
+    const total = await AuditLog.countDocuments();
+
+    res.json({
+      success: true,
+      logs,
+      total,
+      pages: Math.ceil(total / limit),
+      currentPage: Number(page),
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Audit jurnallarini yuklashda xato' });
+  }
+};
+
+const getDoctors = async (req, res) => {
+  try {
+    const doctors = await userRepository.find({ role: 'doctor' }, {
+      select: 'firstName lastName email region district'
+    });
+    res.json({ success: true, doctors });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Server xatosi' });
+  }
+};
+
+const assignDoctor = async (req, res) => {
+  try {
+    const { doctorId } = req.body;
+    const user = await userRepository.findById(req.params.id);
+    if (!user) return res.status(404).json({ success: false, message: 'Foydalanuvchi topilmadi' });
+
+    user.assignedDoctor = doctorId || null;
+    await user.save();
+
+    await logAction(req.user._id, 'ASSIGN_DOCTOR', {
+      targetId: user._id,
+      targetType: 'User',
+      details: { doctorId, userEmail: user.email },
+      req
+    });
+
+    res.json({ success: true, message: 'Doktor biriktirildi', user });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Server xatosi' });
   }
@@ -249,4 +369,7 @@ module.exports = {
   getUserRecords,
   getAdminContacts,
   updateAdminContacts,
+  getAuditLogs,
+  getDoctors,
+  assignDoctor,
 };

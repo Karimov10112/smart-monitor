@@ -8,9 +8,8 @@ exports.getPatients = async (req, res) => {
   try {
     const { search } = req.query;
     
-    // Find users who have this doctor's name or common users if no specific assignment
-    // For now, let's allow doctors to see all users who have entered a doctor name or just all users for simplicity
-    let query = { role: 'user' };
+    // Filter users specifically assigned to this doctor
+    let query = { role: 'user', assignedDoctor: req.user._id };
     
     if (search) {
       query.$or = [

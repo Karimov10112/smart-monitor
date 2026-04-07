@@ -116,7 +116,8 @@ export default function CompleteProfilePage() {
         }
         toast.success(t.success);
         updateUser(data.user);
-        setTimeout(() => navigate(user?.role === 'superadmin' ? '/admin' : '/'), 300);
+        const targetPath = ['superadmin', 'admin'].includes(data.user.role) ? '/admin' : (data.user.role === 'doctor' ? '/doctor' : '/');
+        setTimeout(() => navigate(targetPath), 300);
       }
     } catch (err: any) {
       toast.error(err.response?.data?.message || t.error);

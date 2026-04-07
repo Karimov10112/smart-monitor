@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { authAPI } from '../utils/api';
 
-export type UserRole = 'user' | 'doctor' | 'superadmin';
+export type UserRole = 'user' | 'doctor' | 'admin' | 'superadmin';
 
 export interface User {
   _id: string;
@@ -44,6 +44,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   updateUser: (user: any) => void;
   isAuthenticated: boolean;
+  isAdmin: boolean;
   isSuperAdmin: boolean;
 }
 
@@ -100,6 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user, token, loading,
       login, logout, updateUser,
       isAuthenticated: !!user,
+      isAdmin: user?.role === 'admin' || user?.role === 'superadmin',
       isSuperAdmin: user?.role === 'superadmin',
     }}>
       {children}

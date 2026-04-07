@@ -78,7 +78,7 @@ import { Toaster, toast } from 'sonner';
 const SIDEBAR_WIDTH = 300;
 
 function App() {
-  const { user, isAuthenticated, logout, loading, updateUser } = useAuth();
+  const { user, isAuthenticated, logout, loading, updateUser, isAdmin } = useAuth();
   const { language, setLanguage, socket, isDarkMode, toggleDarkMode } = useApp();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('lg'));
@@ -229,13 +229,13 @@ function App() {
             {user?.firstName}
           </Typography>
           <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
-            {user?.role === 'superadmin' ? 'Administrator' : (t.user || 'User')}
+            {isAdmin ? 'Administrator' : (user?.role === 'doctor' ? (t.doctor || 'Doctor') : (t.user || 'User'))}
           </Typography>
         </Box>
       </Stack>
 
       <List sx={{ flexGrow: 1 }}>
-        {(user?.isProfileComplete || user?.role === 'superadmin') && [
+        {(user?.isProfileComplete || isAdmin) && [
           { id: 'journal', label: t.dailyJournal || 'Journal', icon: <AssignmentIcon fontSize="small" />, path: '/?tab=journal' },
           { id: 'statistics', label: t.statistics || 'Stats', icon: <BarChartIcon fontSize="small" />, path: '/?tab=statistics' },
           { id: 'products', label: t.products || 'Products', icon: <StorageIcon fontSize="small" />, path: '/?tab=products' },
@@ -258,7 +258,7 @@ function App() {
           </ListItem>
         ))}
 
-        {user?.isProfileComplete && user?.role === 'superadmin' && (
+        {user?.isProfileComplete && isAdmin && (
           <ListItem disablePadding sx={{ mb: 0.5 }}>
             <ListItemButton 
               component={RouterLink} 
@@ -273,6 +273,25 @@ function App() {
             >
               <ListItemIcon sx={{ minWidth: 40 }}><AdminPanelSettingsIcon fontSize="small" /></ListItemIcon>
               <ListItemText primary={t.adminPanel} primaryTypographyProps={{ fontWeight: 700, fontSize: '0.875rem' }} />
+            </ListItemButton>
+          </ListItem>
+        )}
+
+        {(user?.role === 'doctor' || isAdmin) && (
+          <ListItem disablePadding sx={{ mb: 0.5 }}>
+            <ListItemButton 
+              component={RouterLink} 
+              to="/doctor" 
+              selected={!isReminderModalOpen && location.pathname === '/doctor'}
+              onClick={() => { setIsSidebarOpen(false); setIsReminderModalOpen(false); }} 
+              sx={{ 
+                borderRadius: 1.5, 
+                py: 1,
+                '&.Mui-selected': { bgcolor: alpha(theme.palette.primary.main, 0.08), color: 'primary.main', '& .MuiListItemIcon-root': { color: 'primary.main' } },
+              }}
+            >
+              <ListItemIcon sx={{ minWidth: 40 }}><MedicalServicesIcon fontSize="small" /></ListItemIcon>
+              <ListItemText primary={t.doctorPanel || 'Doctor Panel'} primaryTypographyProps={{ fontWeight: 700, fontSize: '0.875rem' }} />
             </ListItemButton>
           </ListItem>
         )}
@@ -408,8 +427,8 @@ function App() {
               ) : <Navigate to="/complete-profile" replace />
             } />
             <Route path="/complete-profile" element={<CompleteProfilePage />} />
-            <Route path="/admin" element={user?.isProfileComplete && user?.role === 'superadmin' ? <AdminPage /> : <Navigate to="/complete-profile" replace />} />
-            <Route path="/doctor" element={user?.isProfileComplete && user?.role === 'doctor' ? <DoctorPage /> : <Navigate to="/complete-profile" replace />} />
+            <Route path="/admin" element={isAdmin ? <AdminPage /> : (user?.isProfileComplete ? <Navigate to="/" replace /> : <Navigate to="/complete-profile" replace />)} />
+            <Route path="/doctor" element={user?.role === 'doctor' || isAdmin ? <DoctorPage /> : (user?.isProfileComplete ? <Navigate to="/" replace /> : <Navigate to="/complete-profile" replace />)} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Box>

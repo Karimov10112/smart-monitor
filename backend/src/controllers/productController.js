@@ -1,4 +1,5 @@
 const productRepository = require('../repositories/ProductRepository');
+const { logAction } = require('../utils/auditLogger');
 
 // Get all products with filters
 const getProducts = async (req, res) => {
@@ -33,6 +34,15 @@ const addProduct = async (req, res) => {
       ...req.body,
       createdBy: req.user._id,
     });
+
+    // Log the action
+    await logAction(req.user._id, 'ADD_PRODUCT', {
+      targetId: product._id,
+      targetType: 'Product',
+      details: { productName: product.name.uz },
+      req
+    });
+
     res.status(201).json({ success: true, product });
   } catch (err) {
     console.error('Add product error:', err.message);
@@ -45,6 +55,15 @@ const updateProduct = async (req, res) => {
   try {
     const product = await productRepository.findByIdAndUpdate(req.params.id, req.body);
     if (!product) return res.status(404).json({ success: false, message: 'Topilmadi' });
+
+    // Log the action
+    await logAction(req.user._id, 'UPDATE_PRODUCT', {
+      targetId: product._id,
+      targetType: 'Product',
+      details: { productName: product.name.uz },
+      req
+    });
+
     res.json({ success: true, product });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Yangilashda xato' });
@@ -56,6 +75,15 @@ const deleteProduct = async (req, res) => {
   try {
     const product = await productRepository.findByIdAndUpdate(req.params.id, { isActive: false });
     if (!product) return res.status(404).json({ success: false, message: 'Topilmadi' });
+
+    // Log the action
+    await logAction(req.user._id, 'DELETE_PRODUCT', {
+      targetId: product._id,
+      targetType: 'Product',
+      details: { productName: product.name.uz },
+      req
+    });
+
     res.json({ success: true, message: 'Mahsulot o\'chirildi' });
   } catch (err) {
     res.status(500).json({ success: false, message: 'O\'chirishda xato' });

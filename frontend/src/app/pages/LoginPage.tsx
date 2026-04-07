@@ -62,7 +62,9 @@ export default function LoginPage() {
       if (data.success) {
         login(data.token, data.refreshToken, data.user);
         toast.success(t.success);
-        navigate(data.user.role === 'superadmin' ? '/admin' : '/');
+        if (['superadmin', 'admin'].includes(data.user.role)) navigate('/admin');
+        else if (data.user.role === 'doctor') navigate('/doctor');
+        else navigate('/');
       }
     } catch (err: any) {
       toast.error(err.response?.data?.message || t.error);

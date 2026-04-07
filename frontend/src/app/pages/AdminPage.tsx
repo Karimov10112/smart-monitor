@@ -61,11 +61,12 @@ import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
 import BlockIcon from '@mui/icons-material/Block';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import SettingsIcon from '@mui/icons-material/Settings';
 import TimelineIcon from '@mui/icons-material/Timeline';
 import SaveIcon from '@mui/icons-material/Save';
 
-type TabType = 'dashboard' | 'users' | 'products' | 'settings';
+import HistoryIcon from '@mui/icons-material/History';
+
+type TabType = 'dashboard' | 'users' | 'products' | 'audit';
 
 export default function AdminPage() {
   const { user } = useAuth();
@@ -108,8 +109,12 @@ export default function AdminPage() {
     advice: { uz: '', ru: '', en: '' }
   });
 
-  const [adminContacts, setAdminContacts] = useState({ phone: '', telegramUsername: '', deepseekApiKey: '' });
-  const [savingContacts, setSavingContacts] = useState(false);
+  const [availableDoctors, setAvailableDoctors] = useState<any[]>([]);
+
+  // Audit Logs State
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
+  const [auditLoading, setAuditLoading] = useState(false);
+  const [auditTotal, setAuditTotal] = useState(0);
 
   useEffect(() => {
     loadAll();
@@ -118,31 +123,11 @@ export default function AdminPage() {
   const loadAll = async () => {
     setLoading(true);
     try {
-      await Promise.all([loadStats(), loadUsers(), loadProducts(), loadContacts()]);
+      await Promise.all([loadStats(), loadUsers(), loadProducts(), loadDoctors()]);
     } catch (err) { }
     finally { setLoading(false); }
   };
 
-  const loadContacts = async () => {
-    try {
-      const { data } = await adminAPI.getContacts();
-      if (data.success) setAdminContacts(data.contacts);
-    } catch { }
-  };
-
-  const handleSaveContacts = async () => {
-    setSavingContacts(true);
-    try {
-      const { data } = await adminAPI.updateContacts(adminContacts);
-      if (data.success) {
-        toast.success(t.success || 'Saqlandi');
-      }
-    } catch {
-      toast.error(t.error || 'Xato yuz berdi');
-    } finally {
-      setSavingContacts(false);
-    }
-  };
 
   const loadStats = async () => {
     try {
@@ -163,6 +148,24 @@ export default function AdminPage() {
       const { data } = await productAPI.getAll();
       setProducts(data.products || []);
     } catch { }
+  };
+
+  const loadDoctors = async () => {
+    try {
+      const { data } = await adminAPI.getDoctors();
+      if (data.success) setAvailableDoctors(data.doctors || []);
+    } catch { }
+  };
+
+  const loadAuditLogs = async () => {
+    if (user?.role !== 'superadmin') return;
+    setAuditLoading(true);
+    try {
+      const { data } = await adminAPI.getAuditLogs({ limit: 50 });
+      setAuditLogs(data.logs || []);
+      setAuditTotal(data.total || 0);
+    } catch { }
+    finally { setAuditLoading(false); }
   };
 
   const loadSpecificUser = async (userId: string) => {
@@ -251,7 +254,9 @@ export default function AdminPage() {
           <Tab value="dashboard" label={t.dashboard || 'Dashboard'} icon={<DashboardIcon fontSize="small" />} iconPosition="start" />
           <Tab value="users" label={t.users || 'Users'} icon={<PeopleIcon fontSize="small" />} iconPosition="start" />
           <Tab value="products" label={t.products || 'Products'} icon={<InventoryIcon fontSize="small" />} iconPosition="start" />
-          <Tab value="settings" label={t.settings || 'Settings'} icon={<SettingsIcon fontSize="small" />} iconPosition="start" />
+          {user?.role === 'superadmin' && (
+            <Tab value="audit" label="Audit" icon={<HistoryIcon fontSize="small" />} iconPosition="start" onClick={loadAuditLogs} />
+          )}
           {selectedUserId && (
             <Tab
               value="user-detail"
@@ -317,7 +322,7 @@ export default function AdminPage() {
                     <MenuItem value="">{t.allStatuses || 'All'}</MenuItem>
                     <MenuItem value="user">User</MenuItem>
                     <MenuItem value="doctor">Doctor</MenuItem>
-                    <MenuItem value="superadmin">SuperAdmin</MenuItem>
+                    <MenuItem value="admin">Admin</MenuItem>
                   </Select>
                 </FormControl>
                 <Button variant="outlined" onClick={() => { setSearch(''); setRole(''); }} sx={{ fontWeight: 800 }}>{t.refresh}</Button>
@@ -339,8 +344,17 @@ export default function AdminPage() {
                       <TableRow
                         key={u._id}
                         hover
-                        sx={{ cursor: 'pointer' }}
-                        onClick={() => { setSelectedUserId(u._id); loadSpecificUser(u._id); }}
+                        sx={{ 
+                          cursor: (u.role === 'superadmin' && user?.role !== 'superadmin') ? 'default' : 'pointer',
+                          opacity: (u.role === 'superadmin' && user?.role !== 'superadmin') ? 0.8 : 1
+                        }}
+                        onClick={() => { 
+                          if (u.role === 'superadmin' && user?.role !== 'superadmin') {
+                            return toast.error("Super Admin ma'lumotlarini ko'rish taqiqlangan");
+                          }
+                          setSelectedUserId(u._id); 
+                          loadSpecificUser(u._id); 
+                        }}
                       >
                         <TableCell>
                           <Stack direction="row" spacing={2} alignItems="center">
@@ -348,7 +362,16 @@ export default function AdminPage() {
                               {u.firstName?.[0]}
                             </Avatar>
                             <Box>
-                              <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>{u.firstName} {u.lastName}</Typography>
+                              <Stack direction="row" spacing={1} alignItems="center">
+                                <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>{u.firstName} {u.lastName}</Typography>
+                                {u.role === 'superadmin' && user?.role !== 'superadmin' && (
+                                  <Chip 
+                                    label="RESTRICTED" 
+                                    size="small" 
+                                    sx={{ height: 16, fontSize: 7, fontWeight: 900, bgcolor: alpha(theme.palette.error.main, 0.1), color: 'error.main' }} 
+                                  />
+                                )}
+                              </Stack>
                               <Typography variant="caption" color="text.secondary">{u.email}</Typography>
                             </Box>
                           </Stack>
@@ -374,8 +397,10 @@ export default function AdminPage() {
                             <IconButton
                               size="small"
                               color="error"
+                              disabled={u.role === 'superadmin' && user?.role !== 'superadmin'}
                               onClick={(e) => {
                                 e.stopPropagation();
+                                if (u.role === 'superadmin') return toast.error("Super Adminni o'chirib bo'lmaydi");
                                 if (confirm("O'chirilsinmi?")) adminAPI.deleteUser(u._id).then(() => loadUsers());
                               }}
                             >
@@ -391,19 +416,35 @@ export default function AdminPage() {
             ) : (
               <Stack spacing={2}>
                 {users.map(u => (
-                  <Card 
-                    key={u._id} 
-                    elevation={0} 
-                    sx={{ border: `1px solid ${theme.palette.divider}`, borderRadius: 2 }}
-                    onClick={() => { setSelectedUserId(u._id); loadSpecificUser(u._id); }}
-                  >
+                    <Card 
+                      key={u._id} 
+                      elevation={0} 
+                      sx={{ 
+                        border: `1px solid ${theme.palette.divider}`, 
+                        borderRadius: 2,
+                        cursor: (u.role === 'superadmin' && user?.role !== 'superadmin') ? 'default' : 'pointer',
+                        opacity: (u.role === 'superadmin' && user?.role !== 'superadmin') ? 0.8 : 1
+                      }}
+                      onClick={() => { 
+                        if (u.role === 'superadmin' && user?.role !== 'superadmin') {
+                          return toast.error("Super Admin ma'lumotlarini ko'rish taqiqlangan");
+                        }
+                        setSelectedUserId(u._id); 
+                        loadSpecificUser(u._id); 
+                      }}
+                    >
                     <CardContent sx={{ p: 2 }}>
                        <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
                           <Avatar sx={{ borderRadius: 1.5, bgcolor: alpha(theme.palette.primary.main, 0.1), color: 'primary.main', fontWeight: 800 }}>
                             {u.firstName?.[0]}
                           </Avatar>
                           <Box sx={{ flexGrow: 1 }}>
-                            <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>{u.firstName} {u.lastName}</Typography>
+                            <Stack direction="row" spacing={1} alignItems="center">
+                              <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>{u.firstName} {u.lastName}</Typography>
+                              {u.role === 'superadmin' && user?.role !== 'superadmin' && (
+                                <Box component="span" sx={{ color: 'error.main', display: 'flex' }}><BlockIcon sx={{ fontSize: 12 }} /></Box>
+                              )}
+                            </Stack>
                             <Typography variant="caption" color="text.secondary">{u.email}</Typography>
                           </Box>
                           <Chip 
@@ -420,8 +461,10 @@ export default function AdminPage() {
                           </Box>
                           <IconButton
                               size="small" color="error"
+                              disabled={u.role === 'superadmin' && user?.role !== 'superadmin'}
                               onClick={(e) => {
                                 e.stopPropagation();
+                                if (u.role === 'superadmin') return toast.error("Super Adminni o'chirib bo'lmaydi");
                                 if (confirm("O'chirilsinmi?")) adminAPI.deleteUser(u._id).then(() => loadUsers());
                               }}
                               sx={{ border: `1px solid ${alpha(theme.palette.error.main, 0.1)}`, borderRadius: 1 }}
@@ -538,13 +581,42 @@ export default function AdminPage() {
                         >
                           <MenuItem value="user">User</MenuItem>
                           <MenuItem value="doctor">Doctor</MenuItem>
-                          <MenuItem value="superadmin">SuperAdmin</MenuItem>
+                          <MenuItem value="admin">Admin</MenuItem>
+                        </Select>
+                     </FormControl>
+
+                     <FormControl size="small" sx={{ minWidth: 180 }}>
+                        <InputLabel>Assign Doctor</InputLabel>
+                        <Select
+                          value={selectedUser.assignedDoctor?._id || selectedUser.assignedDoctor || ''} 
+                          label="Assign Doctor"
+                          disabled={selectedUser.role !== 'user'}
+                          onChange={e => {
+                             const docId = e.target.value;
+                             adminAPI.assignDoctor(selectedUser._id, docId || null).then(() => {
+                                toast.success('Doktor muvaffaqiyatli biriktirildi');
+                                loadSpecificUser(selectedUser._id);
+                                loadUsers();
+                             });
+                          }}
+                          sx={{ fontWeight: 800, fontSize: 13 }}
+                        >
+                          <MenuItem value=""><em>None</em></MenuItem>
+                          {availableDoctors.map(doc => (
+                             <MenuItem key={doc._id} value={doc._id}>
+                                {doc.firstName} {doc.lastName}
+                             </MenuItem>
+                          ))}
                         </Select>
                      </FormControl>
                      <Button 
                        variant="outlined" 
                        color={selectedUser.isBanned ? 'success' : 'warning'} 
-                       onClick={() => adminAPI.toggleBan(selectedUser._id).then(() => loadSpecificUser(selectedUser._id))}
+                       disabled={selectedUser.role === 'superadmin'}
+                       onClick={() => {
+                         if (selectedUser.role === 'superadmin') return toast.error("Super Adminni bloklash mumkin emas");
+                         adminAPI.toggleBan(selectedUser._id).then(() => loadSpecificUser(selectedUser._id));
+                       }}
                        sx={{ fontWeight: 800, minWidth: 100 }}
                      >
                        {selectedUser.isBanned ? 'Unban' : 'Ban'}
@@ -578,8 +650,14 @@ export default function AdminPage() {
                                       {selectedUser.dateOfBirth && ` • ${new Date().getFullYear() - new Date(selectedUser.dateOfBirth).getFullYear()} ${language === 'uz' ? 'yosh' : language === 'ru' ? 'лет' : 'years'}`}
                                    </Typography>
                                 </Box>
+                                 <Box>
+                                   <Typography variant="caption" sx={{ display: 'block', fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', fontSize: 9 }}>Biriktirilgan Shifokor</Typography>
+                                   <Typography variant="body2" sx={{ fontWeight: 900, color: 'info.main' }}>
+                                      {selectedUser.assignedDoctor ? `${selectedUser.assignedDoctor.firstName} ${selectedUser.assignedDoctor.lastName}` : '—'}
+                                   </Typography>
+                                </Box>
                                 <Box>
-                                   <Typography variant="caption" sx={{ display: 'block', fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', fontSize: 9 }}>{t.doctorNameLabel}</Typography>
+                                   <Typography variant="caption" sx={{ display: 'block', fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', fontSize: 9 }}>{t.doctorNameLabel} (User input)</Typography>
                                    <Typography variant="body2" sx={{ fontWeight: 900 }}>{selectedUser.doctorName || '—'}</Typography>
                                 </Box>
                              </Stack>
@@ -711,7 +789,11 @@ export default function AdminPage() {
                           <Typography variant="caption" sx={{ fontWeight: 800, color: 'text.secondary', display: 'block', mb: 2 }}>{t.deleteWarning}</Typography>
                           <Button 
                             fullWidth variant="outlined" color="error" startIcon={<DeleteIcon />}
-                            onClick={() => { if (confirm(t.deleteWarning)) adminAPI.deleteUser(selectedUser._id).then(() => { setCurrentTab('users'); setSelectedUserId(null); loadUsers(); }); }}
+                            disabled={selectedUser.role === 'superadmin'}
+                            onClick={() => { 
+                              if (selectedUser.role === 'superadmin') return toast.error("Super Adminni o'chirib bo'lmaydi");
+                              if (confirm(t.deleteWarning)) adminAPI.deleteUser(selectedUser._id).then(() => { setCurrentTab('users'); setSelectedUserId(null); loadUsers(); }); 
+                            }}
                             sx={{ fontWeight: 900 }}
                           >
                             {t.deleteAccountLabel}
@@ -724,50 +806,68 @@ export default function AdminPage() {
           </Box>
         )}
 
-        {/* Settings Tab */}
-        {currentTab === 'settings' && (
-          <Box maxWidth="sm">
-            <Typography variant="h6" sx={{ fontWeight: 900, mb: 1, textTransform: 'uppercase' }}>System Settings</Typography>
-            <Typography variant="caption" sx={{ fontWeight: 800, color: 'text.secondary', display: 'block', mb: 4 }}>
-              Super Admin aloqa ma'lumotlarini boshqaring
-            </Typography>
+        {/* Audit Tab */}
+        {currentTab === 'audit' && user?.role === 'superadmin' && (
+          <Box>
+            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 4 }}>
+               <Box>
+                  <Typography variant="h6" sx={{ fontWeight: 900 }}>Audit Logs</Typography>
+                  <Typography variant="caption" sx={{ fontWeight: 800, color: 'text.secondary' }}>System activity history ({auditTotal} events)</Typography>
+               </Box>
+               <Button variant="outlined" size="small" onClick={loadAuditLogs} startIcon={auditLoading ? <CircularProgress size={14} /> : <HistoryIcon fontSize="small" />} sx={{ fontWeight: 800 }}>Refresh</Button>
+            </Stack>
 
-            <Card elevation={0} sx={{ border: `1px solid ${theme.palette.divider}` }}>
-              <CardContent sx={{ p: 4 }}>
-                <Stack spacing={4}>
-                  <Box>
-                    <Typography variant="caption" sx={{ fontWeight: 900, color: 'primary.main', mb: 1, display: 'block' }}>PHONE NUMBER</Typography>
-                    <TextField
-                      fullWidth
-                      placeholder="+998 90 123 45 67"
-                      value={adminContacts.phone}
-                      onChange={e => setAdminContacts({ ...adminContacts, phone: e.target.value })}
-                    />
-                  </Box>
-
-                  <Box>
-                    <Typography variant="caption" sx={{ fontWeight: 900, color: 'primary.main', mb: 1, display: 'block' }}>TELEGRAM USERNAME / LINK</Typography>
-                    <TextField
-                      fullWidth
-                      placeholder="@username yoki t.me/link"
-                      value={adminContacts.telegramUsername}
-                      onChange={e => setAdminContacts({ ...adminContacts, telegramUsername: e.target.value })}
-                    />
-                  </Box>
-
-                  <Button
-                    variant="contained"
-                    size="large"
-                    disabled={savingContacts}
-                    onClick={handleSaveContacts}
-                    startIcon={savingContacts ? <CircularProgress size={16} color="inherit" /> : <SaveIcon />}
-                    sx={{ fontWeight: 900, height: 54, borderRadius: 1.5, mt: 2 }}
-                  >
-                    {savingContacts ? 'SAVING...' : 'SAVE CHANGES'}
-                  </Button>
-                </Stack>
-              </CardContent>
-            </Card>
+            <TableContainer component={Paper} elevation={0} sx={{ border: `1px solid ${theme.palette.divider}`, maxHeight: 700 }}>
+              <Table stickyHeader size="small">
+                <TableHead>
+                  <TableRow>
+                     <TableCell sx={{ fontWeight: 900, textTransform: 'uppercase', fontSize: 10 }}>Admin</TableCell>
+                     <TableCell sx={{ fontWeight: 900, textTransform: 'uppercase', fontSize: 10 }}>Action</TableCell>
+                     <TableCell sx={{ fontWeight: 900, textTransform: 'uppercase', fontSize: 10 }}>Details</TableCell>
+                     <TableCell sx={{ fontWeight: 900, textTransform: 'uppercase', fontSize: 10 }}>Date</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                   {auditLoading ? (
+                     <TableRow><TableCell colSpan={4} align="center" sx={{ py: 10 }}><CircularProgress /></TableCell></TableRow>
+                   ) : auditLogs.length === 0 ? (
+                     <TableRow><TableCell colSpan={4} align="center" sx={{ py: 10 }}><Typography variant="body2" sx={{ opacity: 0.5 }}>No logs found</Typography></TableCell></TableRow>
+                   ) : (
+                     auditLogs.map(log => (
+                       <TableRow key={log._id} hover>
+                         <TableCell>
+                            <Typography variant="body2" sx={{ fontWeight: 800 }}>{log.adminId?.firstName} {log.adminId?.lastName}</Typography>
+                            <Typography variant="caption" color="text.secondary">{log.adminId?.email}</Typography>
+                         </TableCell>
+                         <TableCell>
+                            <Chip 
+                              label={log.action} 
+                              size="small" 
+                              sx={{ 
+                                fontWeight: 900, fontSize: 8, borderRadius: 1,
+                                bgcolor: log.action.includes('DELETE') || log.action.includes('BAN') ? alpha(theme.palette.error.main, 0.08) : alpha(theme.palette.primary.main, 0.08),
+                                color: log.action.includes('DELETE') || log.action.includes('BAN') ? 'error.main' : 'primary.main'
+                              }} 
+                            />
+                         </TableCell>
+                         <TableCell>
+                            <Box sx={{ maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                               <Typography variant="caption" sx={{ fontWeight: 700, whiteSpace: 'pre-wrap' }}>
+                                 {Object.entries(log.details || {}).map(([key, val]) => `${key}: ${val}`).join(', ')}
+                               </Typography>
+                               {log.ipAddress && <Typography variant="caption" display="block" color="text.secondary" sx={{ fontSize: 7 }}>IP: {log.ipAddress}</Typography>}
+                            </Box>
+                         </TableCell>
+                         <TableCell>
+                            <Typography variant="caption" sx={{ fontWeight: 800 }}>{format(new Date(log.createdAt), 'dd.MM.yyyy')}</Typography>
+                            <Typography variant="caption" display="block" color="text.secondary">{format(new Date(log.createdAt), 'HH:mm:ss')}</Typography>
+                         </TableCell>
+                       </TableRow>
+                     ))
+                   )}
+                </TableBody>
+              </Table>
+            </TableContainer>
           </Box>
         )}
       </Box>

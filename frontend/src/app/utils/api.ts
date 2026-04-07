@@ -71,8 +71,9 @@ export const adminAPI = {
   toggleBan: (id: string, reason?: string) => api.patch(`/admin/users/${id}/ban`, { reason }),
   deleteUser: (id: string) => api.delete(`/admin/users/${id}`),
   addNote: (id: string, notes: string) => api.patch(`/admin/users/${id}/notes`, { notes }),
-  getContacts: () => api.get('/admin/contacts'),
-  updateContacts: (data: { phone: string; telegramUsername: string }) => api.put('/admin/contacts', data),
+  getAuditLogs: (params?: any) => api.get('/admin/audit-logs', { params }),
+  getDoctors: () => api.get('/admin/doctors'),
+  assignDoctor: (id: string, doctorId: string | null) => api.patch(`/admin/users/${id}/assign-doctor`, { doctorId }),
 };
 
 export const productAPI = {

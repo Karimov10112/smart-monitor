@@ -1,0 +1,43 @@
+const mongoose = require('mongoose');
+
+const auditLogSchema = new mongoose.Schema(
+  {
+    adminId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true
+    },
+    action: {
+      type: String,
+      required: true,
+      enum: [
+        'DELETE_USER',
+        'BAN_USER',
+        'UNBAN_USER',
+        'UPDATE_USER_ROLE',
+        'ADD_PRODUCT',
+        'UPDATE_PRODUCT',
+        'DELETE_PRODUCT',
+        'UPDATE_ADMIN_CONTACTS'
+      ]
+    },
+    targetId: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: false // Optional, as some actions might not have a specific target
+    },
+    targetType: {
+      type: String,
+      enum: ['User', 'Product', 'System'],
+      required: false
+    },
+    details: {
+      type: Object,
+      default: {}
+    },
+    ipAddress: String,
+    userAgent: String
+  },
+  { timestamps: true }
+);
+
+module.exports = mongoose.model('AuditLog', auditLogSchema);

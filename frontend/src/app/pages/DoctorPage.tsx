@@ -118,14 +118,22 @@ export default function DoctorPage() {
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
-      {/* Sidebar (Formal) */}
-      <Box sx={{ width: SIDEBAR_WIDTH, borderRight: `1px solid ${theme.palette.divider}`, bgcolor: 'background.paper', display: 'flex', flexDirection: 'column', p: 3, position: 'fixed', h: '100vh' }}>
+      {/* Sidebar (Local) */}
+      <Box sx={{ 
+        width: SIDEBAR_WIDTH, 
+        borderRight: `1px solid ${theme.palette.divider}`, 
+        bgcolor: 'background.paper', 
+        display: { xs: 'none', lg: 'flex' }, 
+        flexDirection: 'column', 
+        p: 3,
+        flexShrink: 0
+      }}>
         <Box sx={{ mb: 4, px: 1 }}>
           <Stack direction="row" spacing={2} alignItems="center">
             <Avatar sx={{ bgcolor: 'primary.main', borderRadius: 1.5, width: 40, height: 40 }}>🩺</Avatar>
             <Box>
-              <Typography variant="subtitle1" sx={{ fontWeight: 900, fontSize: '0.875rem' }}>Qand Nazorati</Typography>
-              <Typography variant="overline" sx={{ fontWeight: 900, color: 'primary.main', fontSize: 9 }}>{t.doctorPanel}</Typography>
+              <Typography variant="subtitle2" sx={{ fontWeight: 900, lineHeight: 1 }}>{t.appName || 'Qand Nazorati'}</Typography>
+              <Typography variant="caption" sx={{ fontWeight: 900, color: 'primary.main', fontSize: 9, textTransform: 'uppercase' }}>{t.doctorPanel}</Typography>
             </Box>
           </Stack>
         </Box>
@@ -140,28 +148,42 @@ export default function DoctorPage() {
               sx={{ borderRadius: 1.5, py: 1, '&.Mui-selected': { bgcolor: alpha(theme.palette.primary.main, 0.05) } }}
             >
               <ListItemIcon sx={{ minWidth: 40 }}><PeopleAltIcon fontSize="small" /></ListItemIcon>
-              <ListItemText primary={t.patients} primaryTypographyProps={{ fontWeight: 700, fontSize: '0.875rem' }} />
+              <ListItemText primary={t.patients} primaryTypographyProps={{ fontWeight: 800, fontSize: '0.8125rem' }} />
             </ListItemButton>
           </ListItem>
         </List>
 
         <Box sx={{ mt: 'auto' }}>
            <Divider sx={{ mb: 2 }} />
-           <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2, px: 1 }}>
-              <Avatar sx={{ width: 36, height: 36, borderRadius: 1, bgcolor: alpha(theme.palette.success.main, 0.1), color: 'success.main', fontWeight: 900, fontSize: 14 }}>{user?.firstName?.[0]}</Avatar>
+
+           {/* Navigation back for Admins */}
+           {isAdmin && (
+             <Button 
+               fullWidth 
+               variant="outlined"
+               startIcon={<ArrowBackIcon fontSize="small" />} 
+               onClick={() => navigate('/admin')} 
+               sx={{ borderRadius: 1.5, mb: 1, justifyContent: 'start', py: 1, fontSize: '0.75rem', fontWeight: 800, borderStyle: 'dashed' }}
+             >
+               {t.adminPanel || 'Admin Panel'}
+             </Button>
+           )}
+
+           <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 2, px: 1 }}>
+              <Avatar sx={{ width: 32, height: 32, borderRadius: 1, bgcolor: alpha(theme.palette.success.main, 0.1), color: 'success.main', fontWeight: 900, fontSize: 13 }}>{user?.firstName?.[0]}</Avatar>
               <Box sx={{ overflow: 'hidden' }}>
                  <Typography variant="caption" sx={{ fontWeight: 900, display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.firstName} {user?.lastName}</Typography>
                  <Typography variant="caption" sx={{ fontSize: 8, color: 'text.secondary', display: 'block' }}>Professional Doctor</Typography>
               </Box>
            </Stack>
-           <Button fullWidth color="error" startIcon={<LogoutIcon fontSize="small" />} onClick={logout} sx={{ borderRadius: 1.5, justifyContent: 'start', py: 1, fontSize: '0.75rem', fontWeight: 700 }}>
-             {t.back || 'Logout'}
+           <Button fullWidth color="error" startIcon={<LogoutIcon fontSize="small" />} onClick={logout} sx={{ borderRadius: 1.5, justifyContent: 'start', py: 1, fontSize: '0.75rem', fontWeight: 800 }}>
+             {t.logoutUser || 'Logout'}
            </Button>
         </Box>
       </Box>
 
       {/* Main Content */}
-      <Box component="main" sx={{ flexGrow: 1, ml: `${SIDEBAR_WIDTH}px`, p: { xs: 3, lg: 5 } }}>
+      <Box component="main" sx={{ flexGrow: 1, p: { xs: 2, sm: 3, lg: 5 } }}>
          {currentTab === 'patients' && (
            <Box>
               <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 4 }}>
