@@ -238,6 +238,67 @@ export default function DoctorPage() {
           minWidth: 0,
         }}
       >
+        {/* MOBILE NAVIGATION BAR (Hidden on Desktop) */}
+        <Box 
+          sx={{ 
+            display: { xs: 'flex', md: 'none' }, 
+            overflowX: 'auto', 
+            mb: 3, pb: 1, mx: -2, px: 2, 
+            '&::-webkit-scrollbar': { display: 'none' },
+            gap: 1
+          }}
+        >
+           <Button
+               onClick={() => { setCurrentTab('patients'); setSelectedPatient(null); }}
+               variant={currentTab === 'patients' || currentTab === 'patient-detail' ? 'contained' : 'contained'}
+               startIcon={<PeopleAltIcon />}
+               sx={{ 
+                 borderRadius: 8, 
+                 flexShrink: 0, 
+                 textTransform: 'none',
+                 boxShadow: currentTab === 'patients' || currentTab === 'patient-detail' ? '0 4px 12px rgba(0,0,0,0.1)' : 'none',
+                 bgcolor: currentTab === 'patients' || currentTab === 'patient-detail' ? 'secondary.main' : alpha(theme.palette.background.paper, 0.5),
+                 color: currentTab === 'patients' || currentTab === 'patient-detail' ? '#fff' : 'text.secondary',
+                 fontWeight: 800,
+                 px: 2,
+                 border: '1px solid',
+                 borderColor: currentTab === 'patients' || currentTab === 'patient-detail' ? 'transparent' : 'divider'
+               }}
+           >
+               Bemorlarim
+           </Button>
+
+           {isAdmin && (
+             <Button
+                 onClick={() => navigate('/admin')}
+                 variant="contained"
+                 startIcon={<AdminPanelSettingsIcon />}
+                 sx={{ 
+                   borderRadius: 8, flexShrink: 0, textTransform: 'none', 
+                   bgcolor: alpha(theme.palette.background.paper, 0.5),
+                   color: 'text.secondary', fontWeight: 800, px: 2,
+                   border: '1px solid', borderColor: 'divider', boxShadow: 'none'
+                 }}
+             >
+                 Admin Panel
+             </Button>
+           )}
+
+           <Button
+               onClick={() => navigate('/')}
+               variant="contained"
+               startIcon={<ArrowBackIcon />}
+               sx={{ 
+                 borderRadius: 8, flexShrink: 0, textTransform: 'none', 
+                 bgcolor: alpha(theme.palette.background.paper, 0.5),
+                 color: 'text.secondary', fontWeight: 800, px: 2,
+                 border: '1px solid', borderColor: 'divider', boxShadow: 'none'
+               }}
+           >
+               Asosiy
+           </Button>
+        </Box>
+
         <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 4 }}>
           <Box>
             <Typography variant="h5" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 2 }}>

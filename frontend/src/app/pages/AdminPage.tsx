@@ -350,6 +350,58 @@ export default function AdminPage() {
           minWidth: 0,
         }}
       >
+        {/* MOBILE NAVIGATION BAR (Hidden on Desktop) */}
+        <Box 
+          sx={{ 
+            display: { xs: 'flex', md: 'none' }, 
+            overflowX: 'auto', 
+            mb: 3, pb: 1, mx: -2, px: 2, 
+            '&::-webkit-scrollbar': { display: 'none' },
+            gap: 1
+          }}
+        >
+           {menuItems.filter(m => !m.hidden).map((item) => (
+             <Button
+               key={item.id}
+               onClick={() => {
+                 setCurrentTab(item.id as TabType);
+                 setSelectedUserId(null);
+                 if (item.id === 'audit') loadAuditLogs();
+               }}
+               variant={currentTab === item.id && !selectedUserId ? 'contained' : 'contained'}
+               startIcon={item.icon}
+               sx={{ 
+                 borderRadius: 8, 
+                 flexShrink: 0, 
+                 textTransform: 'none',
+                 boxShadow: currentTab === item.id && !selectedUserId ? '0 4px 12px rgba(0,0,0,0.1)' : 'none',
+                 bgcolor: currentTab === item.id && !selectedUserId ? 'primary.main' : alpha(theme.palette.background.paper, 0.5),
+                 color: currentTab === item.id && !selectedUserId ? '#fff' : 'text.secondary',
+                 fontWeight: 800,
+                 px: 2,
+                 border: '1px solid',
+                 borderColor: currentTab === item.id && !selectedUserId ? 'transparent' : 'divider',
+                 '&:hover': { bgcolor: currentTab === item.id && !selectedUserId ? 'primary.dark' : 'background.paper' }
+               }}
+             >
+               {item.label}
+             </Button>
+           ))}
+           <Button
+               onClick={() => navigate('/')}
+               variant="contained"
+               startIcon={<ArrowBackIcon />}
+               sx={{ 
+                 borderRadius: 8, flexShrink: 0, textTransform: 'none', 
+                 bgcolor: alpha(theme.palette.background.paper, 0.5),
+                 color: 'text.secondary', fontWeight: 800, px: 2,
+                 border: '1px solid', borderColor: 'divider', boxShadow: 'none'
+               }}
+           >
+               Asosiy
+           </Button>
+        </Box>
+
         <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 4 }}>
           <Box>
              <Typography variant="h5" sx={{ fontWeight: 900 }}>
