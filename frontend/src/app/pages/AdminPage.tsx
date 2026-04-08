@@ -724,8 +724,9 @@ export default function AdminPage() {
           <form onSubmit={handleSaveProduct}>
             <DialogContent>
               <Grid container spacing={2}>
-                <Grid size={{ xs: 6 }}><TextField fullWidth label="UZ Name" value={productForm.name.uz} onChange={e => setProductForm({...productForm, name: {...productForm.name, uz: e.target.value}})} /></Grid>
-                <Grid size={{ xs: 6 }}><TextField fullWidth label="RU Name" value={productForm.name.ru} onChange={e => setProductForm({...productForm, name: {...productForm.name, ru: e.target.value}})} /></Grid>
+                <Grid size={{ xs: 4 }}><TextField fullWidth label="UZ Name" value={productForm.name.uz} onChange={e => setProductForm({...productForm, name: {...productForm.name, uz: e.target.value}})} /></Grid>
+                <Grid size={{ xs: 4 }}><TextField fullWidth label="RU Name" value={productForm.name.ru} onChange={e => setProductForm({...productForm, name: {...productForm.name, ru: e.target.value}})} /></Grid>
+                <Grid size={{ xs: 4 }}><TextField fullWidth label="EN Name" value={productForm.name.en} onChange={e => setProductForm({...productForm, name: {...productForm.name, en: e.target.value}})} /></Grid>
                 <Grid size={{ xs: 4 }}><TextField fullWidth label="GI" type="number" value={productForm.gi} onChange={e => setProductForm({...productForm, gi: Number(e.target.value)})} /></Grid>
                 <Grid size={{ xs: 4 }}><TextField fullWidth label="GL" type="number" value={productForm.gl} onChange={e => setProductForm({...productForm, gl: Number(e.target.value)})} /></Grid>
                 <Grid size={{ xs: 4 }}><TextField fullWidth label="KCal" type="number" value={productForm.calories} onChange={e => setProductForm({...productForm, calories: Number(e.target.value)})} /></Grid>

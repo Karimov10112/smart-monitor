@@ -98,35 +98,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // 30 Minutes Inactivity Auto-Logout
   useEffect(() => {
-    let timeoutId: ReturnType<typeof setTimeout>;
+    if (!token) return;
 
-    const resetTimer = () => {
-      clearTimeout(timeoutId);
-      if (token) {
-        timeoutId = setTimeout(() => {
-           logout();
-        }, 30 * 60 * 1000); // 30 minutes
-      }
+    const INACTIVITY_LIMIT = 30 * 60 * 1000; // 30 minutes
+    localStorage.setItem('lastActivity', Date.now().toString());
+
+    const updateActivity = () => {
+      localStorage.setItem('lastActivity', Date.now().toString());
     };
 
-    if (token) {
-      const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
-      
-      // Initialize the timer directly
-      resetTimer();
+    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
+    events.forEach(event => {
+      window.addEventListener(event, updateActivity, { passive: true });
+    });
 
-      // Listen for user activity
-      events.forEach(event => {
-        window.addEventListener(event, resetTimer, { passive: true });
-      });
-
-      return () => {
-        clearTimeout(timeoutId);
-        events.forEach(event => {
-          window.removeEventListener(event, resetTimer);
+    const intervalId = setInterval(() => {
+      const lastActivity = parseInt(localStorage.getItem('lastActivity') || '0', 10);
+      if (Date.now() - lastActivity > INACTIVITY_LIMIT) {
+        logout().then(() => {
+          window.location.href = '/register';
         });
-      };
-    }
+      }
+    }, 5000); // Check every 5 seconds
+
+    return () => {
+      clearInterval(intervalId);
+      events.forEach(event => {
+        window.removeEventListener(event, updateActivity);
+      });
+    };
   }, [token, logout]);
 
   return (
