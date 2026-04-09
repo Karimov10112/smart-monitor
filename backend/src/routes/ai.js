@@ -35,6 +35,7 @@ router.post('/chat', protect, async (req, res) => {
 router.post('/analyze', protect, async (req, res) => {
   try {
     const { language = 'uz' } = req.body;
+    const DEEPSEEK_API_URL = 'https://api.deepseek.com/chat/completions';
 
     if (!process.env.DEEPSEEK_API_KEY || process.env.DEEPSEEK_API_KEY.includes('your_')) {
       const msgs = {

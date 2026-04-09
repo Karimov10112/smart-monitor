@@ -210,18 +210,22 @@ const forgotPassword = async (req, res) => {
 
     const user = await userRepository.findByEmail(email);
     if (!user) {
-      return res.status(404).json({ success: false, message: 'Bu email ro\'yxatdan o\'tmagan' });
+      // Don't reveal whether email exists - return success anyway for security
+      return res.json({ success: true, message: 'Agar bu email ro\'yxatdan o\'tgan bo\'lsa, tiklash havolasi yuborildi' });
     }
 
+    // Generate a raw 256-bit random token
     const resetToken = crypto.randomBytes(32).toString('hex');
-    const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
     
+    // Save token to DB — expires in 2 hours
     await userRepository.findByIdAndUpdate(user._id, {
-      passwordResetToken: hashedToken,
-      passwordResetExpires: new Date(Date.now() + 60 * 60 * 1000)
+      $set: {
+        passwordResetToken: resetToken,
+        passwordResetExpires: new Date(Date.now() + 2 * 60 * 60 * 1000),
+      }
     });
 
-    await sendPasswordResetEmail(email, resetToken, req.body.language || 'uz');
+    await sendPasswordResetEmail(user.email, resetToken, req.body.language || 'uz');
 
     res.json({ success: true, message: 'Parolni tiklash havolasi emailga yuborildi' });
   } catch (err) {
@@ -235,23 +239,34 @@ const resetPassword = async (req, res) => {
   try {
     const { token, password } = req.body;
 
-    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+    if (!token) {
+      return res.status(400).json({ success: false, message: 'Token topilmadi' });
+    }
+
+    if (!password || password.length < 6) {
+      return res.status(400).json({ success: false, message: 'Parol kamida 6 ta belgidan iborat bo\'lishi kerak' });
+    }
+
+    // Compare raw token directly with DB (no hashing)
     const user = await userRepository.findOne({
-      passwordResetToken: hashedToken,
+      passwordResetToken: token.trim(),
       passwordResetExpires: { $gt: new Date() },
     });
 
     if (!user) {
-      return res.status(400).json({ success: false, message: 'Token yaroqsiz yoki muddati o\'tgan' });
+      return res.status(400).json({ success: false, message: 'Token yaroqsiz yoki muddati o\'tgan. Qaytadan so\'rov yuboring.' });
     }
 
-    // Use the document save middleware for hashing password
+    // Clear reset token FIRST using $unset (undefined does NOT delete in MongoDB)
+    await userRepository.findByIdAndUpdate(user._id, {
+      $unset: { passwordResetToken: '', passwordResetExpires: '' }
+    });
+
+    // Update password using save() — triggers bcrypt pre-save middleware
     user.password = password;
-    user.passwordResetToken = undefined;
-    user.passwordResetExpires = undefined;
     await user.save();
 
-    res.json({ success: true, message: 'Parol muvaffaqiyatli yangilandi' });
+    res.json({ success: true, message: 'Parol muvaffaqiyatli yangilandi! Endi yangi parol bilan kirishingiz mumkin.' });
   } catch (err) {
     console.error('Reset password error:', err);
     res.status(500).json({ success: false, message: 'Server xatosi' });

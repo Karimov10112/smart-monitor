@@ -208,6 +208,10 @@ export default function AdminPage() {
     }
   };
 
+  const setFormNumber = (field: string, val: string) => {
+    setProductForm({ ...productForm, [field]: val === '' ? 0 : Number(val) });
+  };
+
   const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -727,9 +731,30 @@ export default function AdminPage() {
                 <Grid size={{ xs: 4 }}><TextField fullWidth label="UZ Name" value={productForm.name.uz} onChange={e => setProductForm({...productForm, name: {...productForm.name, uz: e.target.value}})} /></Grid>
                 <Grid size={{ xs: 4 }}><TextField fullWidth label="RU Name" value={productForm.name.ru} onChange={e => setProductForm({...productForm, name: {...productForm.name, ru: e.target.value}})} /></Grid>
                 <Grid size={{ xs: 4 }}><TextField fullWidth label="EN Name" value={productForm.name.en} onChange={e => setProductForm({...productForm, name: {...productForm.name, en: e.target.value}})} /></Grid>
-                <Grid size={{ xs: 4 }}><TextField fullWidth label="GI" type="number" value={productForm.gi} onChange={e => setProductForm({...productForm, gi: Number(e.target.value)})} /></Grid>
-                <Grid size={{ xs: 4 }}><TextField fullWidth label="GL" type="number" value={productForm.gl} onChange={e => setProductForm({...productForm, gl: Number(e.target.value)})} /></Grid>
-                <Grid size={{ xs: 4 }}><TextField fullWidth label="KCal" type="number" value={productForm.calories} onChange={e => setProductForm({...productForm, calories: Number(e.target.value)})} /></Grid>
+                <Grid size={{ xs: 4 }}><TextField fullWidth label="GI" type="number" value={productForm.gi} onChange={e => setFormNumber('gi', e.target.value)} /></Grid>
+                <Grid size={{ xs: 4 }}><TextField fullWidth label="GL" type="number" value={productForm.gl} onChange={e => setFormNumber('gl', e.target.value)} /></Grid>
+                <Grid size={{ xs: 4 }}><TextField fullWidth label="KCal" type="number" value={productForm.calories} onChange={e => setFormNumber('calories', e.target.value)} /></Grid>
+                
+                <Grid size={{ xs: 4 }}><TextField fullWidth label="Carbs (g)" type="number" value={productForm.carbs} onChange={e => setFormNumber('carbs', e.target.value)} /></Grid>
+                <Grid size={{ xs: 4 }}><TextField fullWidth label="Protein (g)" type="number" value={productForm.protein} onChange={e => setFormNumber('protein', e.target.value)} /></Grid>
+                <Grid size={{ xs: 4 }}><TextField fullWidth label="Fats (g)" type="number" value={productForm.fats} onChange={e => setFormNumber('fats', e.target.value)} /></Grid>
+                
+                <Grid size={{ xs: 4 }}><TextField fullWidth label="Sugar (g)" type="number" value={productForm.sugar} onChange={e => setFormNumber('sugar', e.target.value)} /></Grid>
+                <Grid size={{ xs: 4 }}><TextField fullWidth label="Fiber (g)" type="number" value={productForm.fiber} onChange={e => setFormNumber('fiber', e.target.value)} /></Grid>
+                <Grid size={{ xs: 4 }}>
+                   <FormControl fullWidth>
+                      <InputLabel>Emoji</InputLabel>
+                      <Select value={productForm.emoji} label="Emoji" onChange={e => setProductForm({...productForm, emoji: e.target.value})}>
+                         {['🍎','🍐','🍑','🍒','🍓','🍇','🥝','🍍','🍊','🍋','🍌','🍉','🍈','🍅','🥒','🥦','🍃','🥕','🍆','🧅','🧄','🫑','🎃','🌽','🍗','🐟','🥚','🥩','🦃','🥣','🍛','🌾','🥛','🍶','🍧'].map(em => (
+                            <MenuItem key={em} value={em}>{em}</MenuItem>
+                         ))}
+                      </Select>
+                   </FormControl>
+                </Grid>
+
+                <Grid size={{ xs: 4 }}><TextField fullWidth label="Advice UZ" multiline rows={2} value={productForm.advice.uz} onChange={e => setProductForm({...productForm, advice: {...productForm.advice, uz: e.target.value}})} /></Grid>
+                <Grid size={{ xs: 4 }}><TextField fullWidth label="Advice RU" multiline rows={2} value={productForm.advice.ru} onChange={e => setProductForm({...productForm, advice: {...productForm.advice, ru: e.target.value}})} /></Grid>
+                <Grid size={{ xs: 4 }}><TextField fullWidth label="Advice EN" multiline rows={2} value={productForm.advice.en} onChange={e => setProductForm({...productForm, advice: {...productForm.advice, en: e.target.value}})} /></Grid>
               </Grid>
             </DialogContent>
             <DialogActions sx={{ p: 3 }}>

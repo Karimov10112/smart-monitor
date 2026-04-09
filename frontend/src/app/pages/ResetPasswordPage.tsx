@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link as RouterLink } from 'react-router-dom';
 import { authAPI } from '../utils/api';
 import { useApp } from '../contexts/AppContext';
 import { translations } from '../utils/translations';
@@ -17,10 +17,10 @@ import {
   InputAdornment,
   Stack,
   Container,
-  Paper,
   alpha,
   useTheme,
-  CircularProgress
+  CircularProgress,
+  Link
 } from '@mui/material';
 
 // MUI Icons
@@ -30,6 +30,8 @@ import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import ShieldIcon from '@mui/icons-material/Shield';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 export default function ResetPasswordPage() {
   const { language } = useApp();
@@ -49,7 +51,11 @@ export default function ResetPasswordPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password !== confirmPassword) {
-      toast.error(language === 'uz' ? 'Parollar mos emas' : 'Пароли не совпадают');
+      toast.error(language === 'uz' ? 'Parollar mos emas' : language === 'ru' ? 'Пароли не совпадают' : 'Passwords do not match');
+      return;
+    }
+    if (password.length < 6) {
+      toast.error(language === 'uz' ? 'Parol kamida 6 ta belgi bo\'lishi kerak' : language === 'ru' ? 'Пароль минимум 6 символов' : 'Password must be at least 6 characters');
       return;
     }
     if (!token) {
@@ -59,17 +65,56 @@ export default function ResetPasswordPage() {
 
     setLoading(true);
     try {
-      const { data } = await authAPI.resetPassword({ token, password });
+      const { data } = await authAPI.resetPassword({ token: token.trim(), password });
       if (data.success) {
         setSuccess(true);
         toast.success(t.passwordUpdated);
       }
     } catch (err: any) {
-      toast.error(err.response?.data?.message || t.error);
+      const msg = err.response?.data?.message || t.error;
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
   };
+
+  // Token yo'q bo'lsa — xato sahifa
+  if (!token) {
+    return (
+      <Container maxWidth="xs" sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', py: 4 }}>
+        <Card elevation={0} sx={{ border: `1px solid ${theme.palette.divider}` }}>
+          <CardContent sx={{ p: 4, textAlign: 'center' }}>
+            <Box sx={{ width: 64, height: 64, bgcolor: alpha(theme.palette.error.main, 0.08), color: 'error.main', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', mx: 'auto', mb: 3 }}>
+              <ErrorOutlineIcon sx={{ fontSize: 32 }} />
+            </Box>
+            <Typography variant="h6" sx={{ fontWeight: 900, mb: 1 }}>
+              {language === 'uz' ? 'Token topilmadi' : language === 'ru' ? 'Токен не найден' : 'Token Not Found'}
+            </Typography>
+            <Typography variant="body2" sx={{ color: 'text.secondary', mb: 4 }}>
+              {language === 'uz'
+                ? 'Emailga yuborilgan havoladan to\'g\'ri kiring. Havola eskirgan bo\'lishi mumkin.'
+                : language === 'ru'
+                ? 'Перейдите по ссылке из письма. Ссылка могла устареть.'
+                : 'Please use the link from your email. The link may have expired.'}
+            </Typography>
+            <Button
+              fullWidth
+              variant="contained"
+              component={RouterLink}
+              to="/forgot-password"
+              sx={{ fontWeight: 800 }}
+            >
+              {language === 'uz' ? 'Qaytadan so\'rov yuborish' : language === 'ru' ? 'Отправить снова' : 'Request Again'}
+            </Button>
+            <Link component={RouterLink} to="/login" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5, mt: 2, fontWeight: 700, fontSize: 12, textDecoration: 'none' }}>
+              <ArrowBackIcon sx={{ fontSize: 14 }} />
+              {t.backToLogin}
+            </Link>
+          </CardContent>
+        </Card>
+      </Container>
+    );
+  }
 
   return (
     <Container maxWidth="xs" sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', py: 4 }}>
@@ -96,6 +141,7 @@ export default function ResetPasswordPage() {
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   required
+                  inputProps={{ minLength: 6 }}
                   InputProps={{
                     startAdornment: <LockOutlinedIcon sx={{ mr: 1, fontSize: 18, color: 'text.secondary' }} />,
                     endAdornment: (
@@ -114,6 +160,7 @@ export default function ResetPasswordPage() {
                   value={confirmPassword}
                   onChange={e => setConfirmPassword(e.target.value)}
                   required
+                  inputProps={{ minLength: 6 }}
                 />
 
                 <Button
@@ -126,6 +173,10 @@ export default function ResetPasswordPage() {
                 >
                   {loading ? <CircularProgress size={20} color="inherit" /> : t.updatePassword}
                 </Button>
+
+                <Link component={RouterLink} to="/forgot-password" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5, fontWeight: 700, fontSize: 12, textDecoration: 'none' }}>
+                  {language === 'uz' ? 'Yangi havola so\'rash' : language === 'ru' ? 'Запросить новую ссылку' : 'Request new link'}
+                </Link>
               </Stack>
             </Box>
           ) : (
@@ -135,7 +186,7 @@ export default function ResetPasswordPage() {
               </Box>
               <Typography variant="h6" sx={{ fontWeight: 900, mb: 1 }}>{t.success}</Typography>
               <Typography variant="body2" sx={{ fontWeight: 700, color: 'text.secondary', mb: 4, px: 2 }}>
-                {t.passwordUpdated}. {language === 'uz' ? 'Endi yangi parolingiz bilan tizimga kirishingiz mumkin.' : 'Теперь вы можете войти с новым паролем.'}
+                {t.passwordUpdated}. {language === 'uz' ? 'Endi yangi parolingiz bilan tizimga kirishingiz mumkin.' : language === 'ru' ? 'Теперь вы можете войти с новым паролем.' : 'You can now log in with your new password.'}
               </Typography>
               <Button fullWidth variant="contained" onClick={() => navigate('/login')} sx={{ fontWeight: 800 }}>
                  {t.signIn}

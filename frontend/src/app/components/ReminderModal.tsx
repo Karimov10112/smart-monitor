@@ -58,7 +58,7 @@ export const ReminderModal: React.FC<ReminderModalProps> = ({ isOpen, onClose, l
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6">
+        <div className="fixed inset-0 flex items-center justify-center p-6" style={{ zIndex: 1500 }}>
           <motion.div 
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="absolute inset-0 bg-slate-900/10 backdrop-blur-sm" 
