@@ -307,7 +307,10 @@ export function DailyJournal() {
                   </Button>
                 </Stack>
               </Box>
-                   {/* AI Recommendation Section (shown after saving or when triggered) */}
+            </CardContent>
+          </Card>
+
+          {/* AI Recommendation Section (shown after saving or when triggered) */}
           {(aiLoading || aiRecommendation || savedRecord || aiError) && hasProfile && (
             <Box ref={aiSectionRef} sx={{ mb: 3 }}>
               {/* Loading state */}
