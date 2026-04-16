@@ -229,7 +229,7 @@ function App() {
             {user?.firstName}
           </Typography>
           <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
-            {isAdmin ? 'Administrator' : (user?.role === 'doctor' ? (t.doctor || 'Doctor') : (t.user || 'User'))}
+            {isAdmin ? t.administrator : (user?.role === 'doctor' ? t.doctorRole : t.userRole)}
           </Typography>
         </Box>
       </Stack>
@@ -365,7 +365,7 @@ function App() {
           
           {(adminContacts.phone || adminContacts.telegramUsername) && (
             <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1.5, bgcolor: alpha(theme.palette.primary.main, 0.02), borderStyle: 'dashed' }}>
-               <Typography variant="caption" sx={{ fontWeight: 900, color: 'primary.main', display: 'block', mb: 1, textTransform: 'uppercase', fontSize: 8 }}>SUPPORT</Typography>
+               <Typography variant="caption" sx={{ fontWeight: 900, color: 'primary.main', display: 'block', mb: 1, textTransform: 'uppercase', fontSize: 8 }}>{t.support}</Typography>
                <Stack spacing={1}>
                   {adminContacts.phone && (
                     <Link href={`tel:${adminContacts.phone}`} sx={{ display: 'flex', alignItems: 'center', gap: 1, textDecoration: 'none', color: 'text.primary', '&:hover': { color: 'primary.main' } }}>
@@ -374,14 +374,14 @@ function App() {
                     </Link>
                   )}
                   {adminContacts.telegramUsername && (
-                    <Link 
-                      href={adminContacts.telegramUsername.startsWith('http') ? adminContacts.telegramUsername : `https://t.me/${adminContacts.telegramUsername.replace('@', '')}`} 
-                      target="_blank"
-                      sx={{ display: 'flex', alignItems: 'center', gap: 1, textDecoration: 'none', color: 'text.primary', '&:hover': { color: 'primary.main' } }}
-                    >
-                       <TelegramIcon sx={{ fontSize: 14 }} />
-                       <Typography variant="caption" sx={{ fontWeight: 700 }}>{adminContacts.telegramUsername.startsWith('@') ? adminContacts.telegramUsername : 'Telegram'}</Typography>
-                    </Link>
+                      <Link 
+                        href={adminContacts.telegramUsername.startsWith('http') ? adminContacts.telegramUsername : `https://t.me/${adminContacts.telegramUsername.replace('@', '')}`} 
+                        target="_blank"
+                        sx={{ display: 'flex', alignItems: 'center', gap: 1, textDecoration: 'none', color: 'text.primary', '&:hover': { color: 'primary.main' } }}
+                      >
+                         <TelegramIcon sx={{ fontSize: 14 }} />
+                         <Typography variant="caption" sx={{ fontWeight: 700 }}>{adminContacts.telegramUsername.startsWith('@') ? adminContacts.telegramUsername : 'Telegram'}</Typography>
+                      </Link>
                   )}
                </Stack>
             </Paper>
@@ -426,7 +426,7 @@ function App() {
         >
           <Toolbar sx={{ justifyContent: 'space-between', minHeight: { xs: 56, sm: 64 }, px: { xs: 1.5, sm: 2 } }}>
             <IconButton edge="start" color="inherit" onClick={() => setIsSidebarOpen(true)}><MenuIcon /></IconButton>
-            <Typography variant="h6" color="primary" sx={{ fontWeight: 900, letterSpacing: isMobile ? -0.5 : -1, fontSize: isMobile ? 18 : 20 }}>QAND NAZORATI</Typography>
+            <Typography variant="h6" color="primary" sx={{ fontWeight: 900, letterSpacing: isMobile ? -0.5 : -1, fontSize: isMobile ? 18 : 20 }}>{t.appName.toUpperCase()}</Typography>
             <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main' }}>{user?.firstName?.[0]}</Avatar>
           </Toolbar>
         </AppBar>
@@ -450,7 +450,7 @@ function App() {
         {/* Footer */}
         <Box sx={{ p: 4, textAlign: 'center', opacity: 0.5, borderTop: `1px solid ${theme.palette.divider}` }}>
            <Typography variant="overline" sx={{ fontWeight: 800, color: 'text.secondary', letterSpacing: 2, fontSize: 10 }}>
-              © {new Date().getFullYear()} QAND NAZORATI. PROFESSIONAL VERSION.
+              © {new Date().getFullYear()} {t.appName.toUpperCase()}. {t.professionalVersion}.
            </Typography>
         </Box>
       </Box>

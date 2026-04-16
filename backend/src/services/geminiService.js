@@ -1,7 +1,8 @@
 const BloodSugar = require('../models/BloodSugar');
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const GROQ_API_KEY = process.env.GROQ_API_KEY;
+// Access keys dynamically from process.env
+const getGeminiKey = () => process.env.GEMINI_API_KEY;
+const getGroqKey = () => process.env.GROQ_API_KEY;
 
 // Simple in-memory cache: userId_lang => { text, timestamp }
 const recommendationCache = new Map();
@@ -9,16 +10,17 @@ const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
 
 // ─── Groq API Call (Primary) ──────────────────────────────────
 const callGroqAPI = async (prompt) => {
-  if (!GROQ_API_KEY) throw new Error('Groq API kaliti topilmadi');
+  const apiKey = getGroqKey();
+  if (!apiKey || apiKey.includes('your_')) throw new Error('Groq API kaliti sozlanmagan');
 
   const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${GROQ_API_KEY}`
+      'Authorization': `Bearer ${apiKey}`
     },
     body: JSON.stringify({
-      model: 'llama-3.3-70b-versatile',
+      model: 'llama-3.1-8b-instant',
       messages: [
         {
           role: 'system',
@@ -42,9 +44,10 @@ const callGroqAPI = async (prompt) => {
 
 // ─── Gemini API Call (Fallback) ───────────────────────────────
 const callGeminiAPI = async (prompt, retries = 1) => {
-  if (!GEMINI_API_KEY) throw new Error('Gemini API kaliti topilmadi');
-  const model = 'gemini-2.0-flash';
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`;
+  const apiKey = getGeminiKey();
+  if (!apiKey || apiKey.includes('your_')) throw new Error('Gemini API kaliti sozlanmagan');
+  const model = 'gemini-1.5-flash';
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
   const response = await fetch(url, {
     method: 'POST',
@@ -71,10 +74,13 @@ const callGeminiAPI = async (prompt, retries = 1) => {
 // ── Nutrition Recommendation ──────────────────────────────────────
 const getNutritionRecommendation = async (req, res) => {
   try {
-    if (!GEMINI_API_KEY && !GROQ_API_KEY) {
+    const groqKey = getGroqKey();
+    const geminiKey = getGeminiKey();
+
+    if ((!groqKey || groqKey.includes('your_')) && (!geminiKey || geminiKey.includes('your_'))) {
       return res.status(500).json({
         success: false,
-        message: 'AI API kalitlari (Groq yoki Gemini) sozlanmagan. Iltimos, muhit o\'zgaruvchilarini tekshiring.'
+        message: 'AI API kalitlari (Groq yoki Gemini) sozlanmagan. Iltimos, .env faylini tekshiring.'
       });
     }
 

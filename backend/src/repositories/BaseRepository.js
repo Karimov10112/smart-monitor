@@ -22,7 +22,7 @@ class BaseRepository {
     if (select) execution = execution.select(select);
     if (populate) execution = execution.populate(populate);
     if (sort) execution = execution.sort(sort);
-    if (skip) execution = execution.skip(skip);
+    if (skip !== undefined && skip !== null) execution = execution.skip(skip);
     if (limit) execution = execution.limit(limit);
 
     return await execution;

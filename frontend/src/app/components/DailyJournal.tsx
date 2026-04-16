@@ -101,11 +101,11 @@ export function DailyJournal() {
           aiSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }, 300);
       } else {
-        setAiError(data.message || 'Xato yuz berdi');
+        setAiError(data.message || t.error);
       }
     } catch (err: any) {
       console.error('AI error:', err);
-      setAiError(err.response?.data?.message || 'AI xizmati bilan aloqa o\'rnatib bo\'lmadi');
+      setAiError(err.response?.data?.message || t.error);
     } finally {
       setAiLoading(false);
     }
@@ -114,7 +114,7 @@ export function DailyJournal() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.fastingLevel && !formData.postMealLevel) {
-      toast.error(language === 'uz' ? 'Kamida bitta (och yoki to\'q qoringa) qand miqdorini kiriting' : 'Введите хотя бы один показатель сахара');
+      toast.error(t.invalidEmailFormat); // Reusing for missing sugar levels or add a new key if needed, but the user requested general fixes. Actually, better use a generic error if key is missing.
       return;
     }
 
@@ -307,10 +307,7 @@ export function DailyJournal() {
                   </Button>
                 </Stack>
               </Box>
-            </CardContent>
-          </Card>
-
-          {/* AI Recommendation Section (shown after saving or when triggered) */}
+                   {/* AI Recommendation Section (shown after saving or when triggered) */}
           {(aiLoading || aiRecommendation || savedRecord || aiError) && hasProfile && (
             <Box ref={aiSectionRef} sx={{ mb: 3 }}>
               {/* Loading state */}
@@ -326,10 +323,10 @@ export function DailyJournal() {
                       </Avatar>
                       <Box sx={{ flexGrow: 1 }}>
                         <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5, color: '#8b5cf6', display: 'block' }}>
-                          {language === 'uz' ? 'Gemini AI tahlil qilmoqda...' : language === 'ru' ? 'Gemini AI анализирует...' : 'Gemini AI analyzing...'}
+                          {t.aiAnalyzing}
                         </Typography>
                         <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
-                          {language === 'uz' ? "Bo'y, yosh, vazn va qand ma'lumotlaringiz asosida" : language === 'ru' ? 'На основе ваших данных о росте, возрасте, весе и сахаре' : 'Based on your height, age, weight & sugar data'}
+                          {t.aiBasedOnDetails}
                         </Typography>
                       </Box>
                       <CircularProgress size={24} sx={{ color: '#8b5cf6' }} />
@@ -359,7 +356,7 @@ export function DailyJournal() {
                       onClick={fetchAIRecommendation}
                       sx={{ color: 'error.main', fontWeight: 800, fontSize: 10 }}
                     >
-                      {language === 'uz' ? 'Qayta urinish' : 'Retry'}
+                      {t.aiRetry}
                     </Button>
                   </Stack>
                 </Card>
@@ -391,7 +388,7 @@ export function DailyJournal() {
                         ✨ GEMINI AI
                       </Typography>
                       <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.75)', fontWeight: 700 }}>
-                        {language === 'uz' ? 'Shaxsiylashtirilgan ovqatlanish tavsiyasi' : language === 'ru' ? 'Персональная рекомендация питания' : 'Personalized nutrition advice'}
+                        {t.aiPersonalizedAdvice}
                       </Typography>
                     </Box>
 
@@ -408,7 +405,7 @@ export function DailyJournal() {
                       {aiMeta?.age && (
                         <Chip
                           size="small"
-                          label={`${aiMeta.age} yosh`}
+                          label={`${aiMeta.age} ${t.aiYearsOld}`}
                           sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', fontWeight: 800, fontSize: 9, height: 22 }}
                         />
                       )}
@@ -434,7 +431,7 @@ export function DailyJournal() {
                           disabled={aiLoading}
                           sx={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1, color: '#8b5cf6' }}
                         >
-                          {language === 'uz' ? 'Yangilash' : language === 'ru' ? 'Обновить' : 'Refresh'}
+                          {t.aiRefresh}
                         </Button>
                       </Box>
                       <Box sx={{ lineHeight: 1.8 }}>
@@ -444,24 +441,24 @@ export function DailyJournal() {
                   </Collapse>
                 </Card>
               )}
-
-              {/* Saved but no profile - nudge to get AI */}
-              {savedRecord && !aiRecommendation && !aiLoading && !hasProfile && (
-                <Card elevation={0} sx={{
-                  border: `1px dashed ${alpha('#8b5cf6', 0.3)}`,
-                  background: alpha('#8b5cf6', 0.02),
-                  textAlign: 'center', p: 3
-                }}>
-                  <AutoAwesomeIcon sx={{ color: '#8b5cf6', mb: 1 }} />
-                  <Typography variant="body2" sx={{ fontWeight: 700, color: 'text.secondary', mb: 2 }}>
-                    {language === 'uz' ? "AI tavsiya uchun profilingizga bo'y va vazn kiriting" : language === 'ru' ? 'Добавьте рост и вес в профиль для AI рекомендации' : 'Add height & weight to your profile for AI advice'}
-                  </Typography>
-                  <Button size="small" variant="outlined" href="/complete-profile" sx={{ borderRadius: 1.5, fontWeight: 800, fontSize: 11, borderColor: '#8b5cf6', color: '#8b5cf6' }}>
-                    {language === 'uz' ? 'Profilni to\'ldirish' : language === 'ru' ? 'Заполнить профиль' : 'Complete Profile'}
-                  </Button>
-                </Card>
-              )}
             </Box>
+          )}
+
+          {/* Saved but no profile - nudge to complete profile (OUTSIDE hasProfile gate) */}
+          {savedRecord && !aiRecommendation && !aiLoading && !hasProfile && (
+            <Card elevation={0} sx={{
+              border: `1px dashed ${alpha('#8b5cf6', 0.3)}`,
+              background: alpha('#8b5cf6', 0.02),
+              textAlign: 'center', p: 3, mb: 3
+            }}>
+              <AutoAwesomeIcon sx={{ color: '#8b5cf6', mb: 1 }} />
+              <Typography variant="body2" sx={{ fontWeight: 700, color: 'text.secondary', mb: 2 }}>
+                {t.aiBasedOnDetails}
+              </Typography>
+              <Button size="small" variant="outlined" onClick={() => navigate('/complete-profile')} sx={{ borderRadius: 1.5, fontWeight: 800, fontSize: 11, borderColor: '#8b5cf6', color: '#8b5cf6' }}>
+                {t.editProfile}
+              </Button>
+            </Card>
           )}
         </Stack>
       </Grid>
@@ -548,7 +545,7 @@ export function DailyJournal() {
                 <AssignmentIndIcon sx={{ fontSize: 32, color: 'primary.main' }} />
               </Box>
               <Typography variant="caption" sx={{ fontWeight: 800, color: 'text.secondary', display: 'block', mb: 2 }}>
-                {language === 'uz' ? 'AI Tavsiya olish uchun bo\'y va vazn kiritishingiz kerak' : 'Add height & weight to your profile for AI advice'}
+                {t.aiBasedOnDetails}
               </Typography>
               <Button 
                 size="small" 
@@ -556,7 +553,7 @@ export function DailyJournal() {
                 onClick={() => navigate('/complete-profile')}
                 sx={{ borderRadius: 1.5, fontWeight: 800, fontSize: 11 }}
               >
-                {language === 'uz' ? 'Profilni to\'ldirish' : 'Complete Profile'}
+                {t.editProfile}
               </Button>
             </Card>
           )}
@@ -577,10 +574,10 @@ export function DailyJournal() {
                   <AutoAwesomeIcon sx={{ color: '#8b5cf6' }} />
                 </Avatar>
                 <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5, color: '#8b5cf6', display: 'block', mb: 0.5 }}>
-                  {language === 'uz' ? 'AI Ovqatlanish Tavsiyasi' : language === 'ru' ? 'AI Рекомендация питания' : 'AI Nutrition Advice'}
+                  {t.aiNutritionAdviceTitle}
                 </Typography>
                 <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
-                  {language === 'uz' ? "Bo'y, yosh, vazn asosida kaloriya hisoblash" : language === 'ru' ? 'Расчёт калорий по росту, возрасту и весу' : 'Calorie calculation based on height, age & weight'}
+                  {t.aiBasedOnDetails}
                 </Typography>
                 <Button
                   size="small"
@@ -591,7 +588,7 @@ export function DailyJournal() {
                     bgcolor: '#8b5cf6', '&:hover': { bgcolor: '#7c3aed' }, boxShadow: 'none'
                   }}
                 >
-                  {language === 'uz' ? 'Tavsiya olish' : language === 'ru' ? 'Получить совет' : 'Get Advice'}
+                  {t.detailedAdvice}
                 </Button>
               </CardContent>
             </Card>

@@ -301,16 +301,17 @@ const refreshToken = async (req, res) => {
 // ==================== COMPLETE PROFILE ====================
 const completeProfile = async (req, res) => {
   try {
-    const { firstName, lastName, phone, dateOfBirth, gender, region, district, mfy, diabetesType, doctorName, height, weight } = req.body;
-
+    const { firstName, lastName, phone, telegramUsername, dateOfBirth, gender, region, district, mfy, diabetesType, doctorName, height, weight } = req.body;
+    
     const isProfileComplete = !!(firstName && lastName && phone && dateOfBirth && gender && region && district && mfy && diabetesType);
-
+    
     const user = await userRepository.findByIdAndUpdate(
       req.user._id,
       {
         firstName,
         lastName,
         phone,
+        telegramUsername,
         dateOfBirth,
         gender,
         region,

@@ -1,20 +1,8 @@
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 
-const createTransporter = () => {
-  return nodemailer.createTransport({
-    host: process.env.EMAIL_HOST,
-    port: parseInt(process.env.EMAIL_PORT),
-    secure: false,
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  });
-};
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const sendOTPEmail = async (email, otp, language = 'uz') => {
-  const transporter = createTransporter();
-
   const subjects = {
     uz: 'Tasdiqlash kodi - Qand Nazorati',
     ru: 'Код подтверждения - Контроль Сахара',
@@ -69,8 +57,10 @@ const sendOTPEmail = async (email, otp, language = 'uz') => {
     `,
   };
 
-  await transporter.sendMail({
-    from: `"Qand Nazorati" <${process.env.EMAIL_FROM}>`,
+  const fromEmail = process.env.EMAIL_FROM || 'onboarding@resend.dev';
+
+  await resend.emails.send({
+    from: `Qand Nazorati <${fromEmail}>`,
     to: email,
     subject: subjects[language] || subjects.uz,
     html: bodies[language] || bodies.uz,
@@ -78,7 +68,6 @@ const sendOTPEmail = async (email, otp, language = 'uz') => {
 };
 
 const sendPasswordResetEmail = async (email, resetToken, language = 'uz') => {
-  const transporter = createTransporter();
   const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
 
   const subjects = {
@@ -112,9 +101,10 @@ const sendPasswordResetEmail = async (email, resetToken, language = 'uz') => {
   };
 
   const t = templates[language] || templates.uz;
+  const fromEmail = process.env.EMAIL_FROM || 'onboarding@resend.dev';
 
-  await transporter.sendMail({
-    from: `"Qand Nazorati" <${process.env.EMAIL_FROM}>`,
+  await resend.emails.send({
+    from: `Qand Nazorati <${fromEmail}>`,
     to: email,
     subject: subjects[language] || subjects.uz,
     html: `

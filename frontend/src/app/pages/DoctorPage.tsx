@@ -72,7 +72,10 @@ export default function DoctorPage() {
   const [isMini, setIsMini] = useState(false);
 
   useEffect(() => {
-    loadPatients();
+    const timer = setTimeout(() => {
+      loadPatients();
+    }, 400);
+    return () => clearTimeout(timer);
   }, [search]);
 
   const loadPatients = async () => {
@@ -106,17 +109,17 @@ export default function DoctorPage() {
   };
 
   const fastingRecords = records
-    .filter(r => r.category === 'fasting' || r.type === 'fasting' || r.fastingLevel)
+    .filter(r => r.fastingLevel !== undefined && r.fastingLevel !== null)
     .map(r => ({
       date: format(new Date(r.date), 'dd/MM'),
-      level: r.fastingLevel || r.level || 0,
+      level: r.fastingLevel,
     }));
 
   const postMealRecords = records
-    .filter(r => r.category === 'post_meal' || r.type === 'post_meal' || r.postMealLevel)
+    .filter(r => r.postMealLevel !== undefined && r.postMealLevel !== null)
     .map(r => ({
       date: format(new Date(r.date), 'dd/MM'),
-      level: r.postMealLevel || r.level || 0,
+      level: r.postMealLevel,
     }));
 
   if (loading && patients.length === 0) return (
@@ -161,7 +164,7 @@ export default function DoctorPage() {
                 <Box sx={{ p: 1, bgcolor: 'secondary.main', borderRadius: 1.5, display: 'flex', color: 'white' }}>
                   <BiotechIcon />
                 </Box>
-                <Typography variant="h6" sx={{ fontWeight: 900, fontSize: 16, letterSpacing: 1 }}>DOCTOR</Typography>
+                <Typography variant="overline" sx={{ fontWeight: 900, color: 'primary.main', letterSpacing: 2 }}>{t.doctorRole.toUpperCase()}</Typography>
               </Stack>
             )}
             <IconButton onClick={() => setIsMini(!isMini)} size="small" sx={{ bgcolor: alpha(theme.palette.secondary.main, 0.05) }}>
@@ -221,7 +224,7 @@ export default function DoctorPage() {
                 <Box sx={{ minWidth: isMini ? 0 : 40, display: 'flex' }}>
                   <ArrowBackIcon fontSize="small" />
                 </Box>
-                {!isMini && <Typography sx={{ fontWeight: 700, fontSize: 13 }}>Asosiy sahifa</Typography>}
+                {!isMini && <Typography sx={{ fontWeight: 700, fontSize: 13 }}>{t.mainPage}</Typography>}
               </ListItemButton>
             </ListItem>
           </Box>
@@ -250,7 +253,7 @@ export default function DoctorPage() {
         >
            <Button
                onClick={() => { setCurrentTab('patients'); setSelectedPatient(null); }}
-               variant={currentTab === 'patients' || currentTab === 'patient-detail' ? 'contained' : 'contained'}
+               variant={currentTab === 'patients' || currentTab === 'patient-detail' ? 'contained' : 'outlined'}
                startIcon={<PeopleAltIcon />}
                sx={{ 
                  borderRadius: 8, 
@@ -265,7 +268,7 @@ export default function DoctorPage() {
                  borderColor: currentTab === 'patients' || currentTab === 'patient-detail' ? 'transparent' : 'divider'
                }}
            >
-               Bemorlarim
+               {t.patients}
            </Button>
 
            {isAdmin && (
@@ -295,7 +298,7 @@ export default function DoctorPage() {
                  border: '1px solid', borderColor: 'divider', boxShadow: 'none'
                }}
            >
-               Asosiy
+               {t.mainPage}
            </Button>
         </Box>
 

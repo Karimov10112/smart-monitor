@@ -12,11 +12,18 @@ exports.getPatients = async (req, res) => {
     let query = { role: 'user', assignedDoctor: req.user._id };
     
     if (search) {
-      query.$or = [
-        { firstName: { $regex: search, $options: 'i' } },
-        { lastName: { $regex: search, $options: 'i' } },
-        { email: { $regex: search, $options: 'i' } }
+      query.$and = [
+        { role: 'user', assignedDoctor: req.user._id },
+        {
+          $or: [
+            { firstName: { $regex: search, $options: 'i' } },
+            { lastName: { $regex: search, $options: 'i' } },
+            { email: { $regex: search, $options: 'i' } }
+          ]
+        }
       ];
+      delete query.role;
+      delete query.assignedDoctor;
     }
 
     const patients = await userRepository.find(query, {

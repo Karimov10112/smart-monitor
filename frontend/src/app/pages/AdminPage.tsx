@@ -174,7 +174,7 @@ export default function AdminPage() {
     try {
       const { data } = await adminAPI.getUser(userId);
       setSelectedUser(data.user);
-      setSelectedUserRecords(data.records ? [...data.records].reverse() : []);
+      setSelectedUserRecords(data.records || []);
       loadStats();
     } catch { }
   };
@@ -239,15 +239,21 @@ export default function AdminPage() {
   const sidebarWidth = 280;
   const miniWidth = 88;
 
-  const fastingRecords = selectedUserRecords.filter(r => r.category === 'fasting' || r.type === 'fasting').map(r => ({
-    date: format(new Date(r.date), 'dd/MM'),
-    level: r.level || r.fastingLevel || 0
-  })).reverse();
+  const fastingRecords = selectedUserRecords
+    .filter(r => r.fastingLevel !== undefined && r.fastingLevel !== null)
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    .map(r => ({
+      date: format(new Date(r.date), 'dd/MM'),
+      level: r.fastingLevel
+    }));
 
-  const postMealRecords = selectedUserRecords.filter(r => r.category === 'post_meal' || r.type === 'post_meal' || r.postMealLevel).map(r => ({
-    date: format(new Date(r.date), 'dd/MM'),
-    level: r.level || r.postMealLevel || 0
-  })).reverse();
+  const postMealRecords = selectedUserRecords
+    .filter(r => r.postMealLevel !== undefined && r.postMealLevel !== null)
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    .map(r => ({
+      date: format(new Date(r.date), 'dd/MM'),
+      level: r.postMealLevel
+    }));
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
@@ -282,7 +288,7 @@ export default function AdminPage() {
                 <Box sx={{ p: 1, bgcolor: 'primary.main', borderRadius: 1.5, display: 'flex', color: 'white' }}>
                   <AdminPanelSettingsIcon />
                 </Box>
-                <Typography variant="h6" sx={{ fontWeight: 900, fontSize: 16 }}>ADMIN</Typography>
+                <Typography variant="h6" sx={{ fontWeight: 900, fontSize: 16 }}>{t.admin.toUpperCase()}</Typography>
               </Stack>
             )}
             <IconButton onClick={() => setIsMini(!isMini)} size="small" sx={{ bgcolor: alpha(theme.palette.primary.main, 0.05) }}>
@@ -337,7 +343,7 @@ export default function AdminPage() {
                 <Box sx={{ minWidth: isMini ? 0 : 40, display: 'flex' }}>
                   <ArrowBackIcon fontSize="small" />
                 </Box>
-                {!isMini && <Typography sx={{ fontWeight: 700, fontSize: 13 }}>Asosiy sahifa</Typography>}
+                {!isMini && <Typography sx={{ fontWeight: 700, fontSize: 13 }}>{t.mainPage}</Typography>}
               </ListItemButton>
             </ListItem>
           </Box>
@@ -372,7 +378,7 @@ export default function AdminPage() {
                  setSelectedUserId(null);
                  if (item.id === 'audit') loadAuditLogs();
                }}
-               variant={currentTab === item.id && !selectedUserId ? 'contained' : 'contained'}
+               variant={currentTab === item.id && !selectedUserId ? 'contained' : 'outlined'}
                startIcon={item.icon}
                sx={{ 
                  borderRadius: 8, 
@@ -402,7 +408,7 @@ export default function AdminPage() {
                  border: '1px solid', borderColor: 'divider', boxShadow: 'none'
                }}
            >
-               Asosiy
+               {t.mainPage}
            </Button>
         </Box>
 
@@ -411,7 +417,7 @@ export default function AdminPage() {
              <Typography variant="h5" sx={{ fontWeight: 900 }}>
                {selectedUserId ? t.userDetail : t[currentTab] || currentTab}
              </Typography>
-             <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary' }}>Admin / {currentTab}</Typography>
+             <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary' }}>{t.admin} / {t[currentTab] || currentTab}</Typography>
           </Box>
           <Stack direction="row" spacing={2} alignItems="center">
             <IconButton sx={{ bgcolor: alpha(theme.palette.divider, 0.4) }}><NotificationsIcon fontSize="small" /></IconButton>
@@ -502,7 +508,7 @@ export default function AdminPage() {
                           <TableCell align="right">
                             <Stack direction="row" spacing={1} justifyContent="flex-end">
                               <IconButton size="small" color="primary"><EditIcon fontSize="small" /></IconButton>
-                              <IconButton size="small" color="error" onClick={(e) => { e.stopPropagation(); if (confirm("Delete?")) adminAPI.deleteUser(u._id).then(() => loadUsers()); }}><DeleteIcon fontSize="small" /></IconButton>
+                              <IconButton size="small" color="error" onClick={(e) => { e.stopPropagation(); if (confirm("Delete?")) adminAPI.deleteUser(u._id).then(() => loadUsers(search, role)); }}><DeleteIcon fontSize="small" /></IconButton>
                             </Stack>
                           </TableCell>
                         </TableRow>
@@ -518,7 +524,7 @@ export default function AdminPage() {
                 <Stack direction="row" justifyContent="space-between" sx={{ mb: 4 }}>
                   <Box>
                     <Typography variant="h6" sx={{ fontWeight: 900 }}>{t.productCatalog}</Typography>
-                    <Typography variant="caption" color="text.secondary">{products.length} products</Typography>
+                    <Typography variant="caption" color="text.secondary">{products.length} {t.productsCount}</Typography>
                   </Box>
                   <Button variant="contained" startIcon={<AddIcon />} onClick={() => { setEditingProduct(null); setIsProductModalOpen(true); }} sx={{ borderRadius: 1.5, fontWeight: 900 }}>{t.addProduct}</Button>
                 </Stack>
@@ -613,14 +619,14 @@ export default function AdminPage() {
                          <Grid size={{ xs: 12, md: 6 }}>
                             <Typography variant="caption" sx={{ fontWeight: 800, mb: 1.5, display: 'block', textTransform: 'uppercase' }}>{t.assignDoctor}</Typography>
                             <FormControl fullWidth size="small">
-                               <Select value={selectedUser.assignedDoctor?._id || selectedUser.assignedDoctor || ''} onChange={e => adminAPI.assignDoctor(selectedUser._id, e.target.value || null).then(() => { toast.success('Doktor biriktirildi'); loadSpecificUser(selectedUser._id); })} sx={{ borderRadius: 2 }}>
-                                  <MenuItem value=""><em>Biriktirish</em></MenuItem>
+                               <Select value={selectedUser.assignedDoctor?._id || selectedUser.assignedDoctor || ''} onChange={e => adminAPI.assignDoctor(selectedUser._id, e.target.value || null).then(() => { toast.success(t.doctorAssigned); loadSpecificUser(selectedUser._id); })} sx={{ borderRadius: 2 }}>
+                                  <MenuItem value=""><em>{t.assignDoctor}</em></MenuItem>
                                   {availableDoctors.map(doc => <MenuItem key={doc._id} value={doc._id}>{doc.firstName} {doc.lastName}</MenuItem>)}
                                </Select>
                             </FormControl>
                             {selectedUser.assignedDoctor && (
                                <Typography variant="caption" color="success.main" sx={{ fontWeight: 800, mt: 1, display: 'block' }}>
-                                  ✓ {typeof selectedUser.assignedDoctor === 'object' ? `${selectedUser.assignedDoctor.firstName} ${selectedUser.assignedDoctor.lastName}` : 'Biriktirilgan'}
+                                  ✓ {typeof selectedUser.assignedDoctor === 'object' ? `${selectedUser.assignedDoctor.firstName} ${selectedUser.assignedDoctor.lastName}` : t.doctorAssigned}
                                </Typography>
                             )}
                          </Grid>
@@ -644,7 +650,7 @@ export default function AdminPage() {
                 <Grid container spacing={3}>
                    <Grid size={{ xs: 12, md: 8 }}>
                       <Card elevation={0} sx={{ p: 4, mb: 3, borderRadius: 2, border: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.background.paper, 0.4), backdropFilter: 'blur(10px)' }}>
-                         <Typography variant="h6" color="primary" sx={{ fontWeight: 900, mb: 3, borderLeft: `4px solid ${theme.palette.primary.main}`, pl: 1.5 }}>Och Qoringa (Fasting)</Typography>
+                         <Typography variant="h6" color="primary" sx={{ fontWeight: 900, mb: 3, borderLeft: `4px solid ${theme.palette.primary.main}`, pl: 1.5 }}>{t.fastingChartTitle}</Typography>
                          <Box sx={{ height: 240 }}>
                            {fastingRecords.length > 0 ? (
                               <ResponsiveContainer width="100%" height="100%">
@@ -656,12 +662,12 @@ export default function AdminPage() {
                                     <Area type="monotone" dataKey="level" stroke={theme.palette.primary.main} fill={theme.palette.primary.main} fillOpacity={0.1} strokeWidth={3} />
                                  </AreaChart>
                               </ResponsiveContainer>
-                           ) : <Box sx={{ py: 6, textAlign: 'center', opacity: 0.4 }}><TimelineIcon sx={{ fontSize: 40, mb: 1 }} /><Typography variant="caption" display="block">Ma'lumot topilmadi</Typography></Box>}
+                           ) : <Box sx={{ py: 6, textAlign: 'center', opacity: 0.4 }}><TimelineIcon sx={{ fontSize: 40, mb: 1 }} /><Typography variant="caption" display="block">{t.noRecords}</Typography></Box>}
                          </Box>
                       </Card>
 
                       <Card elevation={0} sx={{ p: 4, borderRadius: 2, border: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.background.paper, 0.4), backdropFilter: 'blur(10px)' }}>
-                         <Typography variant="h6" color="secondary" sx={{ fontWeight: 900, mb: 3, borderLeft: `4px solid ${theme.palette.secondary.main}`, pl: 1.5 }}>To'q Qoringa (Post-meal)</Typography>
+                         <Typography variant="h6" color="secondary" sx={{ fontWeight: 900, mb: 3, borderLeft: `4px solid ${theme.palette.secondary.main}`, pl: 1.5 }}>{t.postMealChartTitle}</Typography>
                          <Box sx={{ height: 240 }}>
                            {postMealRecords.length > 0 ? (
                               <ResponsiveContainer width="100%" height="100%">
@@ -673,7 +679,7 @@ export default function AdminPage() {
                                     <Area type="monotone" dataKey="level" stroke={theme.palette.secondary.main} fill={theme.palette.secondary.main} fillOpacity={0.1} strokeWidth={3} />
                                  </AreaChart>
                               </ResponsiveContainer>
-                           ) : <Box sx={{ py: 6, textAlign: 'center', opacity: 0.4 }}><TimelineIcon sx={{ fontSize: 40, mb: 1 }} /><Typography variant="caption" display="block">Ma'lumot topilmadi</Typography></Box>}
+                           ) : <Box sx={{ py: 6, textAlign: 'center', opacity: 0.4 }}><TimelineIcon sx={{ fontSize: 40, mb: 1 }} /><Typography variant="caption" display="block">{t.noRecords}</Typography></Box>}
                          </Box>
                       </Card>
                    </Grid>
@@ -681,7 +687,7 @@ export default function AdminPage() {
                    <Grid size={{ xs: 12, md: 4 }}>
                       <Card elevation={0} sx={{ p: 4, borderRadius: 2, border: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.background.paper, 0.4), backdropFilter: 'blur(10px)', height: '100%', display: 'flex', flexDirection: 'column' }}>
                          <Typography variant="caption" sx={{ fontWeight: 900, color: 'warning.main', textTransform: 'uppercase', mb: 2, display: 'block' }}>{t.administrativeNotes || 'Admin Izohi'}</Typography>
-                         <TextField fullWidth multiline rows={7} variant="outlined" placeholder="Izoh yozing..." value={selectedUser.adminNotes || ''} onChange={e => setSelectedUser({...selectedUser, adminNotes: e.target.value})} sx={{ mb: 3, flexGrow: 1, '& .MuiOutlinedInput-root': { borderRadius: 2, bgcolor: alpha(theme.palette.background.default, 0.5) } }} />
+                         <TextField fullWidth multiline rows={7} variant="outlined" placeholder={t.notesPlaceholder} value={selectedUser.adminNotes || ''} onChange={e => setSelectedUser({...selectedUser, adminNotes: e.target.value})} sx={{ mb: 3, flexGrow: 1, '& .MuiOutlinedInput-root': { borderRadius: 2, bgcolor: alpha(theme.palette.background.default, 0.5) } }} />
                          <Button fullWidth variant="contained" onClick={() => handleSaveAdminNotes(selectedUserId!, selectedUser.adminNotes)} sx={{ borderRadius: 1.5, fontWeight: 900, py: 1.5 }}>{t.saveNotes || 'Izohni saqlash'}</Button>
                       </Card>
                    </Grid>

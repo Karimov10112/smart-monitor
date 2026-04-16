@@ -90,7 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const updateUser = React.useCallback((updatedUser: any) => {
     if (typeof updatedUser === 'function') {
-      setUser(updatedUser);
+      setUser(prev => updatedUser(prev));
     } else {
       setUser(updatedUser);
     }
@@ -116,7 +116,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const lastActivity = parseInt(localStorage.getItem('lastActivity') || '0', 10);
       if (Date.now() - lastActivity > INACTIVITY_LIMIT) {
         logout().then(() => {
-          window.location.href = '/register';
+          window.location.href = '/login';
         });
       }
     }, 5000); // Check every 5 seconds

@@ -9,6 +9,7 @@ export default defineConfig({
     alias: { '@': path.resolve(__dirname, './src') },
   },
   server: {
+    allowedHosts: ['diabetmed.uz'],
     proxy: {
       '/api': { target: 'http://localhost:5000', changeOrigin: true },
     },

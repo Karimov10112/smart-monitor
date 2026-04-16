@@ -16,6 +16,8 @@ const { Server } = require('socket.io');
 // Dynamic CORS — works for localhost, mobile devices (192.168.x.x), and Vercel
 const ALLOWED_ORIGINS = [
   process.env.FRONTEND_URL,
+  'https://diabetmed.uz',
+  'https://qandli-diabet.vercel.app',
   'http://localhost:5173',
   'http://localhost:3000',
 ].filter(Boolean);
@@ -26,7 +28,7 @@ const corsOriginFn = (origin, callback) => {
   // In development allow any origin (local network, mobile)
   if (process.env.NODE_ENV !== 'production') return callback(null, true);
   // In production only allow configured origins
-  if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+  if (ALLOWED_ORIGINS.includes(origin) || origin.includes('diabetmed.uz')) return callback(null, true);
   callback(new Error('Not allowed by CORS'));
 };
 
@@ -173,29 +175,25 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 
 // Export for Vercel
-if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+const initialize = async () => {
+  try {
+    await connectDB();
+    await createSuperAdmin();
+    await seedProducts();
+  } catch (err) {
+    console.error('Initialization error:', err);
+  }
+};
+
+if (!process.env.VERCEL) {
   server.listen(PORT, async () => {
-    console.log(`🚀 Server ishlamoqda: http://localhost:${PORT}`);
-    try {
-      await connectDB();
-      await createSuperAdmin();
-      await seedProducts();
-    } catch (err) {
-      console.error('Startup initialization error:', err);
-    }
+    const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
+    const host = process.env.NODE_ENV === 'production' ? 'diabetmed.uz' : 'localhost';
+    console.log(`🚀 Server ishlamoqda: ${protocol}://${host}:${PORT}`);
+    await initialize();
   });
 } else {
-  // On Vercel, we still need to run these once if possible, 
-  // but serverless functions are stateless. 
-  const initialize = async () => {
-    try {
-      await connectDB();
-      await createSuperAdmin();
-      await seedProducts();
-    } catch (err) {
-      console.error('Vercel initialization error:', err);
-    }
-  };
+  // On Vercel, just run initialization
   initialize();
 }
 

@@ -8,7 +8,7 @@ passport.use(
     {
       clientID: process.env.GOOGLE_CLIENT_ID || 'dummy-id',
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || 'dummy-secret',
-      callbackURL: process.env.GOOGLE_CALLBACK_URL || 'http://localhost:5000/api/auth/google/callback',
+      callbackURL: process.env.GOOGLE_CALLBACK_URL || 'https://diabetmed.uz/api/auth/google/callback',
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
@@ -45,7 +45,7 @@ passport.use(
     {
       clientID: process.env.FACEBOOK_APP_ID || 'dummy-id',
       clientSecret: process.env.FACEBOOK_APP_SECRET || 'dummy-secret',
-      callbackURL: process.env.FACEBOOK_CALLBACK_URL || 'http://localhost:5000/api/auth/facebook/callback',
+      callbackURL: process.env.FACEBOOK_CALLBACK_URL || 'https://diabetmed.uz/api/auth/facebook/callback',
       profileFields: ['id', 'emails', 'name', 'picture'],
     },
     async (accessToken, refreshToken, profile, done) => {

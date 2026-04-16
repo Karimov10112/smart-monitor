@@ -192,7 +192,7 @@ export const translations: any = {
     newPassword: "Yangi parol",
     changeCredentials: "Login va parolni o'zgartirish",
     emailBand: "Bu email band",
-    invalidEmailFormat: "Faqat 'admin' yoki '@gmail.com' bilan tugaydigan loginlar qabul qilinadi. Boshqa domenlar (.ru, va h.k.) taqiqlangan.",
+    invalidEmailFormat: "Faqat '@gmail.com' bilan tugaydigan loginlar qabul qilinadi. Boshqa domenlar (.ru, va h.k.) taqiqlangan.",
     
     // Reminders
     reminders: "Eslatmalar",
@@ -300,6 +300,27 @@ export const translations: any = {
     detailedAdvice: "Batafsil tavsiya",
     noAdviceAvailable: "Tavsiya mavjud emas",
     joinCommunity: "Jamiyatga qo'shiling",
+    
+    // New Keys
+    administrator: "Administrator",
+    doctorRole: "Shifokor",
+    userRole: "Foydalanuvchi",
+    support: "QO'LLAB-QUVVATLASH",
+    professionalVersion: "PROFESSIONAL TALQIN",
+    mainPage: "Asosiy sahifa",
+    aiAnalyzing: "Gemini AI tahlil qilmoqda...",
+    aiBasedOnDetails: "Bo'y, yosh, vazn va qand ma'lumotlaringiz asosida",
+    aiNutritionAdviceTitle: "AI Ovqatlanish Tavsiyasi",
+    aiBMI: "BMI",
+    aiYearsOld: "yosh",
+    aiRetry: "Qayta urinish",
+    aiRefresh: "Yangilash",
+    aiPersonalizedAdvice: "Shaxsiylashtirilgan ovqatlanish tavsiyasi",
+    fastingChartTitle: "Och Qoringa Shakar",
+    postMealChartTitle: "Ovqatdan Keyin Shakar",
+    recentActivityTitle: "SO'NGGI FAOLIYAT",
+    patientListTitle: "BEMORLAR RO'YXATI",
+    sugarMonitoringTrends: "GLYUKOZA MONITORING TRENDLARI",
   },
   ru: {
     // Tabs
@@ -494,7 +515,7 @@ export const translations: any = {
     newPassword: "Новый пароль",
     changeCredentials: "Смена логина и пароля",
     emailBand: "Этот email занят",
-    invalidEmailFormat: "Допускаются только 'admin' или логины, оканчивающиеся на '@gmail.com'. Другие домены (.ru и т.д.) запрещены.",
+    invalidEmailFormat: "Допускаются только логины, оканчивающиеся на '@gmail.com'. Другие домены (.ru и т.д.) запрещены.",
     
     // Reminders
     reminders: "Напоминания",
@@ -602,6 +623,27 @@ export const translations: any = {
     detailedAdvice: "Подробная рекомендация",
     noAdviceAvailable: "Рекомендация отсутствует",
     joinCommunity: "Присоединяйтесь к сообществу",
+
+    // New Keys
+    administrator: "Администратор",
+    doctorRole: "Врач",
+    userRole: "Пользователь",
+    support: "ПОДДЕРЖКА",
+    professionalVersion: "ПРОФЕССИОНАЛЬНАЯ ВЕРСИЯ",
+    mainPage: "Главная страница",
+    aiAnalyzing: "Gemini AI анализирует...",
+    aiBasedOnDetails: "На основе ваших данных о росте, возрасте, весе и сахаре",
+    aiNutritionAdviceTitle: "AI Рекомендация питания",
+    aiBMI: "ИМТ",
+    aiYearsOld: "лет",
+    aiRetry: "Повторить",
+    aiRefresh: "Обновить",
+    aiPersonalizedAdvice: "Персональная рекомендация питания",
+    fastingChartTitle: "Сахар натощак",
+    postMealChartTitle: "Сахар после еды",
+    recentActivityTitle: "ПОСЛЕДНЯЯ АКТИВНОСТЬ",
+    patientListTitle: "СПИСОК ПАЦИЕНТОВ",
+    sugarMonitoringTrends: "ТРЕНДЫ МОНИТОРИНГА ГЛЮКОЗЫ",
   },
   en: {
     // Tabs
@@ -796,7 +838,7 @@ export const translations: any = {
     newPassword: "New Password",
     changeCredentials: "Change credentials",
     emailBand: "This email is taken",
-    invalidEmailFormat: "Only 'admin' or logins ending with '@gmail.com' are accepted. Other domains (.ru, etc.) are forbidden.",
+    invalidEmailFormat: "Only logins ending with '@gmail.com' are accepted. Other domains (.ru, etc.) are forbidden.",
     
     // Reminders
     reminders: "Reminders",
@@ -904,6 +946,27 @@ export const translations: any = {
     detailedAdvice: "Detailed Advice",
     noAdviceAvailable: "No advice available",
     joinCommunity: "Join the Community",
+
+    // New Keys
+    administrator: "Administrator",
+    doctorRole: "Doctor",
+    userRole: "User",
+    support: "SUPPORT",
+    professionalVersion: "PROFESSIONAL VERSION",
+    mainPage: "Main Page",
+    aiAnalyzing: "Gemini AI analyzing...",
+    aiBasedOnDetails: "Based on your height, age, weight & sugar data",
+    aiNutritionAdviceTitle: "AI Nutrition Advice",
+    aiBMI: "BMI",
+    aiYearsOld: "years old",
+    aiRetry: "Retry",
+    aiRefresh: "Refresh",
+    aiPersonalizedAdvice: "Personalized nutrition advice",
+    fastingChartTitle: "Fasting Blood Sugar",
+    postMealChartTitle: "Post-Meal Blood Sugar",
+    recentActivityTitle: "RECENT ACTIVITY",
+    patientListTitle: "PATIENT LIST",
+    sugarMonitoringTrends: "GLUCOSE MONITORING TRENDS",
   }
 };
 

@@ -64,6 +64,7 @@ export default function CompleteProfilePage() {
     dateOfBirth: '', gender: '', region: '',
     district: '', mfy: '', diabetesType: '',
     height: '', weight: '',
+    doctorName: '',
     email: '', currentPassword: '', newPassword: '',
   });
   const [loading, setLoading] = useState(false);
@@ -83,6 +84,7 @@ export default function CompleteProfilePage() {
         diabetesType: user.diabetesType || '',
         height: user.height ? String(user.height) : '',
         weight: user.weight ? String(user.weight) : '',
+        doctorName: user.doctorName || '',
         email: user.email || '',
         currentPassword: '',
         newPassword: '',
@@ -175,6 +177,9 @@ export default function CompleteProfilePage() {
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField fullWidth size="small" type="date" label={t.dob} value={form.dateOfBirth} onChange={e => handleChange('dateOfBirth', e.target.value)} InputLabelProps={{ shrink: true }} InputProps={{ startAdornment: <CalendarMonthIcon sx={{ mr: 1, fontSize: 18, color: 'text.secondary' }} /> }} />
                 </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                   <TextField fullWidth size="small" label={t.telegramLabel || 'Telegram'} placeholder="@username" value={form.telegramUsername} onChange={e => handleChange('telegramUsername', e.target.value)} />
+                </Grid>
                 <Grid size={{ xs: 12 }}>
                   <Typography variant="caption" sx={{ fontWeight: 800, mb: 1.5, display: 'block', textTransform: 'uppercase', color: 'text.secondary' }}>{t.gender}</Typography>
                   <Stack direction="row" spacing={2}>
@@ -235,7 +240,7 @@ export default function CompleteProfilePage() {
                         label={t.mfy}
                         size="small"
                         required
-                        placeholder={form.district && !UZ_MAHALLAS[form.district] ? "Mahalla nomini yozing..." : "Tanlang yoki yozing..."}
+                        placeholder={form.district && !UZ_MAHALLAS[form.district] ? (language === 'uz' ? "Mahalla nomini yozing..." : "Введите название махалли...") : (language === 'uz' ? "Tanlang yoki yozing..." : "Выберите или напишите...")}
                       />
                     )}
                     openOnFocus
@@ -292,6 +297,9 @@ export default function CompleteProfilePage() {
                     placeholder="70"
                     required
                   />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                   <TextField fullWidth size="small" label={t.doctorName} value={form.doctorName} onChange={e => handleChange('doctorName', e.target.value)} placeholder="Dr. Falonchiyev" />
                 </Grid>
               </Grid>
             </Box>
