@@ -1,8 +1,4 @@
 const mongoose = require('mongoose');
-const dns = require('dns');
-
-// Force usage of Google Public DNS to bypass local SRV resolution issues
-dns.setServers(['8.8.8.8', '8.8.4.4']);
 
 let cached = global.mongoose;
 

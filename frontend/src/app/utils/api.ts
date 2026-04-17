@@ -74,6 +74,8 @@ export const adminAPI = {
   getAuditLogs: (params?: any) => api.get('/admin/audit-logs', { params }),
   getDoctors: () => api.get('/admin/doctors'),
   assignDoctor: (id: string, doctorId: string | null) => api.patch(`/admin/users/${id}/assign-doctor`, { doctorId }),
+  getContacts: () => api.get('/admin/contacts'),
+  updateContacts: (data: any) => api.put('/admin/contacts', data),
 };
 
 export const productAPI = {
