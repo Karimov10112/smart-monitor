@@ -20,8 +20,36 @@ const register = async (req, res) => {
     }
 
     const existingUser = await userRepository.findByEmail(lowerEmail);
+    
     if (existingUser) {
-      return res.status(400).json({ success: false, message: 'Bu login allaqachon ro\'yxatdan o\'tgan' });
+      if (existingUser.isEmailVerified) {
+        return res.status(400).json({ success: false, message: 'Bu login allaqachon ro\'yxatdan o\'tgan' });
+      }
+      
+      // If user exists but NOT verified, update their info and resend OTP
+      const otp = generateOTP();
+      const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
+      
+      await userRepository.findByIdAndUpdate(existingUser._id, {
+        password, // Pre-save middleware will hash this
+        firstName,
+        lastName,
+        emailOTP: otp,
+        emailOTPExpires: otpExpires
+      });
+
+      try {
+        await sendOTPEmail(lowerEmail, otp, req.body.language || 'uz');
+      } catch (emailErr) {
+        console.error('Failed to resend OTP email during register:', emailErr);
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: 'Emailingiz tasdiqlanmagan edi. Yangi tasdiqlash kodi yuborildi.',
+        userId: existingUser._id,
+        needsOTP: true
+      });
     }
 
     const otp = generateOTP();
@@ -41,7 +69,6 @@ const register = async (req, res) => {
       await sendOTPEmail(lowerEmail, otp, req.body.language || 'uz');
     } catch (emailErr) {
       console.error('Failed to send OTP email:', emailErr);
-      // Even if email fails, User is created but they may need to request resend.
     }
 
     res.status(201).json({
