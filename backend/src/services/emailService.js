@@ -1,4 +1,9 @@
-const { Resend } = require('resend');
+let Resend;
+try {
+  Resend = require('resend').Resend;
+} catch (e) {
+  console.error('❌ Resend module not found. Run: npm install resend');
+}
 
 // Lazy initialization of Resend to prevent crash if API key is missing
 let resendInstance = null;
@@ -7,6 +12,10 @@ const getResend = () => {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey || apiKey === 'your_resend_api_key' || !apiKey.startsWith('re_')) {
     console.warn('⚠️ Warning: RESEND_API_KEY is not configured or invalid. Emails will fail but server will run.');
+    return null;
+  }
+  if (!Resend) {
+    console.warn('⚠️ Warning: Resend module is not installed. Emails will fail but server will run.');
     return null;
   }
   resendInstance = new Resend(apiKey);
