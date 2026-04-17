@@ -13,7 +13,7 @@ const callGroqAPI = async (prompt) => {
   const apiKey = getGroqKey();
   if (!apiKey || apiKey.includes('your_')) throw new Error('Groq API kaliti sozlanmagan');
 
-  console.log(`🤖 Groq so'rovi yuborilmoqda (Model: llama3-8b-8192)...`);
+  console.log(`🤖 Groq so'rovi yuborilmoqda (Model: llama-3.1-8b-instant)...`);
   const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -21,7 +21,7 @@ const callGroqAPI = async (prompt) => {
       'Authorization': `Bearer ${apiKey}`
     },
     body: JSON.stringify({
-      model: 'llama3-8b-8192',
+      model: 'llama-3.1-8b-instant',
       messages: [
         {
           role: 'system',
@@ -35,8 +35,9 @@ const callGroqAPI = async (prompt) => {
   });
 
   if (!response.ok) {
-    const errData = await response.json().catch(() => ({}));
-    throw new Error(`Groq API xatosi ${response.status}: ${errData?.error?.message || response.statusText}`);
+    const errText = await response.text().catch(() => 'No error body');
+    console.error(`❌ Groq API error body: ${errText}`);
+    throw new Error(`Groq API xatosi ${response.status}: ${errText}`);
   }
 
   const data = await response.json();
@@ -47,8 +48,8 @@ const callGroqAPI = async (prompt) => {
 const callGeminiAPI = async (prompt, retries = 1) => {
   const apiKey = getGeminiKey();
   if (!apiKey || apiKey.includes('your_')) throw new Error('Gemini API kaliti sozlanmagan');
-  const model = 'gemini-1.5-flash';
-  const url = `https://generativelanguage.googleapis.com/v1/models/${model}:generateContent?key=${apiKey}`;
+  const model = 'gemini-1.5-flash-latest';
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
   console.log(`🤖 Gemini so'rovi yuborilmoqda (Model: ${model})...`);
 
   const response = await fetch(url, {
@@ -61,12 +62,13 @@ const callGeminiAPI = async (prompt, retries = 1) => {
   });
 
   if (!response.ok) {
-    const errData = await response.json().catch(() => ({}));
+    const errText = await response.text().catch(() => 'No error body');
+    console.error(`❌ Gemini API error body: ${errText}`);
     if (response.status === 429 && retries > 0) {
       await new Promise(r => setTimeout(r, 5000));
       return callGeminiAPI(prompt, retries - 1);
     }
-    throw new Error(`Gemini API xatosi ${response.status}: ${JSON.stringify(errData?.error?.message || response.statusText)}`);
+    throw new Error(`Gemini API xatosi ${response.status}: ${errText}`);
   }
 
   const data = await response.json();
