@@ -1,5 +1,10 @@
 const BloodSugar = require('../models/BloodSugar');
 
+// AI Model and Version Constants
+const GROQ_MODEL = 'llama-3.3-70b-versatile';
+const GEMINI_MODEL = 'gemini-1.5-flash';
+const GEMINI_API_VERSION = 'v1';
+
 // Access keys dynamically from process.env
 const getGeminiKey = () => process.env.GEMINI_API_KEY;
 const getGroqKey = () => process.env.GROQ_API_KEY;
@@ -14,7 +19,7 @@ const callGroqAPI = async (prompt) => {
   if (!apiKey || apiKey.includes('your_')) throw new Error('Groq API kaliti sozlanmagan');
 
   console.log(`🤖 Groq Key Prefix: ${apiKey.substring(0, 4)}... (Total: ${apiKey.length})`);
-  console.log(`🤖 Groq so'rovi yuborilmoqda (Model: llama3-8b-8192)...`);
+  console.log(`🤖 Groq so'rovi yuborilmoqda (Model: ${GROQ_MODEL})...`);
   const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -22,7 +27,7 @@ const callGroqAPI = async (prompt) => {
       'Authorization': `Bearer ${apiKey}`
     },
     body: JSON.stringify({
-      model: 'llama3-8b-8192',
+      model: GROQ_MODEL,
       messages: [
         {
           role: 'system',
