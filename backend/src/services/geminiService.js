@@ -2,7 +2,7 @@ const BloodSugar = require('../models/BloodSugar');
 
 // AI Model and Version Constants
 const GROQ_MODEL = 'llama-3.3-70b-versatile';
-const GEMINI_MODEL = 'gemini-1.5-flash';
+const GEMINI_MODEL = 'gemini-2.5-flash';
 const GEMINI_API_VERSION = 'v1beta';
 
 // Access keys dynamically from process.env
