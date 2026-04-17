@@ -51,9 +51,8 @@ const callGeminiAPI = async (prompt, retries = 1) => {
   if (!apiKey || apiKey.includes('your_')) throw new Error('Gemini API kaliti sozlanmagan');
   
   console.log(`🤖 Gemini Key Prefix: ${apiKey.substring(0, 4)}... (Total: ${apiKey.length})`);
-  const model = 'gemini-1.5-flash';
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-  console.log(`🤖 Gemini so'rovi yuborilmoqda (Model: ${model})...`);
+  const url = `https://generativelanguage.googleapis.com/${GEMINI_API_VERSION}/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
+  console.log(`🤖 Gemini so'rovi yuborilmoqda (Model: ${GEMINI_MODEL})...`);
 
   const response = await fetch(url, {
     method: 'POST',
