@@ -85,13 +85,19 @@ const sendOTPEmail = async (email, otp, language = 'uz') => {
   }
 
   try {
-    const result = await client.emails.send({
+    const { data, error } = await client.emails.send({
       from: `Qand Nazorati <${fromEmail}>`,
       to: email,
       subject: subjects[language] || subjects.uz,
       html: bodies[language] || bodies.uz,
     });
-    console.log(`✅ Email sent successfully to ${email}. ID: ${result.data?.id}`);
+
+    if (error) {
+      console.error(`❌ Resend Error sending to ${email}:`, error);
+      throw new Error(error.message);
+    }
+
+    console.log(`✅ Email sent successfully to ${email}. ID: ${data?.id}`);
   } catch (err) {
     console.error(`❌ Failed to send email to ${email}:`, err.message);
     throw err;
