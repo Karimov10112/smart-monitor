@@ -1,6 +1,17 @@
 const { Resend } = require('resend');
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy initialization of Resend to prevent crash if API key is missing
+let resendInstance = null;
+const getResend = () => {
+  if (resendInstance) return resendInstance;
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey || apiKey === 'your_resend_api_key' || !apiKey.startsWith('re_')) {
+    console.warn('⚠️ Warning: RESEND_API_KEY is not configured or invalid. Emails will fail but server will run.');
+    return null;
+  }
+  resendInstance = new Resend(apiKey);
+  return resendInstance;
+};
 
 const sendOTPEmail = async (email, otp, language = 'uz') => {
   const subjects = {
@@ -58,8 +69,13 @@ const sendOTPEmail = async (email, otp, language = 'uz') => {
   };
 
   const fromEmail = process.env.EMAIL_FROM || 'onboarding@resend.dev';
+  const client = getResend();
+  if (!client) {
+    console.warn(`📧 Email to ${email} skipped because RESEND_API_KEY is missing.`);
+    return;
+  }
 
-  await resend.emails.send({
+  await client.emails.send({
     from: `Qand Nazorati <${fromEmail}>`,
     to: email,
     subject: subjects[language] || subjects.uz,
@@ -102,8 +118,10 @@ const sendPasswordResetEmail = async (email, resetToken, language = 'uz') => {
 
   const t = templates[language] || templates.uz;
   const fromEmail = process.env.EMAIL_FROM || 'onboarding@resend.dev';
+  const client = getResend();
+  if (!client) throw new Error('Email xizmati (Resend) sozlanmagan');
 
-  await resend.emails.send({
+  await client.emails.send({
     from: `Qand Nazorati <${fromEmail}>`,
     to: email,
     subject: subjects[language] || subjects.uz,
