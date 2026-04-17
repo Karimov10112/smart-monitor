@@ -14,4 +14,9 @@ export default defineConfig({
       '/api': { target: 'http://localhost:5000', changeOrigin: true },
     },
   },
+  preview: {
+    port: 3000,
+    host: true,
+    allowedHosts: ['diabetmed.uz']
+  }
 });
