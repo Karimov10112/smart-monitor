@@ -1,6 +1,12 @@
 const path = require('path');
+const dns = require('dns');
+
+// Fix for local DNS/SRV issues
+dns.setServers(['8.8.8.8', '8.8.4.4']);
+
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
 const express = require('express');
+const distPath = path.join(__dirname, '../../frontend/dist');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 const passport = require('./config/passport');
@@ -75,6 +81,15 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(passport.initialize());
+
+// Request Logger for debugging
+app.use((req, res, next) => {
+  console.log(`[${new Date().toLocaleTimeString()}] ${req.method} ${req.url} (Origin: ${req.get('origin') || 'no-origin'})`);
+  next();
+});
+
+// Serve frontend static files
+app.use(express.static(distPath));
 
 // DB Connection Middleware for Serverless
 app.use(async (req, res, next) => {
@@ -163,6 +178,16 @@ const createSuperAdmin = async () => {
     console.error('Super admin yaratishda xato:', err.message);
   }
 };
+
+// Handles all other routes (SPA support)
+app.get('*', (req, res) => {
+  res.sendFile(path.join(distPath, 'index.html'), (err) => {
+    if (err) {
+      console.error('index.html jo\'natishda xato:', err.message);
+      res.status(404).json({ success: false, message: 'Sayt fayllari topilmadi. Iltimos, npm run build buyrug\'ini bajaring.' });
+    }
+  });
+});
 
 // 404
 app.use((req, res) => res.status(404).json({ success: false, message: 'Endpoint topilmadi', url: req.originalUrl, path: req.path }));

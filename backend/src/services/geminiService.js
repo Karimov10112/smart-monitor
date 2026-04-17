@@ -31,7 +31,7 @@ const callGroqAPI = async (prompt) => {
       messages: [
         {
           role: 'system',
-          content: 'Siz diabet shifokorisiz. Javobingizni har doim QISQA, SODDA va TUSHUNARLI tilda bering. Yoshi kattalar ham qiynalmay o\'qishi uchun murakkab tibbiy so\'zlarni ishlatmang. Faqat eng muhim maslahatlarni yozing.'
+          content: 'Siz xalqaro darajadagi tajribali endokrinolog va dietologsiz. Bemorga tibbiy jihatdan chuqur, mukammal va "PRO" darajadagi maslahat berasiz. Oddiy yuzaki gaplar o\'rniga gormonlar, glikemik indeks, oqsillar va uglevodlar parchalanishini tushuntirib, aniq gramm/kkal o\'lchovlari bilan tibbiy tavsiya bering. Ammo matn tushunarli bo\'lsin.'
         },
         { role: 'user', content: prompt }
       ],
@@ -42,7 +42,7 @@ const callGroqAPI = async (prompt) => {
 
   if (!response.ok) {
     const errText = await response.text().catch(() => 'No error body');
-    console.error(`❌ Groq API error body: ${errText}`);
+    console.error(`❌ Groq API error (${response.status}):`, errText);
     throw new Error(`Groq API xatosi ${response.status}: ${errText}`);
   }
 
@@ -70,8 +70,9 @@ const callGeminiAPI = async (prompt, retries = 1) => {
 
   if (!response.ok) {
     const errText = await response.text().catch(() => 'No error body');
-    console.error(`❌ Gemini API error body: ${errText}`);
+    console.error(`❌ Gemini API error (${response.status}):`, errText);
     if (response.status === 429 && retries > 0) {
+      console.log('🔄 Gemini 429 detected, retrying in 5s...');
       await new Promise(r => setTimeout(r, 5000));
       return callGeminiAPI(prompt, retries - 1);
     }
@@ -145,10 +146,28 @@ const getNutritionRecommendation = async (req, res) => {
 
     // Pick the absolute latest reading (fasting or post-meal from the very last record)
     const lastRec = recentRecords[0];
-    const latestSugar = lastRec ? (lastRec.postMealLevel || lastRec.fastingLevel || null) : null;
+    let latestSugar = null;
+    let measT = ''; // Measurement Time context
+
+    if (lastRec) {
+      // Check which level was recorded most recently. If both exist on the same day, maybe post-meal is later.
+      if (lastRec.postMealLevel) {
+        latestSugar = lastRec.postMealLevel;
+        measT = language === 'uz' ? '(Toq qoringa o\'lchangan)' : language === 'ru' ? '(После еды)' : '(Post-meal)';
+      } else if (lastRec.fastingLevel) {
+        latestSugar = lastRec.fastingLevel;
+        measT = language === 'uz' ? '(Och qoringa o\'lchangan)' : language === 'ru' ? '(Натощак)' : '(Fasting)';
+      } else {
+        measT = language === 'uz' ? '(Oddiy holatda)' : language === 'ru' ? '(Обычное состояние)' : '(Random)';
+      }
+    } else {
+      measT = language === 'uz' ? '(Qand miqdori kiritilmagan)' : language === 'ru' ? '(Нет данных о сахаре)' : '(No sugar data)';
+    }
 
     const sugarStatus = latestSugar
-      ? latestSugar >= 7 ? 'high' : latestSugar < 3.9 ? 'low' : 'normal'
+      ? (measT.includes('och') || measT.includes('fast') || measT.includes('Натощак')) 
+          ? (latestSugar >= 7 ? 'high' : latestSugar < 3.9 ? 'low' : 'normal')
+          : (latestSugar >= 10 ? 'high' : latestSugar < 3.9 ? 'low' : 'normal')
       : 'unknown';
 
     // ─── Cache check (Disabled for live prediction) ────────────
@@ -196,69 +215,52 @@ const getNutritionRecommendation = async (req, res) => {
     let prompt = `[ID: ${nonce}]\n`;
 
     if (language === 'ru') {
-      prompt = `Представьте, что вы заботливый врач-эндокринолог. Дайте ПРОСТОЙ И НАДЕЖНЫЙ совет пожилому человеку с диабетом, основываясь на его данных:
+      prompt = `Действуйте как ведущий международный врач-эндокринолог и клинический диетолог. Дайте глубоко профессиональный, медицински обоснованный ("ПРО-уровня") совет для пациента с диабетом:
       
-ДАННЫЕ: Возраст: ${age || '-'} лет, Вес: ${weight || '-'} кг, Рост: ${height || '-'} см, ИМТ (BMI): ${bmi || '-'}.
-ПОСЛЕДНИЙ САХАР: ${latestSugar || 'нет данных'} ммоль/л.
-ДНЕВНАЯ НОРМА КАЛОРИЙ: ${dailyCalories || '-'} ккал.
+КЛИНИЧЕСКИЕ ДАННЫЕ: Возраст: ${age || '-'} лет, Вес: ${weight || '-'} кг, Рост: ${height || '-'} см, ИМТ: ${bmi || '-'}.
+УРОВЕНЬ ГЛЮКОЗЫ: ${latestSugar || 'нет данных'} ммоль/л ${measT}.
+ЦЕЛЕВАЯ КАЛОРИЙНОСТЬ: ${dailyCalories || '-'} ккал/день.
 
-Структура совета:
-**1. ВАШ ТЕКУЩИЙ САХАР (${latestSugar || '-'}):** 
-Если сахар < 3.9: Правило 15 (съесть 15г сахара, ждать 15 мин). 
-Если сахар > 13: Пить много воды, исключить все углеводы, связаться с врачом. 
-Если норма: Продолжайте в том же духе.
+Структура клинического заключения:
+**1. ЭНДОКРИННЫЙ АНАЛИЗ (Глюкоза: ${latestSugar || '-'} ммоль/л - ${measT}):** 
+Проведите глубокий анализ: что означает эта цифра именно для этого времени измерения (натощак/после еды). Как это влияет на сосуды и инсулинорезистентность. Дайте строгий медицинский алгоритм действий при этом показателе.
 
-**2. РЕКОМЕНДАЦИЯ ПО ВЕСУ:** Исходя из ИМТ (${bmi}), нужно ли снижать вес или поддерживать его. Упоминайте расчетную норму в ${dailyCalories} ккал.
+**2. МЕТАБОЛИЗМ И БАЛАНС МАКРОНУТРИЕНТОВ:** При ИМТ ${bmi} объясните, как именно нужно распределить ${dailyCalories} ккал (сколько % белка, жиров, сложных углеводов) для контроля скачков сахара.
 
-**3. ЕДА (4-5 продукта):** Самые полезные для его возраста и веса.
-**4. ЧТО НЕЛЬЗЯ (3-4 продукта):** Самые опасные продукты.
-**5. ЗАМЕНА СЛАДКОМУ:** Чем порадовать себя без вреда.
-**6. ГЛАВНЫЙ СОВЕТ:** Твердый шаг, который нужно сделать сегодня (с учетом возраста ${age} лет).${urgentAlert}`;
+**3. ПЕРСОНАЛИЗИРОВАННЫЙ РАЦИОН (на ${dailyCalories} ккал):** Пропишите 4-5 конкретных продуктов с точным весом (в граммах), низким гликемическим индексом (ГИ), которые подойдут для возраста ${age} лет и веса ${weight} кг. Объясните их пользу с научной точки зрения.
+**4. КРИТИЧЕСКИ ОПАСНЫЕ ПРОДУКТЫ:** Назовите 3-4 продукта, которые провоцируют резкий выброс инсулина в данной ситуации, и объясните биохимию вреда.
+**5. БЕЗОПАСНАЯ АЛЬТЕРНАТИВА СЛАДКОМУ:** Чем заменить сахар без влияния на гликемическую кривую.
+**6. КЛЮЧЕВОЙ ПРОТОКОЛ НА СЕГОДНЯ:** Одно самое важное клиническое действие.${urgentAlert}`;
 
     } else if (language === 'en') {
-      prompt = `Act as an expert diabetes coach for a senior user. Provide a CLEAR, ACTIONABLE, AND SIMPLE health prediction based on their metrics:
+      prompt = `Act as an elite international endocrinologist and clinical dietitian. Provide a deep, scientifically-backed, "PRO-level" medical analysis and dietary plan for a diabetic patient:
       
-DATA: Age: ${age || '-'}, Weight: ${weight || '-'}, Height: ${height || '-'}, BMI: ${bmi || '-'}.
-CURRENT SUGAR: ${latestSugar || 'no data'} mmol/l.
-DAILY CALORIE LIMIT: ${dailyCalories || '-'} kcal.
+CLINICAL DATA: Age: ${age || '-'}, Weight: ${weight || '-'} kg, Height: ${height || '-'} cm, BMI: ${bmi || '-'}.
+GLUCOSE LEVEL: ${latestSugar || 'no data'} mmol/l ${measT}.
+TARGET CALORIES: ${dailyCalories || '-'} kcal/day.
 
-Structure:
-**1. CURRENT STATE (${latestSugar || '-'}):** 
-If < 3.9: 15-15 Rule (15g sugar, wait 15 mins). 
-If > 13: Hydrate heavily, zero carbs, contact doctor. 
-If Normal: Maintain habits.
+Clinical Report Structure:
+**1. ENDOCRINE ANALYSIS (${latestSugar || '-'} mmol/l - ${measT}):** 
+Provide a deep physiological analysis of this specific reading based on the measurement time. How does it impact insulin resistance and vascular health? Give a strict medical protocol for this exact level.
 
-**2. WEIGHT & CALORIES:** Based on BMI (${bmi}), advice on weight management using the ${dailyCalories} kcal limit.
+**2. METABOLIC CALORIC DISTRIBUTION:** Based on a BMI of ${bmi}, explain exactly how to distribute the ${dailyCalories} kcal intake into macronutrients (proteins, healthy fats, complex carbs) to avoid glucose spikes.
 
-**3. RECOMMENDED FOODS (4-5):** Best for their specific age and weight.
-**4. AVOID THESE (3-4):** High-risk foods for diabetes.
-**5. SWEET SWAPS:** Low-sugar alternatives.
-**6. KEY DAILY TIP:** One simple concrete step for today, considering their age of ${age}.${urgentAlert}`;
+**3. PRECISION NUTRITION PLAN (${dailyCalories} kcal):** Recommend 4-5 specific foods with exact weights (in grams) and low Glycemic Index (GI) tailored for a ${age}-year-old weighing ${weight}kg. Explain their molecular benefit.
+**4. HIGH-RISK FOODS:** Identify 3-4 specific foods that cause rapid insulin spikes in this condition and explain the biochemical reason.
+**5. ZERO-SPIKE SWEET SWAPS:** Scientifically safe sweet alternatives that do not alter the glycemic curve.
+**6. TODAY'S CLINICAL DIRECTIVE:** The absolute most critical medical/dietary action to take today.${urgentAlert}`;
 
     } else {
       // Default: Uzbek
-      prompt = `Siz mehribon va professional shifokorsiz. Yoshi katta diabetga chalingan bemor uchun uning bo'yi, vazni, yoshi va qand miqdori asosida SODDA va ANIQ "bashorat" (maslahat) bering:
-
-BEMOR MA'LUMOTLARI:
-• Yosh: ${age || '-'} yosh
-• Vazn: ${weight || '-'} kg (Bo'y: ${height || '-'} sm)
-• BMI (Vazn indeksi): ${bmi || '-'}
-• Kunlik kaloriya normasi: ${dailyCalories || '-'} kkal
-• HOZIRGI QAND: ${latestSugar || "ma'lumot yo'q"} mmol/l
-
-Tavsiyalarni quyidagi qisqa bloklarda bering:
-
-**1. HOZIRGI HOLATINGIZ (${latestSugar || 'yo\'q'}):**
-Agar qand < 3.9 bo'lsa: "15-15 qoidasi" (Masalan: 1-2 bo'lak qand yeb, 15 daqiqa kuting). 
-Agar qand > 13 bo'lsa: Ko'p suv iching, birorta ham uglevod (non, xamir) yemang, shifokorga xabar bering. 
-Agar normal (3.9-7.8) bo'lsa: Shunday davom eting!
-
-**2. VAZN VA KALORIYA:** VAZN INDEXINGIZ ${bmi} ekanini hisobga olib, vaznni qanday ushlash kerak. Kuniga ${dailyCalories} kkal'dan oshmaslikni tavsiya qiling.
-
-**3. FOYDALI TAOMLAR (4-5 ta):** Sizning vazningiz va ${age} yoshingizga mos keladigan eng foydali narsalar.
-**4. TAQIQLANGANLAR (3-4 ta):** Siz uchun eng zararli bo'lgan oziq-ovqatlar.
-**5. SHIRINLIK O'RNIGA:** Qand darajangizni ko'tarmaydigan shirinlik muqobillari.
-**6. BUGUNGI ASOSIY QADAM:** Sizning yoshingizda bugun qilishingiz kerak bo'lgan bitta eng muhim va xavfsiz harakat.${urgentAlert}`;
+      prompt = `Siz xalqaro darajadagi malakali endokrinologsiz. Yosh: ${age || '-'} yosh, Vazn: ${weight || '-'} kg (Bo'y: ${height || '-'} sm), BMI: ${bmi || '-'}. Kunlik kaloriya: ${dailyCalories || '-'} kkal. Qondagi qand: ${latestSugar || "ma'lumot yo'q"} mmol/l ${measT}.
+      
+Bemorga "PRO" darajadagi aniq tibbiy tahlil bering. Iltimos, javobni to'liq tugating. Quyidagilarni o'z ichiga olsin:
+1. Endokrin holat: Qand ko'rsatkichi nima degani va organizmda qanday ta'sir qilmoqda.
+2. Kaloriya va makronutriyent (oqsil, yog', uglevod) nisbati.
+3. ${dailyCalories} kkal doirasida yeyish tavsiya qilinadigan aniq grammlari va Glikemik indeksiga ega 4 ta mahsulot.
+4. Qandni keskin oshiruvchi 3 ta taqiqlangan oziq-ovqat va bu nega zararli ekanligi.
+5. Eng xavfsiz shirinlik o'rinbosarlari.
+6. Bugungi aniq va qat'iy tibbiy ko'rsatmalaringiz.${urgentAlert}`;
     }
 
     // ─── Call AI API (Groq with Gemini Fallback) ─────────────
@@ -275,7 +277,7 @@ Agar normal (3.9-7.8) bo'lsa: Shunday davom eting!
         console.log('🤖 Recommendation generated via Gemini (Fallback)');
       } catch (geminiErr) {
         console.error('❌ Both AI providers failed:', geminiErr.message);
-        throw geminiErr; // Let the catch block handle the response
+        throw new Error(`Groq: ${groqErr.message} | Gemini: ${geminiErr.message}`); // Let the catch block handle the response
       }
     }
 
@@ -313,6 +315,9 @@ Agar normal (3.9-7.8) bo'lsa: Shunday davom eting!
     }
     if (err.message?.includes('API_KEY') || err.message?.includes('403')) {
       return res.status(403).json({ success: false, message: 'AI API kaliti (Groq yoki Gemini) noto\'g\'ri yoki muddati o\'tgan.' });
+    }
+    if (err.message?.includes('503') || err.message?.toLowerCase().includes('demand')) {
+      return res.status(503).json({ success: false, message: 'AI xizmatida hozirda yuqori yuklanish (navbat ko\'p). Iltimos, birozdan so\'ng yana bir marta urinib ko\'ring.' });
     }
 
     return res.status(500).json({

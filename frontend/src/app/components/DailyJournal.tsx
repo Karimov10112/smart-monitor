@@ -114,7 +114,7 @@ export function DailyJournal() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.fastingLevel && !formData.postMealLevel) {
-      toast.error(t.invalidEmailFormat); // Reusing for missing sugar levels or add a new key if needed, but the user requested general fixes. Actually, better use a generic error if key is missing.
+      toast.error("Iltimos, och qoringa yoki ovqatdan keyingi qand miqdorining kamida birini kiriting!");
       return;
     }
 
@@ -227,7 +227,7 @@ export function DailyJournal() {
                 <Typography variant="subtitle1" sx={{ fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1 }}>{t.addRecord}</Typography>
               </Box>
 
-              <Box component="form" onSubmit={handleSubmit}>
+              <Box component="form" onSubmit={handleSubmit} noValidate>
                 <Stack spacing={3}>
                   <TextField
                     label={t.date}
@@ -253,7 +253,6 @@ export function DailyJournal() {
                         placeholder="5.5"
                         value={formData.fastingLevel}
                         onChange={(e) => setFormData({ ...formData, fastingLevel: e.target.value })}
-                        required
                         fullWidth
                         InputProps={{
                           startAdornment: <CoffeeIcon sx={{ mr: 1, color: 'text.secondary', fontSize: 18 }} />,

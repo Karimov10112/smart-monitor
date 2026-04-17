@@ -4,7 +4,7 @@ const bloodSugarSchema = new mongoose.Schema(
   {
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     date: { type: Date, required: true },
-    fastingLevel: { type: Number, required: true },
+    fastingLevel: { type: Number },
     postMealLevel: { type: Number },
     notes: String,
     mood: { type: String, enum: ['great', 'good', 'okay', 'bad', 'terrible'] },
