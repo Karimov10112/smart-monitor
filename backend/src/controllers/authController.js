@@ -32,13 +32,13 @@ const register = async (req, res) => {
       const otp = generateOTP();
       const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
       
-      await userRepository.findByIdAndUpdate(existingUser._id, {
-        password, // Pre-save middleware will hash this
-        firstName,
-        lastName,
-        emailOTP: otp,
-        emailOTPExpires: otpExpires
-      });
+      existingUser.password = password;
+      existingUser.firstName = firstName;
+      existingUser.lastName = lastName;
+      existingUser.emailOTP = otp;
+      existingUser.emailOTPExpires = otpExpires;
+      
+      await existingUser.save();
 
       try {
         await sendOTPEmail(lowerEmail, otp, req.body.language || 'uz');
