@@ -73,6 +73,11 @@ const sendOTPEmail = async (email, otp, language = 'uz') => {
   };
 
   const fromEmail = process.env.EMAIL_FROM || 'onboarding@resend.dev';
+  
+  console.log('-----------------------------------------');
+  console.log(`🔑 EMERGENCY OTP LOG [${email}]: ${otp}`);
+  console.log('-----------------------------------------');
+
   const client = getResend();
   if (!client) return;
 
