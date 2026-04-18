@@ -132,18 +132,29 @@ const verifyEmailOTP = async (req, res) => {
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
+    const lowerEmail = email ? email.toLowerCase().trim() : '';
 
-    const user = await userRepository.findOne({ email });
-    if (!user || !user.password) {
+    console.log(`🔑 Login attempt for: ${lowerEmail}`);
+
+    const user = await userRepository.findOne({ email: lowerEmail });
+    if (!user) {
+      console.log(`❌ Login failed: User not found [${lowerEmail}]`);
+      return res.status(401).json({ success: false, message: 'Email yoki parol noto\'g\'ri' });
+    }
+
+    if (!user.password) {
+      console.log(`❌ Login failed: User has no password set [${lowerEmail}]`);
       return res.status(401).json({ success: false, message: 'Email yoki parol noto\'g\'ri' });
     }
 
     if (user.isBanned) {
+      console.log(`❌ Login failed: User is banned [${lowerEmail}]`);
       return res.status(403).json({ success: false, message: `Hisobingiz bloklangan: ${user.banReason || 'Sabab ko\'rsatilmagan'}` });
     }
 
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
+      console.log(`❌ Login failed: Password mismatch for [${lowerEmail}]`);
       return res.status(401).json({ success: false, message: 'Email yoki parol noto\'g\'ri' });
     }
 
