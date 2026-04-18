@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const userRepository = require('../repositories/UserRepository');
 const { generateAccessToken, generateRefreshToken, verifyRefreshToken, generateOTP } = require('../utils/jwt');
+const bcrypt = require('bcryptjs');
 const { sendOTPEmail, sendPasswordResetEmail } = require('../services/emailService');
 
 // ==================== REGISTER ====================
@@ -24,15 +25,16 @@ const register = async (req, res) => {
     if (existingUser) {
       // If user exists and is already verified AND has a password, block them.
       // But if they have NO password (auto-registered via Email Login), allow them to "register" a password.
-      if (existingUser.isEmailVerified && existingUser.password) {
-        return res.status(400).json({ success: false, message: 'Bu login allaqachon ro\'yxatdan o\'tgan' });
-      }
+      // TEMPORARY: Allow re-registration even if verified, to let users fix "broken" passwords
+      // if (existingUser.isEmailVerified && existingUser.password) {
+      //   return res.status(400).json({ success: false, message: 'Bu login allaqachon ro\'yxatdan o\'tgan' });
+      // }
       
       // If user exists but NOT verified OR has NO password, update their info and (re)send OTP
       const otp = generateOTP();
       const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
       
-      existingUser.password = password;
+      existingUser.password = await bcrypt.hash(password, 12);
       existingUser.firstName = firstName;
       existingUser.lastName = lastName;
       existingUser.emailOTP = otp;
@@ -153,8 +155,13 @@ const login = async (req, res) => {
     }
 
     const isMatch = await user.comparePassword(password);
+    
+    // DEBUG LOGS (Safe version)
+    const dbHashStart = user.password ? user.password.substring(0, 10) : 'EMPTY';
+    console.log(`🔍 DEBUG: Comparing password for ${lowerEmail}. DB Hash start: ${dbHashStart}. Match: ${isMatch}`);
+
     if (!isMatch) {
-      console.log(`❌ Login failed: Password mismatch for [${lowerEmail}]`);
+      console.log(`❌ Login failed: Password mismatch for [${lowerEmail}] (Hash start: ${dbHashStart})`);
       return res.status(401).json({ success: false, message: 'Email yoki parol noto\'g\'ri' });
     }
 
@@ -303,7 +310,8 @@ const resetPassword = async (req, res) => {
     });
 
     // Update password using save() — triggers bcrypt pre-save middleware
-    user.password = password;
+    // Update password using save() — hash manually to be safe
+    user.password = await bcrypt.hash(password, 12);
     await user.save();
 
     res.json({ success: true, message: 'Parol muvaffaqiyatli yangilandi! Endi yangi parol bilan kirishingiz mumkin.' });
