@@ -1,25 +1,22 @@
-let Resend;
-try {
-  Resend = require('resend').Resend;
-} catch (e) {
-  console.error('❌ Resend module not found. Run: npm install resend');
-}
+const nodemailer = require('nodemailer');
 
-// Lazy initialization of Resend to prevent crash if API key is missing
-let resendInstance = null;
-const getResend = () => {
-  if (resendInstance) return resendInstance;
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey || apiKey === 'your_resend_api_key' || !apiKey.startsWith('re_')) {
-    console.warn('⚠️ Warning: RESEND_API_KEY is not configured or invalid. Emails will fail but server will run.');
+// Create a transporter using Gmail SMTP
+const getTransporter = () => {
+  const user = process.env.GMAIL_USER;
+  const pass = process.env.GMAIL_PASS;
+
+  if (!user || !pass) {
+    console.warn('⚠️ Warning: GMAIL_USER or GMAIL_PASS is not configured. Emails will fail.');
     return null;
   }
-  if (!Resend) {
-    console.warn('⚠️ Warning: Resend module is not installed. Emails will fail but server will run.');
-    return null;
-  }
-  resendInstance = new Resend(apiKey);
-  return resendInstance;
+
+  return nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: user,
+      pass: pass,
+    },
+  });
 };
 
 const sendOTPEmail = async (email, otp, language = 'uz') => {
@@ -77,33 +74,19 @@ const sendOTPEmail = async (email, otp, language = 'uz') => {
     `,
   };
 
-  const fromEmail = process.env.EMAIL_FROM || 'onboarding@resend.dev';
-  const client = getResend();
-  if (!client) {
-    console.warn(`📧 Email to ${email} skipped because RESEND_API_KEY is missing.`);
-    return;
-  }
+  const transporter = getTransporter();
+  if (!transporter) return;
 
   try {
-    const result = await client.emails.send({
-      from: `Qand Nazorati <${fromEmail}>`,
+    await transporter.sendMail({
+      from: `"Qand Nazorati" <${process.env.GMAIL_USER}>`,
       to: email,
       subject: subjects[language] || subjects.uz,
       html: bodies[language] || bodies.uz,
     });
-
-    console.log(`🔍 Resend Raw Result for ${email}:`, JSON.stringify(result));
-
-    const { data, error } = result || {};
-
-    if (error) {
-      console.error(`❌ Resend Error sending to ${email}:`, error);
-      throw new Error(error.message || 'Resend error');
-    }
-
-    console.log(`✅ Email process finished for ${email}. ID: ${data?.id || 'No ID'}`);
+    console.log(`✅ OTP Email sent successfully via Gmail to ${email}`);
   } catch (err) {
-    console.error(`❌ Failed to send email to ${email}:`, err.message);
+    console.error(`❌ Failed to send OTP email to ${email}:`, err.message);
     throw err;
   }
 };
@@ -142,13 +125,12 @@ const sendPasswordResetEmail = async (email, resetToken, language = 'uz') => {
   };
 
   const t = templates[language] || templates.uz;
-  try {
-    const fromEmail = process.env.EMAIL_FROM || 'onboarding@resend.dev';
-    const client = getResend();
-    if (!client) throw new Error('Email xizmati (Resend) sozlanmagan');
+  const transporter = getTransporter();
+  if (!transporter) return;
 
-    const result = await client.emails.send({
-      from: `Qand Nazorati <${fromEmail}>`,
+  try {
+    await transporter.sendMail({
+      from: `"Qand Nazorati" <${process.env.GMAIL_USER}>`,
       to: email,
       subject: subjects[language] || subjects.uz,
       html: `
@@ -173,15 +155,7 @@ const sendPasswordResetEmail = async (email, resetToken, language = 'uz') => {
         </div>
       `,
     });
-
-    console.log(`🔍 Resend Raw Reset Result for ${email}:`, JSON.stringify(result));
-    
-    if (result?.error) {
-      console.error(`❌ Resend Reset Error for ${email}:`, result.error);
-      throw new Error(result.error.message || 'Resend error');
-    }
-    
-    console.log(`✅ Reset email finished for ${email}.`);
+    console.log(`✅ Reset Email sent successfully via Gmail to ${email}`);
   } catch (err) {
     console.error(`❌ Failed to send reset email to ${email}:`, err.message);
     throw err;
