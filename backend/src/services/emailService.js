@@ -1,22 +1,20 @@
-const nodemailer = require('nodemailer');
+let Resend;
+try {
+  Resend = require('resend').Resend;
+} catch (e) {
+  console.error('❌ Resend module not found.');
+}
 
-// Create a transporter using Gmail SMTP
-const getTransporter = () => {
-  const user = process.env.GMAIL_USER;
-  const pass = process.env.GMAIL_PASS;
-
-  if (!user || !pass) {
-    console.warn('⚠️ Warning: GMAIL_USER or GMAIL_PASS is not configured. Emails will fail.');
+let resendInstance = null;
+const getResend = () => {
+  if (resendInstance) return resendInstance;
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey || !apiKey.startsWith('re_')) {
+    console.warn('⚠️ Warning: RESEND_API_KEY is not configured.');
     return null;
   }
-
-  return nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: user,
-      pass: pass,
-    },
-  });
+  resendInstance = new Resend(apiKey);
+  return resendInstance;
 };
 
 const sendOTPEmail = async (email, otp, language = 'uz') => {
@@ -38,7 +36,7 @@ const sendOTPEmail = async (email, otp, language = 'uz') => {
           <div style="background: #f1f5f9; border-radius: 8px; padding: 20px; text-align: center; margin: 20px 0;">
             <span style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #2563eb;">${otp}</span>
           </div>
-          <p style="color: #94a3b8; font-size: 14px;">Bu kod 10 daqiqa davomida amal qiladi. Agar siz so'ramagan bo'lsangiz, e'tibor bermang.</p>
+          <p style="color: #94a3b8; font-size: 14px;">Bu kod 10 daqiqa davomida amal qiladi.</p>
         </div>
       </div>
     `,
@@ -53,7 +51,7 @@ const sendOTPEmail = async (email, otp, language = 'uz') => {
           <div style="background: #f1f5f9; border-radius: 8px; padding: 20px; text-align: center; margin: 20px 0;">
             <span style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #2563eb;">${otp}</span>
           </div>
-          <p style="color: #94a3b8; font-size: 14px;">Код действителен 10 минут. Если вы не запрашивали, проигнорируйте это письмо.</p>
+          <p style="color: #94a3b8; font-size: 14px;">Код действителен 10 минут.</p>
         </div>
       </div>
     `,
@@ -68,32 +66,40 @@ const sendOTPEmail = async (email, otp, language = 'uz') => {
           <div style="background: #f1f5f9; border-radius: 8px; padding: 20px; text-align: center; margin: 20px 0;">
             <span style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #2563eb;">${otp}</span>
           </div>
-          <p style="color: #94a3b8; font-size: 14px;">This code is valid for 10 minutes. If you didn't request this, please ignore.</p>
+          <p style="color: #94a3b8; font-size: 14px;">This code is valid for 10 minutes.</p>
         </div>
       </div>
     `,
   };
 
-  const transporter = getTransporter();
-  if (!transporter) return;
+  const fromEmail = process.env.EMAIL_FROM || 'onboarding@resend.dev';
+  const client = getResend();
+  if (!client) return;
 
   try {
-    await transporter.sendMail({
-      from: `"Qand Nazorati" <${process.env.GMAIL_USER}>`,
+    const result = await client.emails.send({
+      from: `Qand Nazorati <${fromEmail}>`,
       to: email,
       subject: subjects[language] || subjects.uz,
       html: bodies[language] || bodies.uz,
     });
-    console.log(`✅ OTP Email sent successfully via Gmail to ${email}`);
+
+    console.log(`🔍 Resend Raw Result for ${email}:`, JSON.stringify(result));
+
+    if (result?.error) {
+      console.error(`❌ Resend Error for ${email}:`, result.error);
+      throw new Error(result.error.message || 'Resend error');
+    }
+
+    console.log(`✅ Email sent via Resend to ${email}. ID: ${result.data?.id}`);
   } catch (err) {
-    console.error(`❌ Failed to send OTP email to ${email}:`, err.message);
+    console.error(`❌ Failed to send email via Resend to ${email}:`, err.message);
     throw err;
   }
 };
 
 const sendPasswordResetEmail = async (email, resetToken, language = 'uz') => {
   const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
-
   const subjects = {
     uz: 'Parolni tiklash - Qand Nazorati',
     ru: 'Сброс пароля - Контроль Сахара',
@@ -125,12 +131,13 @@ const sendPasswordResetEmail = async (email, resetToken, language = 'uz') => {
   };
 
   const t = templates[language] || templates.uz;
-  const transporter = getTransporter();
-  if (!transporter) return;
+  const fromEmail = process.env.EMAIL_FROM || 'onboarding@resend.dev';
+  const client = getResend();
+  if (!client) return;
 
   try {
-    await transporter.sendMail({
-      from: `"Qand Nazorati" <${process.env.GMAIL_USER}>`,
+    const result = await client.emails.send({
+      from: `Qand Nazorati <${fromEmail}>`,
       to: email,
       subject: subjects[language] || subjects.uz,
       html: `
@@ -155,9 +162,9 @@ const sendPasswordResetEmail = async (email, resetToken, language = 'uz') => {
         </div>
       `,
     });
-    console.log(`✅ Reset Email sent successfully via Gmail to ${email}`);
+    console.log(`✅ Reset email sent via Resend to ${email}`);
   } catch (err) {
-    console.error(`❌ Failed to send reset email to ${email}:`, err.message);
+    console.error(`❌ Failed to send reset email via Resend to ${email}:`, err.message);
     throw err;
   }
 };
