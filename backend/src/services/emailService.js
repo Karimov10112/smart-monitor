@@ -142,36 +142,50 @@ const sendPasswordResetEmail = async (email, resetToken, language = 'uz') => {
   };
 
   const t = templates[language] || templates.uz;
-  const fromEmail = process.env.EMAIL_FROM || 'onboarding@resend.dev';
-  const client = getResend();
-  if (!client) throw new Error('Email xizmati (Resend) sozlanmagan');
+  try {
+    const fromEmail = process.env.EMAIL_FROM || 'onboarding@resend.dev';
+    const client = getResend();
+    if (!client) throw new Error('Email xizmati (Resend) sozlanmagan');
 
-  await client.emails.send({
-    from: `Qand Nazorati <${fromEmail}>`,
-    to: email,
-    subject: subjects[language] || subjects.uz,
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc; padding: 20px; border-radius: 12px;">
-        <div style="background: linear-gradient(135deg, #2563eb, #7c3aed); padding: 24px; border-radius: 10px; text-align: center;">
-          <h1 style="color: white; margin: 0;">💙 Qand Nazorati</h1>
-        </div>
-        <div style="background: white; padding: 30px; border-radius: 10px; margin-top: 16px;">
-          <h2 style="color: #1e293b;">${t.title}</h2>
-          <p style="color: #64748b;">${t.text}</p>
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${resetUrl}" style="display: inline-block; background: linear-gradient(135deg, #2563eb, #7c3aed); color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);">
-              ${t.button}
-            </a>
+    const result = await client.emails.send({
+      from: `Qand Nazorati <${fromEmail}>`,
+      to: email,
+      subject: subjects[language] || subjects.uz,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc; padding: 20px; border-radius: 12px;">
+          <div style="background: linear-gradient(135deg, #2563eb, #7c3aed); padding: 24px; border-radius: 10px; text-align: center;">
+            <h1 style="color: white; margin: 0;">💙 Qand Nazorati</h1>
           </div>
-          <p style="color: #94a3b8; font-size: 14px;">${t.expire}</p>
-          <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid #f1f5f9;">
-            <p style="color: #94a3b8; font-size: 12px;">${t.footer}</p>
-            <p style="color: #2563eb; font-size: 11px; word-break: break-all;">${resetUrl}</p>
+          <div style="background: white; padding: 30px; border-radius: 10px; margin-top: 16px;">
+            <h2 style="color: #1e293b;">${t.title}</h2>
+            <p style="color: #64748b;">${t.text}</p>
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${resetUrl}" style="display: inline-block; background: linear-gradient(135deg, #2563eb, #7c3aed); color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);">
+                ${t.button}
+              </a>
+            </div>
+            <p style="color: #94a3b8; font-size: 14px;">${t.expire}</p>
+            <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid #f1f5f9;">
+              <p style="color: #94a3b8; font-size: 12px;">${t.footer}</p>
+              <p style="color: #2563eb; font-size: 11px; word-break: break-all;">${resetUrl}</p>
+            </div>
           </div>
         </div>
-      </div>
-    `,
-  });
+      `,
+    });
+
+    console.log(`🔍 Resend Raw Reset Result for ${email}:`, JSON.stringify(result));
+    
+    if (result?.error) {
+      console.error(`❌ Resend Reset Error for ${email}:`, result.error);
+      throw new Error(result.error.message || 'Resend error');
+    }
+    
+    console.log(`✅ Reset email finished for ${email}.`);
+  } catch (err) {
+    console.error(`❌ Failed to send reset email to ${email}:`, err.message);
+    throw err;
+  }
 };
 
 module.exports = { sendOTPEmail, sendPasswordResetEmail };

@@ -22,11 +22,13 @@ const register = async (req, res) => {
     const existingUser = await userRepository.findByEmail(lowerEmail);
     
     if (existingUser) {
-      if (existingUser.isEmailVerified) {
+      // If user exists and is already verified AND has a password, block them.
+      // But if they have NO password (auto-registered via Email Login), allow them to "register" a password.
+      if (existingUser.isEmailVerified && existingUser.password) {
         return res.status(400).json({ success: false, message: 'Bu login allaqachon ro\'yxatdan o\'tgan' });
       }
       
-      // If user exists but NOT verified, update their info and resend OTP
+      // If user exists but NOT verified OR has NO password, update their info and (re)send OTP
       const otp = generateOTP();
       const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
       
