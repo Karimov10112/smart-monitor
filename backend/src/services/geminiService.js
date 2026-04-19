@@ -133,7 +133,7 @@ const getNutritionRecommendation = async (req, res) => {
     const dailyCalories = bmr ? Math.round(bmr * 1.375) : null;
 
     // ─── Blood sugar records ─────────────────────────────────
-    const recentRecords = await BloodSugar.find({ user: user._id }).sort({ date: -1 }).limit(7);
+    const recentRecords = await BloodSugar.find({ user: user._id }).sort({ createdAt: -1 }).limit(7);
 
     const avgFasting = recentRecords.length > 0
       ? (recentRecords.reduce((s, r) => s + (r.fastingLevel || 0), 0) / recentRecords.length).toFixed(1)
