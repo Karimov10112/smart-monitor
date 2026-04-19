@@ -31,7 +31,7 @@ const callGroqAPI = async (prompt) => {
       messages: [
         {
           role: 'system',
-          content: 'Siz xalqaro darajadagi tajribali endokrinolog va dietologsiz. Bemorga tibbiy jihatdan chuqur, mukammal va "PRO" darajadagi maslahat berasiz. Oddiy yuzaki gaplar o\'rniga gormonlar, glikemik indeks, oqsillar va uglevodlar parchalanishini tushuntirib, aniq gramm/kkal o\'lchovlari bilan tibbiy tavsiya bering. Ammo matn tushunarli bo\'lsin.'
+          content: 'Siz tajribali endokrinologsiz. Bemorlarga faqat ENG ASOSIY, QISQA va TUSHUNARLI maslahat berasiz. Katta matnlar, ilmiy terminlar yozmang, qisqa bullet point qilib bering.'
         },
         { role: 'user', content: prompt }
       ],
@@ -215,52 +215,38 @@ const getNutritionRecommendation = async (req, res) => {
     let prompt = `[ID: ${nonce}]\n`;
 
     if (language === 'ru') {
-      prompt = `Действуйте как ведущий международный врач-эндокринолог и клинический диетолог. Дайте глубоко профессиональный, медицински обоснованный ("ПРО-уровня") совет для пациента с диабетом:
+      prompt = `Действуйте как врач-эндокринолог. Дайте КОРОТКИЙ, ЯСНЫЙ и ОСНОВНОЙ совет пациенту. Никаких длинных текстов, только самая суть!
       
-КЛИНИЧЕСКИЕ ДАННЫЕ: Возраст: ${age || '-'} лет, Вес: ${weight || '-'} кг, Рост: ${height || '-'} см, ИМТ: ${bmi || '-'}.
+КЛИНИЧЕСКИЕ ДАННЫЕ: Возраст: ${age || '-'} лет, Вес: ${weight || '-'} кг, ИМТ: ${bmi || '-'}.
 УРОВЕНЬ ГЛЮКОЗЫ: ${latestSugar || 'нет данных'} ммоль/л ${measT}.
-ЦЕЛЕВАЯ КАЛОРИЙНОСТЬ: ${dailyCalories || '-'} ккал/день.
 
-Структура клинического заключения:
-**1. ЭНДОКРИННЫЙ АНАЛИЗ (Глюкоза: ${latestSugar || '-'} ммоль/л - ${measT}):** 
-Проведите глубокий анализ: что означает эта цифра именно для этого времени измерения (натощак/после еды). Как это влияет на сосуды и инсулинорезистентность. Дайте строгий медицинский алгоритм действий при этом показателе.
-
-**2. МЕТАБОЛИЗМ И БАЛАНС МАКРОНУТРИЕНТОВ:** При ИМТ ${bmi} объясните, как именно нужно распределить ${dailyCalories} ккал (сколько % белка, жиров, сложных углеводов) для контроля скачков сахара.
-
-**3. ПЕРСОНАЛИЗИРОВАННЫЙ РАЦИОН (на ${dailyCalories} ккал):** Пропишите 4-5 конкретных продуктов с точным весом (в граммах), низким гликемическим индексом (ГИ), которые подойдут для возраста ${age} лет и веса ${weight} кг. Объясните их пользу с научной точки зрения.
-**4. КРИТИЧЕСКИ ОПАСНЫЕ ПРОДУКТЫ:** Назовите 3-4 продукта, которые провоцируют резкий выброс инсулина в данной ситуации, и объясните биохимию вреда.
-**5. БЕЗОПАСНАЯ АЛЬТЕРНАТИВА СЛАДКОМУ:** Чем заменить сахар без влияния на гликемическую кривую.
-**6. КЛЮЧЕВОЙ ПРОТОКОЛ НА СЕГОДНЯ:** Одно самое важное клиническое действие.${urgentAlert}`;
+Пожалуйста, ответьте коротко (3-4 пункта):
+1. Оценка состояния: Что означает уровень сахара (${latestSugar || '-'}) на данный момент?
+2. Питание: Что съесть и чего избегать именно сегодня (кратко)?
+3. Действие: Самое важное действие на сегодня.${urgentAlert}`;
 
     } else if (language === 'en') {
-      prompt = `Act as an elite international endocrinologist and clinical dietitian. Provide a deep, scientifically-backed, "PRO-level" medical analysis and dietary plan for a diabetic patient:
+      prompt = `Act as an endocrinologist. Give a SHORT, CLEAR, and ESSENTIAL advice to the patient. No long texts, just the main logic!
       
-CLINICAL DATA: Age: ${age || '-'}, Weight: ${weight || '-'} kg, Height: ${height || '-'} cm, BMI: ${bmi || '-'}.
+CLINICAL DATA: Age: ${age || '-'}, Weight: ${weight || '-'} kg, BMI: ${bmi || '-'}.
 GLUCOSE LEVEL: ${latestSugar || 'no data'} mmol/l ${measT}.
-TARGET CALORIES: ${dailyCalories || '-'} kcal/day.
 
-Clinical Report Structure:
-**1. ENDOCRINE ANALYSIS (${latestSugar || '-'} mmol/l - ${measT}):** 
-Provide a deep physiological analysis of this specific reading based on the measurement time. How does it impact insulin resistance and vascular health? Give a strict medical protocol for this exact level.
-
-**2. METABOLIC CALORIC DISTRIBUTION:** Based on a BMI of ${bmi}, explain exactly how to distribute the ${dailyCalories} kcal intake into macronutrients (proteins, healthy fats, complex carbs) to avoid glucose spikes.
-
-**3. PRECISION NUTRITION PLAN (${dailyCalories} kcal):** Recommend 4-5 specific foods with exact weights (in grams) and low Glycemic Index (GI) tailored for a ${age}-year-old weighing ${weight}kg. Explain their molecular benefit.
-**4. HIGH-RISK FOODS:** Identify 3-4 specific foods that cause rapid insulin spikes in this condition and explain the biochemical reason.
-**5. ZERO-SPIKE SWEET SWAPS:** Scientifically safe sweet alternatives that do not alter the glycemic curve.
-**6. TODAY'S CLINICAL DIRECTIVE:** The absolute most critical medical/dietary action to take today.${urgentAlert}`;
+Please answer briefly (3 paragraphs max):
+1. Status: What does the sugar level (${latestSugar || '-'}) mean right now?
+2. Nutrition: What to eat and what to avoid today (briefly)?
+3. Action: The single most important action to take today.${urgentAlert}`;
 
     } else {
       // Default: Uzbek
-      prompt = `Siz xalqaro darajadagi malakali endokrinologsiz. Yosh: ${age || '-'} yosh, Vazn: ${weight || '-'} kg (Bo'y: ${height || '-'} sm), BMI: ${bmi || '-'}. Kunlik kaloriya: ${dailyCalories || '-'} kkal. Qondagi qand: ${latestSugar || "ma'lumot yo'q"} mmol/l ${measT}.
+      prompt = `Siz tajribali endokrinologsiz. Bemorga faqat ENG ASOSIY, QISQA va TUSHUNARLI maslahat bering. Ortiqcha gaplarsiz, teksti o'zlashtirish oson va zerikarli bo'lmasin!
       
-Bemorga "PRO" darajadagi aniq tibbiy tahlil bering. Iltimos, javobni to'liq tugating. Quyidagilarni o'z ichiga olsin:
-1. Endokrin holat: Qand ko'rsatkichi nima degani va organizmda qanday ta'sir qilmoqda.
-2. Kaloriya va makronutriyent (oqsil, yog', uglevod) nisbati.
-3. ${dailyCalories} kkal doirasida yeyish tavsiya qilinadigan aniq grammlari va Glikemik indeksiga ega 4 ta mahsulot.
-4. Qandni keskin oshiruvchi 3 ta taqiqlangan oziq-ovqat va bu nega zararli ekanligi.
-5. Eng xavfsiz shirinlik o'rinbosarlari.
-6. Bugungi aniq va qat'iy tibbiy ko'rsatmalaringiz.${urgentAlert}`;
+Ma'lumot: Yosh: ${age || '-'}, Vazn: ${weight || '-'} kg, BMI: ${bmi || '-'}.
+Qondagi qand: ${latestSugar || "ma'lumot yo'q"} mmol/l ${measT}.
+
+Javobni juda lo'nda holda 3 ta bandda tayyorlang:
+1. Holat: Hozirgi qand ko'rsatkichi (${latestSugar || '-'}) qanday ahvolni bildiradi?
+2. Ovqatlanish: Bugun nima yeyish tavsiya qilinadi va nimadan shartta voz kechish kerak (qisqacha)?
+3. Harakat: Bugun qilinishi kerak bo'lgan asosiy amaliy qadam.${urgentAlert}`;
     }
 
     // ─── Call AI API (Groq with Gemini Fallback) ─────────────
