@@ -1,15 +1,38 @@
+# Dependencies
 node_modules/
+
+# Environment variables
 .env
+.env.local
+.env.production
+
+# Build output
 dist/
 build/
+frontend/dist/
+frontend/build/
+
+# TypeScript build cache
+tsconfig.tsbuildinfo
+frontend/tsconfig.tsbuildinfo
+
+# OS files
 .DS_Store
+Thumbs.db
+
+# Logs
 *.log
 backend/error.txt
 backend/nslookup_output.txt
 backend/nslookup_utf8.txt
-frontend/dist/
-frontend/build/
+
+# Editor
 .vscode/
 .idea/
+
+# Temp files
 *.tmp
 *.temp
+
+# Vercel
+.vercel
