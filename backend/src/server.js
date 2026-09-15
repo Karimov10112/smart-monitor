@@ -6,7 +6,8 @@ dns.setServers(['8.8.8.8', '8.8.4.4']);
 
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
 const express = require('express');
-const distPath = path.join(__dirname, '../../frontend/dist');
+// Frontend dist path (only used if frontend is built locally)
+// const distPath = path.join(__dirname, '../../frontend/dist');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 const passport = require('./config/passport');
@@ -88,8 +89,8 @@ app.use((req, res, next) => {
   next();
 });
 
-// Serve frontend static files
-app.use(express.static(distPath));
+// NOTE: Frontend static files not served here — frontend is deployed separately
+// app.use(express.static(distPath));
 
 // DB Connection Middleware for Serverless
 app.use(async (req, res, next) => {
@@ -179,13 +180,13 @@ const createSuperAdmin = async () => {
   }
 };
 
-// Handles all other routes (SPA support)
-app.get('*', (req, res) => {
-  res.sendFile(path.join(distPath, 'index.html'), (err) => {
-    if (err) {
-      console.error('index.html jo\'natishda xato:', err.message);
-      res.status(404).json({ success: false, message: 'Sayt fayllari topilmadi. Iltimos, npm run build buyrug\'ini bajaring.' });
-    }
+// Root route — API info
+app.get('/', (req, res) => {
+  res.json({
+    success: true,
+    message: 'DiabetMed API ishlayapti 🚀',
+    version: '1.0.0',
+    docs: '/api/health'
   });
 });
 
