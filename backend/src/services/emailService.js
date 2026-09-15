@@ -1,20 +1,27 @@
-let Resend;
-try {
-  Resend = require('resend').Resend;
-} catch (e) {
-  console.error('❌ Resend module not found.');
-}
+const nodemailer = require('nodemailer');
 
-let resendInstance = null;
-const getResend = () => {
-  if (resendInstance) return resendInstance;
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey || !apiKey.startsWith('re_')) {
-    console.warn('⚠️ Warning: RESEND_API_KEY is not configured.');
+let transporter = null;
+
+const getTransporter = () => {
+  if (transporter) return transporter;
+
+  const user = process.env.EMAIL_USER;
+  const pass = process.env.EMAIL_PASS;
+
+  if (!user || !pass) {
+    console.warn('⚠️ Warning: EMAIL_USER or EMAIL_PASS is not configured. Emails will not be sent.');
     return null;
   }
-  resendInstance = new Resend(apiKey);
-  return resendInstance;
+
+  transporter = nodemailer.createTransport({
+    host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+    port: parseInt(process.env.EMAIL_PORT || '587'),
+    secure: false, // TLS
+    auth: { user, pass },
+    tls: { rejectUnauthorized: false },
+  });
+
+  return transporter;
 };
 
 const sendOTPEmail = async (email, otp, language = 'uz') => {
@@ -72,34 +79,25 @@ const sendOTPEmail = async (email, otp, language = 'uz') => {
     `,
   };
 
-  const fromEmail = process.env.EMAIL_FROM || 'onboarding@resend.dev';
-  
+  // Always log OTP for emergency access / debugging
   console.log('-----------------------------------------');
-  console.log(`🔑 EMERGENCY OTP LOG [${email}]: ${otp}`);
+  console.log(`🔑 OTP LOG [${email}]: ${otp}`);
   console.log('-----------------------------------------');
 
-  const client = getResend();
-  if (!client) return;
+  const mail = getTransporter();
+  if (!mail) return; // no transporter configured, OTP already logged above
 
   try {
-    const result = await client.emails.send({
-      from: `Qand Nazorati <${fromEmail}>`,
+    const info = await mail.sendMail({
+      from: `"Qand Nazorati" <${process.env.EMAIL_USER}>`,
       to: email,
       subject: subjects[language] || subjects.uz,
       html: bodies[language] || bodies.uz,
     });
-
-    console.log(`🔍 Resend Raw Result for ${email}:`, JSON.stringify(result));
-
-    if (result?.error) {
-      console.error(`❌ Resend Error for ${email}:`, result.error);
-      throw new Error(result.error.message || 'Resend error');
-    }
-
-    console.log(`✅ Email sent via Resend to ${email}. ID: ${result.data?.id}`);
+    console.log(`✅ OTP email sent to ${email}. MessageId: ${info.messageId}`);
   } catch (err) {
-    console.error(`❌ Failed to send email via Resend to ${email}:`, err.message);
-    throw err;
+    console.error(`❌ Failed to send OTP email to ${email}:`, err.message);
+    // Don't rethrow — OTP is already logged, login flow should not break
   }
 };
 
@@ -131,18 +129,21 @@ const sendPasswordResetEmail = async (email, resetToken, language = 'uz') => {
       text: 'To reset your password, click the button below:',
       button: 'Reset Password',
       expire: 'This link is valid for 2 hours.',
-      footer: 'If the button doesn\'t work, copy this link into your browser:'
+      footer: "If the button doesn't work, copy this link into your browser:"
     }
   };
 
   const t = templates[language] || templates.uz;
-  const fromEmail = process.env.EMAIL_FROM || 'onboarding@resend.dev';
-  const client = getResend();
-  if (!client) return;
+
+  const mail = getTransporter();
+  if (!mail) {
+    console.warn(`⚠️ Cannot send reset email to ${email}: transporter not configured.`);
+    return;
+  }
 
   try {
-    const result = await client.emails.send({
-      from: `Qand Nazorati <${fromEmail}>`,
+    await mail.sendMail({
+      from: `"Qand Nazorati" <${process.env.EMAIL_USER}>`,
       to: email,
       subject: subjects[language] || subjects.uz,
       html: `
@@ -167,9 +168,9 @@ const sendPasswordResetEmail = async (email, resetToken, language = 'uz') => {
         </div>
       `,
     });
-    console.log(`✅ Reset email sent via Resend to ${email}`);
+    console.log(`✅ Reset email sent to ${email}`);
   } catch (err) {
-    console.error(`❌ Failed to send reset email via Resend to ${email}:`, err.message);
+    console.error(`❌ Failed to send reset email to ${email}:`, err.message);
     throw err;
   }
 };
