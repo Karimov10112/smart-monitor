@@ -23,15 +23,13 @@ const ThemeWrapper = ({ children }: { children: React.ReactNode }) => {
 };
 
 createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <BrowserRouter>
-      <AuthProvider>
-        <AppProvider>
-          <ThemeWrapper>
-            <App />
-          </ThemeWrapper>
-        </AppProvider>
-      </AuthProvider>
-    </BrowserRouter>
-  </React.StrictMode>
+  <BrowserRouter>
+    <AuthProvider>
+      <AppProvider>
+        <ThemeWrapper>
+          <App />
+        </ThemeWrapper>
+      </AppProvider>
+    </AuthProvider>
+  </BrowserRouter>
 );
