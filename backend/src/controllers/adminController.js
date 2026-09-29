@@ -280,7 +280,7 @@ const addAdminNote = async (req, res) => {
 const getDashboardStats = async (req, res) => {
   try {
     const statsArray = await Promise.all([
-      userRepository.countDocuments({ role: 'user' }),
+      userRepository.countDocuments({ role: 'user', isEmailVerified: true }),
       userRepository.countDocuments({ role: 'user', isEmailVerified: true }),
       userRepository.countDocuments({ isBanned: true }),
       bloodSugarRepository.countDocuments(),
