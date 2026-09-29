@@ -72,10 +72,13 @@ export function Statistics() {
       const displayTime = record.createdAt ? createdDate.toLocaleTimeString(language === 'uz' ? 'uz' : 'ru', { hour: '2-digit', minute: '2-digit' }) : '';
       const fullLabel = displayTime ? `${displayDate} • ${displayTime}` : displayDate;
       
+      const fastingVal = record.category === 'fasting' ? (record.level ?? null) : (record.fastingLevel ?? null);
+      const postMealVal = record.category === 'post-meal' ? (record.level ?? null) : (record.postMealLevel ?? null);
+      
       return {
         date: fullLabel,
-        fasting: record.category === 'fasting' ? (record.level ?? null) : (record.fastingLevel ?? null),
-        postMeal: record.category === 'post-meal' ? (record.level ?? null) : (record.postMealLevel ?? null),
+        fasting: fastingVal !== null && fastingVal > 0 ? fastingVal : null,
+        postMeal: postMealVal !== null && postMealVal > 0 ? postMealVal : null,
       };
     });
 
