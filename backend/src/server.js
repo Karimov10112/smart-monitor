@@ -26,6 +26,7 @@ const ALLOWED_ORIGINS = [
   process.env.FRONTEND_URL,
   'https://diabetmed.uz',
   'https://qandli-diabet.vercel.app',
+  'https://smart-monitor-cbfm.vercel.app',
   'http://localhost:5173',
   'http://localhost:3000',
 ].filter(Boolean);
@@ -33,10 +34,12 @@ const ALLOWED_ORIGINS = [
 const corsOriginFn = (origin, callback) => {
   // Allow requests with no origin (Postman, mobile apps, server-to-server)
   if (!origin) return callback(null, true);
-  // In development allow any origin (local network, mobile)
-  if (process.env.NODE_ENV !== 'production') return callback(null, true);
-  // In production allow configured origins, any diabetmed.uz, and any vercel.app
-  if (ALLOWED_ORIGINS.includes(origin) || origin.includes('diabetmed.uz') || origin.endsWith('vercel.app')) return callback(null, true);
+  // Always allow any vercel.app subdomain (frontend deployments)
+  if (origin.endsWith('.vercel.app') || origin === 'https://diabetmed.uz') return callback(null, true);
+  // Allow configured origins
+  if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+  // Allow localhost in development
+  if (origin.startsWith('http://localhost') || origin.startsWith('http://192.168.')) return callback(null, true);
   callback(new Error('Not allowed by CORS'));
 };
 
