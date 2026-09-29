@@ -46,6 +46,7 @@ const register = async (req, res) => {
         await sendOTPEmail(lowerEmail, otp, req.body.language || 'uz');
       } catch (emailErr) {
         console.error('Failed to resend OTP email during register:', emailErr);
+        return res.status(500).json({ success: false, message: 'Email jo\'natishda xatolik yuz berdi. Iltimos keyinroq qayta urinib ko\'ring.', error: emailErr.message });
       }
 
       return res.status(200).json({
@@ -73,6 +74,7 @@ const register = async (req, res) => {
       await sendOTPEmail(lowerEmail, otp, req.body.language || 'uz');
     } catch (emailErr) {
       console.error('Failed to send OTP email:', emailErr);
+      return res.status(500).json({ success: false, message: 'Email jo\'natishda xatolik yuz berdi. Iltimos keyinroq qayta urinib ko\'ring yoki Spamnini tekshiring.', error: emailErr.message });
     }
 
     res.status(201).json({
@@ -387,12 +389,23 @@ const updateProfile = async (req, res) => {
     const user = await userRepository.findById(req.user._id);
 
     const updates = {};
+    let needsEmailVerification = false;
+    let message = 'Profil muvaffaqiyatli yangilandi';
+
     if (email && email !== user.email) {
       const emailExists = await userRepository.findByEmail(email);
       if (emailExists) {
         return res.status(400).json({ success: false, message: 'Bu email band' });
       }
-      updates.email = email;
+      
+      const otp = generateOTP();
+      updates.newEmail = email;
+      updates.newEmailOTP = otp;
+      updates.newEmailOTPExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
+      
+      await sendOTPEmail(email, otp, req.body.language || 'uz');
+      needsEmailVerification = true;
+      message = 'Profil yangilandi. Yangi emailga tasdiqlash kodi yuborildi.';
     }
 
     if (firstName) updates.firstName = firstName;
@@ -400,7 +413,12 @@ const updateProfile = async (req, res) => {
     if (phone) updates.phone = phone;
 
     const updatedUser = await userRepository.findByIdAndUpdate(req.user._id, updates);
-    res.json({ success: true, user: updatedUser.toSafeObject(), message: 'Profil muvaffaqiyatli yangilandi' });
+    res.json({ 
+      success: true, 
+      user: updatedUser.toSafeObject(), 
+      message,
+      needsEmailVerification 
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Yangilashda xato' });
   }
@@ -467,6 +485,39 @@ const oauthCallback = async (req, res) => {
   }
 };
 
+// ==================== VERIFY NEW EMAIL OTP ====================
+const verifyNewEmail = async (req, res) => {
+  try {
+    const { otp } = req.body;
+    const user = await userRepository.findById(req.user._id);
+
+    if (!user) return res.status(404).json({ success: false, message: 'Foydalanuvchi topilmadi' });
+
+    if (!user.newEmail || user.newEmailOTP !== otp) {
+      return res.status(400).json({ success: false, message: 'Noto\'g\'ri kod' });
+    }
+
+    if (new Date() > user.newEmailOTPExpires) {
+      return res.status(400).json({ success: false, message: 'Kod muddati o\'tgan. Qayta so\'rang.' });
+    }
+
+    const updatedUser = await userRepository.findByIdAndUpdate(req.user._id, {
+      email: user.newEmail,
+      isEmailVerified: true,
+      $unset: { newEmail: '', newEmailOTP: '', newEmailOTPExpires: '' }
+    });
+
+    res.json({
+      success: true,
+      message: 'Email muvaffaqiyatli o\'zgartirildi!',
+      user: updatedUser.toSafeObject(),
+    });
+  } catch (err) {
+    console.error('Verify new email error:', err);
+    res.status(500).json({ success: false, message: 'Server xatosi' });
+  }
+};
+
 module.exports = {
   register,
   verifyEmailOTP,
@@ -481,4 +532,5 @@ module.exports = {
   oauthCallback,
   updateProfile,
   updatePassword,
+  verifyNewEmail,
 };
