@@ -358,6 +358,50 @@ const assignDoctor = async (req, res) => {
   }
 };
 
+// Delete all incomplete/unverified users (superadmin only)
+const purgeIncompleteUsers = async (req, res) => {
+  try {
+    const User = require('../models/User');
+    const BloodSugar = require('../models/BloodSugar');
+
+    // Find incomplete users: not verified OR profile not complete, excluding superadmin/admin/doctor
+    const incompleteUsers = await User.find({
+      role: { $nin: ['superadmin', 'admin', 'doctor'] },
+      $or: [
+        { isEmailVerified: { $ne: true } },
+        { firstName: { $in: [null, '', undefined] } },
+      ]
+    }).select('_id email');
+
+    if (incompleteUsers.length === 0) {
+      return res.json({ success: true, message: 'Tozalanishi kerak bo\'lgan foydalanuvchi yo\'q', deleted: 0 });
+    }
+
+    const ids = incompleteUsers.map(u => u._id);
+
+    // Delete their blood sugar records too
+    await BloodSugar.deleteMany({ userId: { $in: ids } });
+
+    // Delete the users
+    const result = await User.deleteMany({ _id: { $in: ids } });
+
+    await logAction(req.user._id, 'PURGE_INCOMPLETE_USERS', {
+      targetType: 'User',
+      details: { deleted: result.deletedCount, emails: incompleteUsers.map(u => u.email) },
+      req
+    });
+
+    res.json({
+      success: true,
+      message: `${result.deletedCount} ta to'liq ro'yxatdan o'tmagan foydalanuvchi o'chirildi`,
+      deleted: result.deletedCount
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Server xatosi' });
+  }
+};
+
 module.exports = {
   getAllUsers,
   getUserById,
@@ -372,4 +416,5 @@ module.exports = {
   getAuditLogs,
   getDoctors,
   assignDoctor,
+  purgeIncompleteUsers,
 };

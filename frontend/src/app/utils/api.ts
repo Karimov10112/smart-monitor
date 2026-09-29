@@ -76,6 +76,7 @@ export const adminAPI = {
   assignDoctor: (id: string, doctorId: string | null) => api.patch(`/admin/users/${id}/assign-doctor`, { doctorId }),
   getContacts: () => api.get('/admin/contacts'),
   updateContacts: (data: any) => api.put('/admin/contacts', data),
+  purgeIncomplete: () => api.delete('/admin/purge-incomplete'),
 };
 
 export const productAPI = {

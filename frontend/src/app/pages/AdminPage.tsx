@@ -453,6 +453,42 @@ export default function AdminPage() {
                   </Grid>
                 ))}
               </Grid>
+
+              {/* Purge incomplete users button */}
+              <Box sx={{ mt: 4 }}>
+                <Card elevation={0} sx={{ p: 3, borderRadius: 2, bgcolor: alpha(theme.palette.error.main, 0.04), border: `1px solid ${alpha(theme.palette.error.main, 0.15)}` }}>
+                  <Stack direction={isMobile ? 'column' : 'row'} spacing={2} alignItems={isMobile ? 'flex-start' : 'center'} justifyContent="space-between">
+                    <Box>
+                      <Typography variant="subtitle1" sx={{ fontWeight: 900, color: 'error.main' }}>
+                        🧹 {language === 'uz' ? "Chala ro'yxatdan o'tganlarni o'chirish" : 'Purge incomplete accounts'}
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
+                        {language === 'uz'
+                          ? "Email tasdiqlanmagan yoki profili to'liq to'ldirilmagan foydalanuvchilar o'chiriladi."
+                          : 'Deletes users who have not verified their email or completed their profile.'}
+                      </Typography>
+                    </Box>
+                    <Button
+                      variant="contained"
+                      color="error"
+                      sx={{ borderRadius: 2, fontWeight: 800, px: 3, flexShrink: 0, textTransform: 'none' }}
+                      onClick={async () => {
+                        if (!window.confirm(language === 'uz' ? "Ishonchingiz komilmi? Bu amalni ortga qaytarib bo'lmaydi." : 'Are you sure? This cannot be undone.')) return;
+                        try {
+                          const { data } = await adminAPI.purgeIncomplete();
+                          toast.success(data.message || "O'chirildi");
+                          loadStats();
+                          loadUsers();
+                        } catch {
+                          toast.error(language === 'uz' ? 'Xato yuz berdi' : 'Error occurred');
+                        }
+                      }}
+                    >
+                      {language === 'uz' ? "O'chirish" : 'Delete'}
+                    </Button>
+                  </Stack>
+                </Card>
+              </Box>
             )}
 
             {currentTab === 'users' && !selectedUserId && (
