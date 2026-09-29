@@ -35,8 +35,8 @@ const corsOriginFn = (origin, callback) => {
   if (!origin) return callback(null, true);
   // In development allow any origin (local network, mobile)
   if (process.env.NODE_ENV !== 'production') return callback(null, true);
-  // In production only allow configured origins
-  if (ALLOWED_ORIGINS.includes(origin) || origin.includes('diabetmed.uz')) return callback(null, true);
+  // In production allow configured origins, any diabetmed.uz, and any vercel.app
+  if (ALLOWED_ORIGINS.includes(origin) || origin.includes('diabetmed.uz') || origin.endsWith('vercel.app')) return callback(null, true);
   callback(new Error('Not allowed by CORS'));
 };
 
