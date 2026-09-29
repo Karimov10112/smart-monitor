@@ -240,19 +240,19 @@ export default function AdminPage() {
   const miniWidth = 88;
 
   const fastingRecords = selectedUserRecords
-    .filter(r => r.fastingLevel !== undefined && r.fastingLevel !== null)
+    .filter(r => (r.fastingLevel != null) || (r.category === 'fasting' && r.level != null))
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
     .map(r => ({
       date: format(new Date(r.date), 'dd/MM'),
-      level: r.fastingLevel
+      level: r.category === 'fasting' ? r.level : r.fastingLevel
     }));
 
   const postMealRecords = selectedUserRecords
-    .filter(r => r.postMealLevel !== undefined && r.postMealLevel !== null)
+    .filter(r => (r.postMealLevel != null) || (r.category === 'post-meal' && r.level != null))
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
     .map(r => ({
       date: format(new Date(r.date), 'dd/MM'),
-      level: r.postMealLevel
+      level: r.category === 'post-meal' ? r.level : r.postMealLevel
     }));
 
   return (

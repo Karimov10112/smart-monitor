@@ -109,17 +109,17 @@ export default function DoctorPage() {
   };
 
   const fastingRecords = records
-    .filter(r => r.fastingLevel !== undefined && r.fastingLevel !== null)
+    .filter(r => (r.fastingLevel != null) || (r.category === 'fasting' && r.level != null))
     .map(r => ({
       date: format(new Date(r.date), 'dd/MM'),
-      level: r.fastingLevel,
+      level: r.category === 'fasting' ? r.level : r.fastingLevel,
     }));
 
   const postMealRecords = records
-    .filter(r => r.postMealLevel !== undefined && r.postMealLevel !== null)
+    .filter(r => (r.postMealLevel != null) || (r.category === 'post-meal' && r.level != null))
     .map(r => ({
       date: format(new Date(r.date), 'dd/MM'),
-      level: r.postMealLevel,
+      level: r.category === 'post-meal' ? r.level : r.postMealLevel,
     }));
 
   if (loading && patients.length === 0) return (

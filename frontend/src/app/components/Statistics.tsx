@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useApp } from '../contexts/AppContext';
 import { translations } from '../utils/translations';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -36,16 +36,26 @@ export function Statistics() {
   const { language, records } = useApp();
   const theme = useTheme();
   const t = translations[language];
+  const [timeRange, setTimeRange] = useState('7');
 
   const stats = useMemo(() => {
     if (records.length === 0) return null;
-    const recentRecords = [...records].sort((a, b) => {
+    
+    const now = new Date();
+    let filteredRecords = [...records];
+    if (timeRange !== 'all') {
+      const days = parseInt(timeRange);
+      const cutoffDate = new Date(now.getTime() - (days * 24 * 60 * 60 * 1000));
+      filteredRecords = filteredRecords.filter(r => new Date(r.date) >= cutoffDate);
+    }
+
+    const recentRecords = filteredRecords.sort((a, b) => {
       const timeDiff = new Date(a.date).getTime() - new Date(b.date).getTime();
       if (timeDiff !== 0) return timeDiff;
       const createA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
       const createB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
       return createA - createB;
-    }).slice(-14);
+    });
 
     const avgFasting = (recentRecords.reduce((sum, r) => sum + (r.fastingLevel ?? r.level ?? 0), 0) / recentRecords.length).toFixed(1);
     const postMealRecords = recentRecords.filter(r => r.postMealLevel != null || (r.category === 'post-meal' && r.level != null));
@@ -64,13 +74,13 @@ export function Statistics() {
       
       return {
         date: fullLabel,
-        fasting: record.fastingLevel ?? (record.category === 'fasting' ? record.level : 0) ?? 0,
-        postMeal: record.postMealLevel ?? (record.category === 'post-meal' ? record.level : null) ?? null,
+        fasting: record.category === 'fasting' ? (record.level ?? null) : (record.fastingLevel ?? null),
+        postMeal: record.category === 'post-meal' ? (record.level ?? null) : (record.postMealLevel ?? null),
       };
     });
 
     return { avgFasting, avgPostMeal, avgDiff, chartData };
-  }, [records, language]);
+  }, [records, language, timeRange]);
 
   if (!stats) {
     return (
@@ -102,6 +112,16 @@ export function Statistics() {
 
   return (
     <Box sx={{ spaceY: 4 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+        <Tabs value={timeRange} onChange={(e, v) => setTimeRange(v)} sx={{ minHeight: 36, '& .MuiTab-root': { minHeight: 36, py: 0.5, fontWeight: 800, textTransform: 'none' } }}>
+          <Tab value="1" label={language === 'uz' ? 'Bugun' : 'Today'} />
+          <Tab value="7" label={language === 'uz' ? 'Haftalik' : 'Weekly'} />
+          <Tab value="30" label={language === 'uz' ? 'Oylik' : 'Monthly'} />
+          <Tab value="365" label={language === 'uz' ? 'Yillik' : 'Yearly'} />
+          <Tab value="all" label={language === 'uz' ? 'Barchasi' : 'All'} />
+        </Tabs>
+      </Box>
+      
       {/* Overview Stats */}
       <Grid container spacing={2} sx={{ mb: 4 }}>
         <Grid size={{ xs: 12, md: 4 }}>
@@ -119,7 +139,7 @@ export function Statistics() {
       <Card elevation={0} sx={{ border: `1px solid ${theme.palette.divider}`, mb: 4 }}>
         <Box sx={{ p: 2.5, px: 3, borderBottom: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.primary.main, 0.01) }}>
           <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5 }}>
-            <TimelineIcon sx={{ fontSize: 16, mr: 1, verticalAlign: 'middle' }} /> {t.last14Days}
+            <TimelineIcon sx={{ fontSize: 16, mr: 1, verticalAlign: 'middle' }} /> {language === 'uz' ? 'Grafik ko\'rsatkichlar' : 'Chart Statistics'}
           </Typography>
         </Box>
         <CardContent sx={{ p: 4, pt: 4 }}>
@@ -131,7 +151,7 @@ export function Statistics() {
               </Typography>
               <Box sx={{ height: 260, w: '100%' }}>
                 <ResponsiveContainer width="100%" height={260}>
-                  <AreaChart data={stats.chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <AreaChart data={stats.chartData.filter(d => d.fasting != null)} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme.palette.divider} />
                     <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: theme.palette.text.secondary }} />
                     <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: theme.palette.text.secondary }} />
