@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://smart-monitor-uz.vercel.app/sitemap.xml
+Sitemap: https://diabetmed.uz/sitemap.xml
