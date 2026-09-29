@@ -18,7 +18,8 @@ const auditLogSchema = new mongoose.Schema(
         'ADD_PRODUCT',
         'UPDATE_PRODUCT',
         'DELETE_PRODUCT',
-        'UPDATE_ADMIN_CONTACTS'
+        'UPDATE_ADMIN_CONTACTS',
+        'PURGE_INCOMPLETE_USERS'
       ]
     },
     targetId: {

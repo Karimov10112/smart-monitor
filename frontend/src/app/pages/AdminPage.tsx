@@ -455,40 +455,42 @@ export default function AdminPage() {
               </Grid>
 
               {/* Purge incomplete users button */}
-              <Box sx={{ mt: 4 }}>
-                <Card elevation={0} sx={{ p: 3, borderRadius: 2, bgcolor: alpha(theme.palette.error.main, 0.04), border: `1px solid ${alpha(theme.palette.error.main, 0.15)}` }}>
-                  <Stack direction={isMobile ? 'column' : 'row'} spacing={2} alignItems={isMobile ? 'flex-start' : 'center'} justifyContent="space-between">
-                    <Box>
-                      <Typography variant="subtitle1" sx={{ fontWeight: 900, color: 'error.main' }}>
-                        🧹 {language === 'uz' ? "Chala ro'yxatdan o'tganlarni o'chirish" : 'Purge incomplete accounts'}
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
-                        {language === 'uz'
-                          ? "Email tasdiqlanmagan yoki profili to'liq to'ldirilmagan foydalanuvchilar o'chiriladi."
-                          : 'Deletes users who have not verified their email or completed their profile.'}
-                      </Typography>
-                    </Box>
-                    <Button
-                      variant="contained"
-                      color="error"
-                      sx={{ borderRadius: 2, fontWeight: 800, px: 3, flexShrink: 0, textTransform: 'none' }}
-                      onClick={async () => {
-                        if (!window.confirm(language === 'uz' ? "Ishonchingiz komilmi? Bu amalni ortga qaytarib bo'lmaydi." : 'Are you sure? This cannot be undone.')) return;
-                        try {
-                          const { data } = await adminAPI.purgeIncomplete();
-                          toast.success(data.message || "O'chirildi");
-                          loadStats();
-                          loadUsers();
-                        } catch {
-                          toast.error(language === 'uz' ? 'Xato yuz berdi' : 'Error occurred');
-                        }
-                      }}
-                    >
-                      {language === 'uz' ? "O'chirish" : 'Delete'}
-                    </Button>
-                  </Stack>
-                </Card>
-              </Box>
+              {user?.role === 'superadmin' && (
+                <Box sx={{ mt: 4 }}>
+                  <Card elevation={0} sx={{ p: 3, borderRadius: 2, bgcolor: alpha(theme.palette.error.main, 0.04), border: `1px solid ${alpha(theme.palette.error.main, 0.15)}` }}>
+                    <Stack direction={isMobile ? 'column' : 'row'} spacing={2} alignItems={isMobile ? 'flex-start' : 'center'} justifyContent="space-between">
+                      <Box>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 900, color: 'error.main' }}>
+                          🧹 {language === 'uz' ? "Chala ro'yxatdan o'tganlarni o'chirish" : 'Purge incomplete accounts'}
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
+                          {language === 'uz'
+                            ? "Email tasdiqlanmagan yoki profili to'liq to'ldirilmagan foydalanuvchilar o'chiriladi."
+                            : 'Deletes users who have not verified their email or completed their profile.'}
+                        </Typography>
+                      </Box>
+                      <Button
+                        variant="contained"
+                        color="error"
+                        sx={{ borderRadius: 2, fontWeight: 800, px: 3, flexShrink: 0, textTransform: 'none' }}
+                        onClick={async () => {
+                          if (!window.confirm(language === 'uz' ? "Ishonchingiz komilmi? Bu amalni ortga qaytarib bo'lmaydi." : 'Are you sure? This cannot be undone.')) return;
+                          try {
+                            const { data } = await adminAPI.purgeIncomplete();
+                            toast.success(data.message || "O'chirildi");
+                            loadStats();
+                            loadUsers();
+                          } catch {
+                            toast.error(language === 'uz' ? 'Xato yuz berdi' : 'Error occurred');
+                          }
+                        }}
+                      >
+                        {language === 'uz' ? "O'chirish" : 'Delete'}
+                      </Button>
+                    </Stack>
+                  </Card>
+                </Box>
+              )}
             )}
 
             {currentTab === 'users' && !selectedUserId && (
@@ -666,16 +668,18 @@ export default function AdminPage() {
                                </Typography>
                             )}
                          </Grid>
-                         <Grid size={{ xs: 12, md: 6 }}>
-                            <Typography variant="caption" sx={{ fontWeight: 800, mb: 1.5, display: 'block', textTransform: 'uppercase' }}>{t.updateRoleLabel || 'Rol'}</Typography>
-                            <FormControl fullWidth size="small">
-                               <Select value={selectedUser.role} onChange={e => adminAPI.updateRole(selectedUser._id, e.target.value).then(() => { toast.success('Rol o\'zgartirildi'); loadSpecificUser(selectedUser._id); })} sx={{ borderRadius: 2 }}>
-                                  <MenuItem value="user">{t.user || 'Foydalanuvchi'}</MenuItem>
-                                  <MenuItem value="doctor">{t.doctor || 'Shifokor'}</MenuItem>
-                                  <MenuItem value="admin">{t.admin || 'Admin'}</MenuItem>
-                               </Select>
-                            </FormControl>
-                         </Grid>
+                         {user?.role === 'superadmin' && (
+                           <Grid size={{ xs: 12, md: 6 }}>
+                              <Typography variant="caption" sx={{ fontWeight: 800, mb: 1.5, display: 'block', textTransform: 'uppercase' }}>{t.updateRoleLabel || 'Rol'}</Typography>
+                              <FormControl fullWidth size="small">
+                                 <Select value={selectedUser.role} onChange={e => adminAPI.updateRole(selectedUser._id, e.target.value).then(() => { toast.success('Rol o\'zgartirildi'); loadSpecificUser(selectedUser._id); })} sx={{ borderRadius: 2 }}>
+                                    <MenuItem value="user">{t.user || 'Foydalanuvchi'}</MenuItem>
+                                    <MenuItem value="doctor">{t.doctor || 'Shifokor'}</MenuItem>
+                                    <MenuItem value="admin">{t.admin || 'Admin'}</MenuItem>
+                                 </Select>
+                              </FormControl>
+                           </Grid>
+                         )}
                       </Grid>
                    </Box>
                 </Card>
@@ -753,7 +757,19 @@ export default function AdminPage() {
                         <TableRow key={log._id}>
                           <TableCell><Typography variant="body2" fontWeight={800}>{log.adminId?.firstName} {log.adminId?.lastName}</Typography></TableCell>
                           <TableCell><Chip label={log.action} size="small" /></TableCell>
-                          <TableCell><Typography variant="caption">{JSON.stringify(log.details)}</Typography></TableCell>
+                          <TableCell>
+                            <Typography variant="caption" sx={{ display: 'block' }}>
+                              {log.action === 'DELETE_USER' && (
+                                <>O'chirildi: <b>{log.details?.userEmail}</b> (Rol: {log.details?.userRole || 'user'}) <br/> O'chiruvchi: {log.details?.deletedByEmail} ({log.details?.deletedByRole})</>
+                              )}
+                              {log.action === 'PURGE_INCOMPLETE_USERS' && (
+                                <>{log.details?.deleted} ta chala akkaunt o'chirildi.</>
+                              )}
+                              {log.action !== 'DELETE_USER' && log.action !== 'PURGE_INCOMPLETE_USERS' && (
+                                JSON.stringify(log.details)
+                              )}
+                            </Typography>
+                          </TableCell>
                           <TableCell align="right"><Typography variant="caption">{format(new Date(log.createdAt), 'dd.MM HH:mm')}</Typography></TableCell>
                         </TableRow>
                       ))}

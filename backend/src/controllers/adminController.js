@@ -80,6 +80,11 @@ const getAllUsers = async (req, res) => {
     if (isBanned !== undefined) query.isBanned = isBanned === 'true';
     if (region) query.region = region;
     
+    // Non-superadmins can only see regular users
+    if (req.user.role !== 'superadmin') {
+      query.role = 'user';
+    }
+    
     // Always filter for verified users by default to avoid showing pending registrations
     query.isEmailVerified = true;
 
@@ -151,6 +156,11 @@ const getUserRecords = async (req, res) => {
 // Update user role
 const updateUserRole = async (req, res) => {
   try {
+    // Only superadmin can update roles
+    if (req.user.role !== 'superadmin') {
+      return res.status(403).json({ success: false, message: 'Faqat Super Admin rolarni o\'zgartira oladi' });
+    }
+
     const { role } = req.body;
     if (!['user', 'doctor', 'admin'].includes(role)) {
       return res.status(400).json({ success: false, message: 'Noto\'g\'ri rol yoki Super Admin tayinlash mumkin emas' });
@@ -227,6 +237,11 @@ const deleteUser = async (req, res) => {
       return res.status(403).json({ success: false, message: 'Super Adminni o\'chirib bo\'lmaydi' });
     }
 
+    // Restriction: Admins and doctors can only delete users, not other admins or doctors
+    if (req.user.role !== 'superadmin' && user.role !== 'user') {
+      return res.status(403).json({ success: false, message: 'Faqat Super Admin admin yoki doktorlarni o\'chira oladi' });
+    }
+
     const BloodSugarModel = require('../models/BloodSugar');
     await BloodSugarModel.deleteMany({ user: user._id });
     await userRepository.findByIdAndDelete(req.params.id);
@@ -235,7 +250,12 @@ const deleteUser = async (req, res) => {
     await logAction(req.user._id, 'DELETE_USER', {
       targetId: user._id,
       targetType: 'User',
-      details: { userEmail: user.email },
+      details: { 
+        userEmail: user.email, 
+        userRole: user.role, 
+        deletedByEmail: req.user.email,
+        deletedByRole: req.user.role 
+      },
       req
     });
 
