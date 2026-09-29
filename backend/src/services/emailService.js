@@ -48,7 +48,7 @@ const sendOTPEmail = async (email, otp, language = 'uz') => {
   if (process.env.RESEND_API_KEY) {
     try {
       const { data, error } = await resend.emails.send({
-        from: 'Qand Nazorati <onboarding@resend.dev>',
+        from: 'Qand Nazorati <noreply@diabetmed.uz>',
         to: [email],
         subject: SUBJECTS[language] || SUBJECTS.uz,
         html: OTP_HTML(otp, language),
@@ -126,7 +126,7 @@ const sendPasswordResetEmail = async (email, resetToken, language = 'uz') => {
   if (process.env.RESEND_API_KEY) {
     try {
       const { data, error } = await resend.emails.send({
-        from: 'Qand Nazorati <onboarding@resend.dev>',
+        from: 'Qand Nazorati <noreply@diabetmed.uz>',
         to: [email],
         subject: subjects[language] || subjects.uz,
         html,
