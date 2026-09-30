@@ -860,28 +860,25 @@ export default function AdminPage() {
           <form onSubmit={handleSavePatient}>
             <DialogContent>
               <Grid container spacing={2}>
+                {/* 1. Ism va Familiya */}
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField fullWidth label="Ism" required size="small" value={patientForm.firstName} onChange={e => setPatientForm({...patientForm, firstName: e.target.value})} />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField fullWidth label="Familiya" required size="small" value={patientForm.lastName} onChange={e => setPatientForm({...patientForm, lastName: e.target.value})} />
                 </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField fullWidth label="Login (Tel raqam / Email)" required size="small" value={patientForm.email} onChange={e => setPatientForm({...patientForm, email: e.target.value})} />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField fullWidth label="Parol" required size="small" value={patientForm.password} onChange={e => setPatientForm({...patientForm, password: e.target.value})} />
-                </Grid>
+                {/* 2. Telefon va Tug'ilgan sana */}
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField fullWidth label="Telefon" required size="small" value={patientForm.phone} onChange={e => setPatientForm({...patientForm, phone: e.target.value})} />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField fullWidth label="Tug'ilgan sana (YYYY-MM-DD)" size="small" value={patientForm.dateOfBirth} onChange={e => setPatientForm({...patientForm, dateOfBirth: e.target.value})} />
+                  <TextField fullWidth label="Tug'ilgan sana (YYYY-MM-DD)" required size="small" value={patientForm.dateOfBirth} onChange={e => setPatientForm({...patientForm, dateOfBirth: e.target.value})} />
                 </Grid>
+                {/* 3. Diabet turi va Bo'y */}
                 <Grid size={{ xs: 12, sm: 6 }}>
-                  <FormControl fullWidth size="small">
-                    <InputLabel>Diabet Turi</InputLabel>
-                    <Select value={patientForm.diabetesType} label="Diabet Turi" onChange={e => setPatientForm({...patientForm, diabetesType: e.target.value})}>
+                  <FormControl fullWidth size="small" required>
+                    <InputLabel>Diabet Turi *</InputLabel>
+                    <Select value={patientForm.diabetesType} label="Diabet Turi *" onChange={e => setPatientForm({...patientForm, diabetesType: e.target.value})}>
                       <MenuItem value="1-toifa">1-toifa</MenuItem>
                       <MenuItem value="2-toifa">2-toifa</MenuItem>
                       <MenuItem value="Homiladorlik">Homiladorlik</MenuItem>
@@ -889,16 +886,30 @@ export default function AdminPage() {
                   </FormControl>
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField fullWidth label="Bo'y (sm)" size="small" type="number" value={patientForm.height} onChange={e => setPatientForm({...patientForm, height: e.target.value})} />
+                  <TextField fullWidth label="Bo'y (sm)" required size="small" type="number" value={patientForm.height} onChange={e => setPatientForm({...patientForm, height: e.target.value})} />
+                </Grid>
+                {/* 4. Vazn va Viloyat */}
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField fullWidth label="Vazn (kg)" required size="small" type="number" value={patientForm.weight} onChange={e => setPatientForm({...patientForm, weight: e.target.value})} />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField fullWidth label="Vazn (kg)" size="small" type="number" value={patientForm.weight} onChange={e => setPatientForm({...patientForm, weight: e.target.value})} />
+                  <TextField fullWidth label="Viloyat" required size="small" value={patientForm.region} onChange={e => setPatientForm({...patientForm, region: e.target.value})} />
+                </Grid>
+                {/* 5. Tuman */}
+                <Grid size={{ xs: 12 }}>
+                  <TextField fullWidth label="Tuman / Shahar" required size="small" value={patientForm.district} onChange={e => setPatientForm({...patientForm, district: e.target.value})} />
+                </Grid>
+                {/* 6. Login va Parol — OXIRIDA */}
+                <Grid size={{ xs: 12 }}>
+                  <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: 1 }}>
+                    Kirish ma'lumotlari
+                  </Typography>
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField fullWidth label="Viloyat" size="small" value={patientForm.region} onChange={e => setPatientForm({...patientForm, region: e.target.value})} />
+                  <TextField fullWidth label="Login (Tel raqam / Email)" required size="small" value={patientForm.email} onChange={e => setPatientForm({...patientForm, email: e.target.value})} />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField fullWidth label="Tuman / Shahar" size="small" value={patientForm.district} onChange={e => setPatientForm({...patientForm, district: e.target.value})} />
+                  <TextField fullWidth label="Parol" required size="small" type="password" value={patientForm.password} onChange={e => setPatientForm({...patientForm, password: e.target.value})} />
                 </Grid>
               </Grid>
             </DialogContent>
