@@ -8,6 +8,7 @@ import { toast, Toaster } from 'sonner';
 import { format } from 'date-fns';
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Statistics } from '../components/Statistics';
 
 // MUI Components
 import {
@@ -701,51 +702,19 @@ export default function AdminPage() {
 
                 {/* === 3. GLYUKOZA VA IZOHLAR === */}
                  {userTab === 'analytics' && (
-                <Grid container spacing={3}>
-                   <Grid size={{ xs: 12, md: 8 }}>
-                      <Card elevation={0} sx={{ p: 4, mb: 3, borderRadius: 2, border: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.background.paper, 0.4), backdropFilter: 'blur(10px)' }}>
-                         <Typography variant="h6" color="primary" sx={{ fontWeight: 900, mb: 3, borderLeft: `4px solid ${theme.palette.primary.main}`, pl: 1.5 }}>{t.fastingChartTitle}</Typography>
-                         <Box sx={{ height: 240 }}>
-                           {fastingRecords.length > 0 ? (
-                              <ResponsiveContainer width="100%" height="100%">
-                                 <AreaChart data={fastingRecords}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme.palette.divider} />
-                                    <XAxis dataKey="date" tick={{ fontSize: 10, fontWeight: 700 }} />
-                                    <YAxis tick={{ fontSize: 10, fontWeight: 700 }} />
-                                    <Tooltip />
-                                    <Area type="monotone" dataKey="level" stroke={theme.palette.primary.main} fill={theme.palette.primary.main} fillOpacity={0.1} strokeWidth={3} />
-                                 </AreaChart>
-                              </ResponsiveContainer>
-                           ) : <Box sx={{ py: 6, textAlign: 'center', opacity: 0.4 }}><TimelineIcon sx={{ fontSize: 40, mb: 1 }} /><Typography variant="caption" display="block">{t.noRecords}</Typography></Box>}
-                         </Box>
-                      </Card>
-
-                      <Card elevation={0} sx={{ p: 4, borderRadius: 2, border: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.background.paper, 0.4), backdropFilter: 'blur(10px)' }}>
-                         <Typography variant="h6" color="secondary" sx={{ fontWeight: 900, mb: 3, borderLeft: `4px solid ${theme.palette.secondary.main}`, pl: 1.5 }}>{t.postMealChartTitle}</Typography>
-                         <Box sx={{ height: 240 }}>
-                           {postMealRecords.length > 0 ? (
-                              <ResponsiveContainer width="100%" height="100%">
-                                 <AreaChart data={postMealRecords}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme.palette.divider} />
-                                    <XAxis dataKey="date" tick={{ fontSize: 10, fontWeight: 700 }} />
-                                    <YAxis tick={{ fontSize: 10, fontWeight: 700 }} />
-                                    <Tooltip />
-                                    <Area type="monotone" dataKey="level" stroke={theme.palette.secondary.main} fill={theme.palette.secondary.main} fillOpacity={0.1} strokeWidth={3} />
-                                 </AreaChart>
-                              </ResponsiveContainer>
-                           ) : <Box sx={{ py: 6, textAlign: 'center', opacity: 0.4 }}><TimelineIcon sx={{ fontSize: 40, mb: 1 }} /><Typography variant="caption" display="block">{t.noRecords}</Typography></Box>}
-                         </Box>
-                      </Card>
-                   </Grid>
-                   
-                   <Grid size={{ xs: 12, md: 4 }}>
-                      <Card elevation={0} sx={{ p: 4, borderRadius: 2, border: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.background.paper, 0.4), backdropFilter: 'blur(10px)', height: '100%', display: 'flex', flexDirection: 'column' }}>
-                         <Typography variant="caption" sx={{ fontWeight: 900, color: 'warning.main', textTransform: 'uppercase', mb: 2, display: 'block' }}>{t.administrativeNotes || 'Admin Izohi'}</Typography>
-                         <TextField fullWidth multiline rows={7} variant="outlined" placeholder={t.notesPlaceholder} value={selectedUser.adminNotes || ''} onChange={e => setSelectedUser({...selectedUser, adminNotes: e.target.value})} sx={{ mb: 3, flexGrow: 1, '& .MuiOutlinedInput-root': { borderRadius: 2, bgcolor: alpha(theme.palette.background.default, 0.5) } }} />
-                         <Button fullWidth variant="contained" onClick={() => handleSaveAdminNotes(selectedUserId!, selectedUser.adminNotes)} sx={{ borderRadius: 1.5, fontWeight: 900, py: 1.5 }}>{t.saveNotes || 'Izohni saqlash'}</Button>
-                      </Card>
-                   </Grid>
-                </Grid>
+                 <Grid container spacing={3}>
+                    <Grid size={{ xs: 12 }}>
+                       <Statistics customRecords={selectedUserRecords} customLanguage={language} />
+                    </Grid>
+                    
+                    <Grid size={{ xs: 12 }}>
+                       <Card elevation={0} sx={{ p: 4, borderRadius: 2, border: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.background.paper, 0.4), backdropFilter: 'blur(10px)' }}>
+                          <Typography variant="caption" sx={{ fontWeight: 900, color: 'warning.main', textTransform: 'uppercase', mb: 2, display: 'block' }}>{t.administrativeNotes || 'Admin Izohi'}</Typography>
+                          <TextField fullWidth multiline rows={4} variant="outlined" placeholder={t.notesPlaceholder} value={selectedUser.adminNotes || ''} onChange={e => setSelectedUser({...selectedUser, adminNotes: e.target.value})} sx={{ mb: 3, '& .MuiOutlinedInput-root': { borderRadius: 2, bgcolor: alpha(theme.palette.background.default, 0.5) } }} />
+                          <Button variant="contained" onClick={() => handleSaveAdminNotes(selectedUserId!, selectedUser.adminNotes)} sx={{ borderRadius: 1.5, fontWeight: 900, py: 1.5, px: 4 }}>{t.saveNotes || 'Izohni saqlash'}</Button>
+                       </Card>
+                    </Grid>
+                 </Grid>
                  )}
               </Box>
             )}

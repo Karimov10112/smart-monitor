@@ -32,8 +32,15 @@ import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 
-export function Statistics() {
-  const { language, records } = useApp();
+interface StatisticsProps {
+  customRecords?: any[];
+  customLanguage?: string;
+}
+
+export function Statistics({ customRecords, customLanguage }: StatisticsProps = {}) {
+  const { language: appLanguage, records: appRecords } = useApp();
+  const language = customLanguage || appLanguage;
+  const records = customRecords || appRecords;
   const theme = useTheme();
   const t = translations[language];
   const [timeRange, setTimeRange] = useState('7');
