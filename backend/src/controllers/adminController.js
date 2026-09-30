@@ -401,6 +401,23 @@ const createPatient = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Bu login (email/telefon) allaqachon band' });
     }
 
+    // Map Uzbek diabetes type labels to model enum values
+    const diabetesTypeMap = {
+      '1-toifa': 'type1',
+      '2-toifa': 'type2',
+      'type1': 'type1',
+      'type2': 'type2',
+      'Homiladorlik': 'gestational',
+      'gestational': 'gestational',
+      'prediabetes': 'prediabetes',
+      'none': 'none',
+    };
+    const mappedDiabetesType = diabetesTypeMap[diabetesType] || 'type2';
+
+    // Only include gender if it's a valid enum value
+    const validGenders = ['male', 'female', 'other'];
+    const mappedGender = validGenders.includes(gender) ? gender : undefined;
+
     const user = await userRepository.create({
       email: lowerEmail,
       password: password,
@@ -408,12 +425,12 @@ const createPatient = async (req, res) => {
       lastName,
       phone,
       telegramUsername,
-      dateOfBirth,
-      gender,
+      dateOfBirth: dateOfBirth || undefined,
+      gender: mappedGender,
       region,
       district,
       mfy,
-      diabetesType,
+      diabetesType: mappedDiabetesType,
       doctorName,
       height: height ? Number(height) : undefined,
       weight: weight ? Number(weight) : undefined,
@@ -437,7 +454,7 @@ const createPatient = async (req, res) => {
     });
   } catch (err) {
     console.error('Create patient error:', err);
-    res.status(500).json({ success: false, message: 'Server xatosi' });
+    res.status(500).json({ success: false, message: err.message || 'Server xatosi' });
   }
 };
 
