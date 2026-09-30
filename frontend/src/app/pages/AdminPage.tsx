@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { productAPI, adminAPI } from '../utils/api';
+import { adminAPI } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useApp } from '../contexts/AppContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -53,7 +53,7 @@ import {
 // MUI Icons
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import PeopleIcon from '@mui/icons-material/People';
-import InventoryIcon from '@mui/icons-material/Inventory';
+
 import SearchIcon from '@mui/icons-material/Search';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
@@ -67,7 +67,7 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 
-type TabType = 'dashboard' | 'users' | 'products' | 'audit';
+type TabType = 'dashboard' | 'users' | 'audit';
 
 export default function AdminPage() {
   const { user } = useAuth();
@@ -93,24 +93,7 @@ export default function AdminPage() {
   const [selectedUserRecords, setSelectedUserRecords] = useState<any[]>([]);
   const [userTab, setUserTab] = useState<'info' | 'manage' | 'analytics'>('info');
 
-  // Products State
-  const [products, setProducts] = useState<any[]>([]);
-  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<any>(null);
-  const [productForm, setProductForm] = useState({
-    name: { uz: '', ru: '', en: '' },
-    category: 'vegetables',
-    emoji: '🥗',
-    gi: 0,
-    gl: 0,
-    carbs: 0,
-    calories: 0,
-    protein: 0,
-    fats: 0,
-    sugar: 0,
-    fiber: 0,
-    advice: { uz: '', ru: '', en: '' }
-  });
+
 
   const [availableDoctors, setAvailableDoctors] = useState<any[]>([]);
 
@@ -142,7 +125,7 @@ export default function AdminPage() {
   const loadAll = async () => {
     setLoading(true);
     try {
-      await Promise.all([loadStats(), loadUsers(), loadProducts(), loadDoctors()]);
+      await Promise.all([loadStats(), loadUsers(), loadDoctors()]);
     } catch (err) { }
     finally { setLoading(false); }
   };
@@ -161,12 +144,7 @@ export default function AdminPage() {
     } catch { }
   };
 
-  const loadProducts = async () => {
-    try {
-      const { data } = await productAPI.getAll();
-      setProducts(data.products || []);
-    } catch { }
-  };
+
 
   const loadDoctors = async () => {
     try {
@@ -224,20 +202,7 @@ export default function AdminPage() {
     }
   };
 
-  const setFormNumber = (field: string, val: string) => {
-    setProductForm({ ...productForm, [field]: val === '' ? 0 : Number(val) });
-  };
 
-  const handleSaveProduct = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      if (editingProduct) await productAPI.update(editingProduct._id, productForm);
-      else await productAPI.create(productForm);
-      setIsProductModalOpen(false);
-      loadProducts();
-      toast.success('Saqlandi');
-    } catch { }
-  };
 
   const handleSavePatient = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -261,7 +226,6 @@ export default function AdminPage() {
   const menuItems = [
     { id: 'dashboard', label: t.dashboard, icon: <DashboardIcon /> },
     { id: 'users', label: t.users, icon: <PeopleIcon /> },
-    { id: 'products', label: t.products, icon: <InventoryIcon /> },
     { id: 'audit', label: t.auditLogs, icon: <HistoryIcon />, hidden: user?.role !== 'superadmin' },
   ];
 
@@ -468,9 +432,8 @@ export default function AdminPage() {
                 {[
                   { icon: PeopleIcon, label: t.totalUsers, val: stats?.totalUsers ?? 0, color: theme.palette.primary.main },
                   { icon: TimelineIcon, label: t.activeToday, val: stats?.activeToday ?? 0, color: theme.palette.success.main },
-                  { icon: InventoryIcon, label: t.products, val: products.length, color: theme.palette.secondary.main },
                 ].map((s, idx) => (
-                  <Grid size={{ xs: 12, sm: 4 }} key={idx}>
+                  <Grid size={{ xs: 12, sm: 6 }} key={idx}>
                     <Card elevation={0} sx={{ p: 3.5, borderRadius: 2, bgcolor: alpha(theme.palette.background.paper, 0.6), backdropFilter: 'blur(10px)', border: `1px solid ${theme.palette.divider}` }}>
                       <Stack direction="column" spacing={2}>
                         <Avatar sx={{ bgcolor: alpha(s.color, 0.12), color: s.color, borderRadius: 1.5, width: 52, height: 52 }}><s.icon /></Avatar>
@@ -589,39 +552,7 @@ export default function AdminPage() {
               </Box>
             )}
 
-            {currentTab === 'products' && (
-              <Box>
-                <Stack direction="row" justifyContent="space-between" sx={{ mb: 4 }}>
-                  <Box>
-                    <Typography variant="h6" sx={{ fontWeight: 900 }}>{t.productCatalog}</Typography>
-                    <Typography variant="caption" color="text.secondary">{products.length} {t.productsCount}</Typography>
-                  </Box>
-                  <Button variant="contained" startIcon={<AddIcon />} onClick={() => { setEditingProduct(null); setIsProductModalOpen(true); }} sx={{ borderRadius: 1.5, fontWeight: 900 }}>{t.addProduct}</Button>
-                </Stack>
-                <Grid container spacing={2.5}>
-                  {products.map(p => (
-                    <Grid size={{ xs: 12, sm: 4, lg: 3 }} key={p._id}>
-                      <Card elevation={0} sx={{ borderRadius: 2, border: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.background.paper, 0.4), backdropFilter: 'blur(10px)', p: 2 }}>
-                        <Stack direction="row" justifyContent="space-between" alignItems="start" sx={{ mb: 2 }}>
-                          <Box sx={{ width: 48, height: 48, borderRadius: 2, bgcolor: alpha(theme.palette.primary.main, 0.1), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>{p.emoji}</Box>
-                          <Stack direction="row" spacing={0.5}>
-                            <IconButton size="small" onClick={() => { setEditingProduct(p); setProductForm(p); setIsProductModalOpen(true); }}><EditIcon fontSize="small" /></IconButton>
-                            <IconButton size="small" color="error" onClick={() => { if (confirm("Delete?")) productAPI.delete(p._id).then(() => loadProducts()); }}><DeleteIcon fontSize="small" /></IconButton>
-                          </Stack>
-                        </Stack>
-                        <Typography variant="subtitle1" sx={{ fontWeight: 900 }}>{p.name?.[language] || p.name?.uz || p.name}</Typography>
-                        <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>{p.category}</Typography>
-                        <Grid container spacing={1}>
-                          <Grid size={{ xs: 4 }}><Box textAlign="center" p={0.5} borderRadius={1} bgcolor="rgba(0,0,0,0.02)"><Typography variant="caption" display="block">GI</Typography><Typography variant="body2" sx={{ fontWeight: 900 }}>{p.gi}</Typography></Box></Grid>
-                          <Grid size={{ xs: 4 }}><Box textAlign="center" p={0.5} borderRadius={1} bgcolor="rgba(0,0,0,0.02)"><Typography variant="caption" display="block">GL</Typography><Typography variant="body2" sx={{ fontWeight: 900 }}>{p.gl}</Typography></Box></Grid>
-                          <Grid size={{ xs: 4 }}><Box textAlign="center" p={0.5} borderRadius={1} bgcolor="rgba(0,0,0,0.02)"><Typography variant="caption" display="block">KCal</Typography><Typography variant="body2" sx={{ fontWeight: 900 }}>{p.calories}</Typography></Box></Grid>
-                        </Grid>
-                      </Card>
-                    </Grid>
-                  ))}
-                </Grid>
-              </Box>
-            )}
+
 
             {selectedUserId && selectedUser && (
               <Box>
@@ -813,46 +744,6 @@ export default function AdminPage() {
           </motion.div>
         </AnimatePresence>
 
-        <Dialog open={isProductModalOpen} onClose={() => setIsProductModalOpen(false)} fullWidth maxWidth="md" PaperProps={{ sx: { borderRadius: 2 } }}>
-          <DialogTitle sx={{ fontWeight: 900 }}>{editingProduct ? 'Edit Product' : 'Add Product'}</DialogTitle>
-          <form onSubmit={handleSaveProduct}>
-            <DialogContent>
-              <Grid container spacing={2}>
-                <Grid size={{ xs: 4 }}><TextField fullWidth label="UZ Name" value={productForm.name.uz} onChange={e => setProductForm({...productForm, name: {...productForm.name, uz: e.target.value}})} /></Grid>
-                <Grid size={{ xs: 4 }}><TextField fullWidth label="RU Name" value={productForm.name.ru} onChange={e => setProductForm({...productForm, name: {...productForm.name, ru: e.target.value}})} /></Grid>
-                <Grid size={{ xs: 4 }}><TextField fullWidth label="EN Name" value={productForm.name.en} onChange={e => setProductForm({...productForm, name: {...productForm.name, en: e.target.value}})} /></Grid>
-                <Grid size={{ xs: 4 }}><TextField fullWidth label="GI" type="number" value={productForm.gi} onChange={e => setFormNumber('gi', e.target.value)} /></Grid>
-                <Grid size={{ xs: 4 }}><TextField fullWidth label="GL" type="number" value={productForm.gl} onChange={e => setFormNumber('gl', e.target.value)} /></Grid>
-                <Grid size={{ xs: 4 }}><TextField fullWidth label="KCal" type="number" value={productForm.calories} onChange={e => setFormNumber('calories', e.target.value)} /></Grid>
-                
-                <Grid size={{ xs: 4 }}><TextField fullWidth label="Carbs (g)" type="number" value={productForm.carbs} onChange={e => setFormNumber('carbs', e.target.value)} /></Grid>
-                <Grid size={{ xs: 4 }}><TextField fullWidth label="Protein (g)" type="number" value={productForm.protein} onChange={e => setFormNumber('protein', e.target.value)} /></Grid>
-                <Grid size={{ xs: 4 }}><TextField fullWidth label="Fats (g)" type="number" value={productForm.fats} onChange={e => setFormNumber('fats', e.target.value)} /></Grid>
-                
-                <Grid size={{ xs: 4 }}><TextField fullWidth label="Sugar (g)" type="number" value={productForm.sugar} onChange={e => setFormNumber('sugar', e.target.value)} /></Grid>
-                <Grid size={{ xs: 4 }}><TextField fullWidth label="Fiber (g)" type="number" value={productForm.fiber} onChange={e => setFormNumber('fiber', e.target.value)} /></Grid>
-                <Grid size={{ xs: 4 }}>
-                   <FormControl fullWidth>
-                      <InputLabel>Emoji</InputLabel>
-                      <Select value={productForm.emoji} label="Emoji" onChange={e => setProductForm({...productForm, emoji: e.target.value})}>
-                         {['🍎','🍐','🍑','🍒','🍓','🍇','🥝','🍍','🍊','🍋','🍌','🍉','🍈','🍅','🥒','🥦','🍃','🥕','🍆','🧅','🧄','🫑','🎃','🌽','🍗','🐟','🥚','🥩','🦃','🥣','🍛','🌾','🥛','🍶','🍧'].map(em => (
-                            <MenuItem key={em} value={em}>{em}</MenuItem>
-                         ))}
-                      </Select>
-                   </FormControl>
-                </Grid>
-
-                <Grid size={{ xs: 4 }}><TextField fullWidth label="Advice UZ" multiline rows={2} value={productForm.advice.uz} onChange={e => setProductForm({...productForm, advice: {...productForm.advice, uz: e.target.value}})} /></Grid>
-                <Grid size={{ xs: 4 }}><TextField fullWidth label="Advice RU" multiline rows={2} value={productForm.advice.ru} onChange={e => setProductForm({...productForm, advice: {...productForm.advice, ru: e.target.value}})} /></Grid>
-                <Grid size={{ xs: 4 }}><TextField fullWidth label="Advice EN" multiline rows={2} value={productForm.advice.en} onChange={e => setProductForm({...productForm, advice: {...productForm.advice, en: e.target.value}})} /></Grid>
-              </Grid>
-            </DialogContent>
-            <DialogActions sx={{ p: 3 }}>
-              <Button onClick={() => setIsProductModalOpen(false)} sx={{ fontWeight: 800 }}>Cancel</Button>
-              <Button type="submit" variant="contained" sx={{ fontWeight: 900, px: 4, borderRadius: 2 }}>Save</Button>
-            </DialogActions>
-          </form>
-        </Dialog>
 
         {/* Add Patient Modal */}
         <Dialog open={isAddPatientModalOpen} onClose={() => setIsAddPatientModalOpen(false)} fullWidth maxWidth="sm" PaperProps={{ sx: { borderRadius: 2 } }}>

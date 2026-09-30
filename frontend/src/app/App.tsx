@@ -59,7 +59,7 @@ import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 
 // Components
 import { DailyJournal } from './components/DailyJournal';
-import { Products } from './components/Products';
+
 import { Statistics } from './components/Statistics';
 import { ReminderModal } from './components/ReminderModal';
 import { reminderAPI, adminAPI, authAPI } from './utils/api';
@@ -238,7 +238,6 @@ function App() {
         {(user?.isProfileComplete || isAdmin) && [
           { id: 'journal', label: t.dailyJournal || 'Journal', icon: <AssignmentIcon fontSize="small" />, path: '/?tab=journal' },
           { id: 'statistics', label: t.statistics || 'Stats', icon: <BarChartIcon fontSize="small" />, path: '/?tab=statistics' },
-          { id: 'products', label: t.products || 'Products', icon: <StorageIcon fontSize="small" />, path: '/?tab=products' },
         ].map((item) => (
           <ListItem key={item.id} disablePadding sx={{ mb: 0.5 }}>
             <ListItemButton
@@ -436,8 +435,7 @@ function App() {
             <Route path="/" element={
               user?.isProfileComplete ? (
                 activeTab === 'journal' ? <DailyJournal /> :
-                  activeTab === 'products' ? <Products /> :
-                    <Statistics />
+                  <Statistics />
               ) : <Navigate to="/complete-profile" replace />
             } />
             <Route path="/complete-profile" element={<CompleteProfilePage />} />

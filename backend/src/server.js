@@ -119,7 +119,7 @@ const adminRoutes = require('./routes/admin');
 const bloodSugarRoutes = require('./routes/bloodSugar');
 const aiRoutes = require('./routes/ai');
 const doctorRoutes = require('./routes/doctor');
-const productRoutes = require('./routes/product');
+
 const reminderRoutes = require('./routes/reminders');
 
 app.use('/api/auth', authRoutes);
@@ -137,8 +137,7 @@ app.use('/ai', aiRoutes);
 app.use('/api/doctor', doctorRoutes);
 app.use('/doctor', doctorRoutes);
 
-app.use('/api/products', productRoutes);
-app.use('/products', productRoutes);
+
 
 app.use('/api/reminders', reminderRoutes);
 app.use('/reminders', reminderRoutes);

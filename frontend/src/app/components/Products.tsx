@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useApp } from '../contexts/AppContext';
 import { translations } from '../utils/translations';
 import { categories, getProductStatus, Product } from '../data/products';
-import { productAPI } from '../utils/api';
+
 
 // MUI Components
 import {

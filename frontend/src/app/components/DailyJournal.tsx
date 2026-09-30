@@ -3,7 +3,7 @@ import { useApp } from '../contexts/AppContext';
 import { useAuth } from '../contexts/AuthContext';
 import { translations } from '../utils/translations';
 import { toast } from 'sonner';
-import { productAPI } from '../utils/api';
+
 import api from '../utils/api';
 import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
@@ -52,7 +52,7 @@ export function DailyJournal() {
   const navigate = useNavigate();
   const t = translations[language];
   const [loading, setLoading] = useState(false);
-  const [recommendedProducts, setRecommendedProducts] = useState<any[]>([]);
+  const [recommendedProducts] = useState<any[]>([]);
   const [formData, setFormData] = useState({
     fastingLevel: '',
     postMealLevel: '',
@@ -69,22 +69,7 @@ export function DailyJournal() {
   const [aiError, setAiError] = useState<string | null>(null);
   const aiSectionRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    loadRecommended();
-  }, []);
 
-  const loadRecommended = async () => {
-    try {
-      const { data } = await productAPI.getAll({ category: 'all' });
-      const safe = data.products
-        .filter((p: any) => p.gi <= 30)
-        .sort(() => 0.5 - Math.random())
-        .slice(0, 3);
-      setRecommendedProducts(safe);
-    } catch (err) {
-      console.error('Error loading recommendations', err);
-    }
-  };
 
   const fetchAIRecommendation = async () => {
     setAiLoading(true);
