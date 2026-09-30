@@ -143,8 +143,8 @@ app.use('/products', productRoutes);
 app.use('/api/reminders', reminderRoutes);
 app.use('/reminders', reminderRoutes);
 
-// Health check
-const healthCheck = (req, res) => res.json({ status: 'ok', time: new Date() });
+// Health check — v2.1 (createPatient endpoint included)
+const healthCheck = (req, res) => res.json({ status: 'ok', version: '2.1', time: new Date() });
 app.get('/api/health', healthCheck);
 app.get('/health', healthCheck);
 
