@@ -240,7 +240,7 @@ export default function AdminPage() {
     e.preventDefault();
     try {
       await adminAPI.createPatient(patientForm);
-      toast.success('Bemor muvaffaqiyatli qo\\'shildi');
+        toast.success("Bemor muvaffaqiyatli qo'shildi");
       setIsAddPatientModalOpen(false);
       setPatientForm({ email: '', password: '', firstName: '', lastName: '', phone: '', region: '', diabetesType: '2-toifa', dateOfBirth: '' });
       loadUsers(search, role);
@@ -460,7 +460,8 @@ export default function AdminPage() {
             transition={{ duration: 0.3 }}
           >
             {currentTab === 'dashboard' && !selectedUserId && (
-              <Grid container spacing={3}>
+              <>
+                <Grid container spacing={3}>
                 {[
                   { icon: PeopleIcon, label: t.totalUsers, val: stats?.totalUsers ?? 0, color: theme.palette.primary.main },
                   { icon: TimelineIcon, label: t.activeToday, val: stats?.activeToday ?? 0, color: theme.palette.success.main },
@@ -517,6 +518,7 @@ export default function AdminPage() {
                   </Card>
                 </Box>
               )}
+              </>
             )}
 
             {currentTab === 'users' && !selectedUserId && (
