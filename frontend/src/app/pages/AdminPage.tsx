@@ -123,6 +123,9 @@ export default function AdminPage() {
     lastName: '',
     phone: '',
     region: '',
+    district: '',
+    height: '',
+    weight: '',
     diabetesType: '2-toifa',
     dateOfBirth: ''
   });
@@ -242,7 +245,7 @@ export default function AdminPage() {
       await adminAPI.createPatient(patientForm);
         toast.success("Bemor muvaffaqiyatli qo'shildi");
       setIsAddPatientModalOpen(false);
-      setPatientForm({ email: '', password: '', firstName: '', lastName: '', phone: '', region: '', diabetesType: '2-toifa', dateOfBirth: '' });
+      setPatientForm({ email: '', password: '', firstName: '', lastName: '', phone: '', region: '', district: '', height: '', weight: '', diabetesType: '2-toifa', dateOfBirth: '' });
       loadUsers(search, role);
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Xato yuz berdi');
@@ -886,7 +889,16 @@ export default function AdminPage() {
                   </FormControl>
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField fullWidth label="Viloyat / Tuman" size="small" value={patientForm.region} onChange={e => setPatientForm({...patientForm, region: e.target.value})} />
+                  <TextField fullWidth label="Bo'y (sm)" size="small" type="number" value={patientForm.height} onChange={e => setPatientForm({...patientForm, height: e.target.value})} />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField fullWidth label="Vazn (kg)" size="small" type="number" value={patientForm.weight} onChange={e => setPatientForm({...patientForm, weight: e.target.value})} />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField fullWidth label="Viloyat" size="small" value={patientForm.region} onChange={e => setPatientForm({...patientForm, region: e.target.value})} />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField fullWidth label="Tuman / Shahar" size="small" value={patientForm.district} onChange={e => setPatientForm({...patientForm, district: e.target.value})} />
                 </Grid>
               </Grid>
             </DialogContent>
