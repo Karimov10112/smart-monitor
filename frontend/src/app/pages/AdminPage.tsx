@@ -83,6 +83,8 @@ export default function AdminPage() {
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isMini, setIsMini] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
 
   // Users State
   const [users, setUsers] = useState<any[]>([]);
@@ -199,6 +201,25 @@ export default function AdminPage() {
       }
     } catch {
       toast.error(t.error || 'Xato yuz berdi');
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (!selectedUserId || !newPassword || newPassword.length < 6) {
+      toast.error('Parol kamida 6 ta belgi bo\'lishi kerak');
+      return;
+    }
+    try {
+      setIsResettingPassword(true);
+      const { data } = await adminAPI.resetPassword(selectedUserId, newPassword);
+      if (data.success) {
+        toast.success(data.message || 'Parol muvaffaqiyatli yangilandi');
+        setNewPassword('');
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Xato yuz berdi');
+    } finally {
+      setIsResettingPassword(false);
     }
   };
 
@@ -604,6 +625,12 @@ export default function AdminPage() {
                             <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800, textTransform: 'uppercase', display: 'block', mb: 0.5 }}>{t.regionLabel || 'Viloyat'}</Typography>
                             <Typography variant="body1" sx={{ fontWeight: 900 }}>{[selectedUser.region, selectedUser.district].filter(Boolean).join(', ') || '—'}</Typography>
                          </Grid>
+                         {selectedUser.createdBy && (
+                           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800, textTransform: 'uppercase', display: 'block', mb: 0.5 }}>Qo'shgan Admin</Typography>
+                              <Typography variant="body1" sx={{ fontWeight: 900 }}>{selectedUser.createdBy.firstName} {selectedUser.createdBy.lastName}</Typography>
+                           </Grid>
+                         )}
                       </Grid>
                    </Box>
                 </Card>
@@ -641,6 +668,30 @@ export default function AdminPage() {
                                     <MenuItem value="admin">{t.admin || 'Admin'}</MenuItem>
                                  </Select>
                               </FormControl>
+                           </Grid>
+                         )}
+                         {user?.role === 'superadmin' && (
+                           <Grid size={{ xs: 12, md: 6 }}>
+                              <Typography variant="caption" sx={{ fontWeight: 800, mb: 1.5, display: 'block', textTransform: 'uppercase', color: 'error.main' }}>Parolni tiklash</Typography>
+                              <Stack direction="row" spacing={1}>
+                                <TextField
+                                  fullWidth
+                                  size="small"
+                                  placeholder="Yangi parol (kamida 6 ta belgi)"
+                                  value={newPassword}
+                                  onChange={e => setNewPassword(e.target.value)}
+                                  type="text"
+                                />
+                                <Button 
+                                  variant="contained" 
+                                  color="error" 
+                                  onClick={handleResetPassword}
+                                  disabled={isResettingPassword || newPassword.length < 6}
+                                  sx={{ fontWeight: 900, whiteSpace: 'nowrap' }}
+                                >
+                                  {isResettingPassword ? <CircularProgress size={20} color="inherit" /> : 'Yangilash'}
+                                </Button>
+                              </Stack>
                            </Grid>
                          )}
                       </Grid>

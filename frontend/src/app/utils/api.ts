@@ -78,6 +78,7 @@ export const adminAPI = {
   updateContacts: (data: any) => api.put('/admin/contacts', data),
   purgeIncomplete: () => api.delete('/admin/purge-incomplete'),
   createPatient: (data: any) => api.post('/admin/patients', data),
+  resetPassword: (id: string, newPassword: string) => api.patch(`/admin/users/${id}/reset-password`, { newPassword }),
 };
 
 

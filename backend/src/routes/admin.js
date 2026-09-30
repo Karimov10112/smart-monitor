@@ -16,6 +16,7 @@ const {
   assignDoctor,
   purgeIncompleteUsers,
   createPatient,
+  resetUserPassword
 } = require('../controllers/adminController');
 const { protect, requireSuperAdmin, requireStrictSuperAdmin } = require('../middleware/auth');
 
@@ -36,6 +37,7 @@ router.patch('/users/:id/ban', toggleBanUser);
 router.get('/doctors', getDoctors);
 router.patch('/users/:id/assign-doctor', assignDoctor);
 router.patch('/users/:id/notes', addAdminNote);
+router.patch('/users/:id/reset-password', resetUserPassword);
 router.delete('/users/:id', deleteUser);
 router.delete('/purge-incomplete', purgeIncompleteUsers);
 

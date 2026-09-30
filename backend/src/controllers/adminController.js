@@ -94,7 +94,10 @@ const getAllUsers = async (req, res) => {
       sort: { createdAt: -1 },
       skip: (Number(page) - 1) * Number(limit),
       limit: Number(limit),
-      populate: { path: 'assignedDoctor', select: 'firstName lastName' }
+      populate: [
+        { path: 'assignedDoctor', select: 'firstName lastName' },
+        { path: 'createdBy', select: 'firstName lastName role' }
+      ]
     });
 
     res.json({
@@ -113,7 +116,10 @@ const getAllUsers = async (req, res) => {
 const getUserById = async (req, res) => {
   try {
     const user = await userRepository.findById(req.params.id, {
-      populate: { path: 'assignedDoctor', select: 'firstName lastName' }
+      populate: [
+        { path: 'assignedDoctor', select: 'firstName lastName' },
+        { path: 'createdBy', select: 'firstName lastName role' }
+      ]
     });
     if (!user) return res.status(404).json({ success: false, message: 'Topilmadi' });
 
@@ -437,7 +443,8 @@ const createPatient = async (req, res) => {
       assignedDoctor: assignedDoctor || null,
       role: 'user',
       isEmailVerified: true,
-      isProfileComplete: true
+      isProfileComplete: true,
+      createdBy: req.user._id
     });
 
     await logAction(req.user._id, 'CREATE_PATIENT', {
@@ -501,6 +508,38 @@ const purgeIncompleteUsers = async (req, res) => {
     res.status(500).json({ success: false, message: 'Server xatosi' });
   }
 };
+const resetUserPassword = async (req, res) => {
+  try {
+    if (req.user.role !== 'superadmin') {
+      return res.status(403).json({ success: false, message: 'Faqat Super Admin parol almashtira oladi' });
+    }
+
+    const { id } = req.params;
+    const { newPassword } = req.body;
+
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({ success: false, message: 'Parol kamida 6 ta belgidan iborat bo\'lishi kerak' });
+    }
+
+    const targetUser = await userRepository.findById(id);
+    if (!targetUser) return res.status(404).json({ success: false, message: 'Topilmadi' });
+    
+    // update password
+    targetUser.password = newPassword;
+    await targetUser.save();
+
+    await logAction(req.user._id, 'RESET_PASSWORD', {
+      targetId: targetUser._id,
+      targetType: 'User',
+      details: { role: targetUser.role },
+      req
+    });
+
+    res.json({ success: true, message: 'Parol muvaffaqiyatli yangilandi' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Server xatosi' });
+  }
+};
 
 module.exports = {
   getAllUsers,
@@ -518,4 +557,5 @@ module.exports = {
   assignDoctor,
   createPatient,
   purgeIncompleteUsers,
+  resetUserPassword
 };

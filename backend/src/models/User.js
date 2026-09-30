@@ -60,6 +60,9 @@ const userSchema = new mongoose.Schema(
     // Notes by admin
     adminNotes: String,
     doctorNotes: String,
+
+    // Tracking
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   },
   { timestamps: true }
 );
