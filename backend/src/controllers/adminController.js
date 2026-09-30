@@ -378,6 +378,69 @@ const assignDoctor = async (req, res) => {
   }
 };
 
+const createPatient = async (req, res) => {
+  try {
+    if (req.user.role !== 'superadmin' && req.user.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Ruxsat etilmagan' });
+    }
+
+    const { 
+      email, password, firstName, lastName, phone, 
+      telegramUsername, dateOfBirth, gender, region, 
+      district, mfy, diabetesType, doctorName, height, weight, assignedDoctor 
+    } = req.body;
+
+    const lowerEmail = email ? email.toLowerCase().trim() : '';
+    
+    if (!lowerEmail || !password || !firstName || !lastName || !phone) {
+      return res.status(400).json({ success: false, message: 'Barcha majburiy maydonlarni to\'ldiring (Login, parol, ism, familiya, telefon)' });
+    }
+
+    const existingUser = await userRepository.findByEmail(lowerEmail);
+    if (existingUser) {
+      return res.status(400).json({ success: false, message: 'Bu login (email/telefon) allaqachon band' });
+    }
+
+    const user = await userRepository.create({
+      email: lowerEmail,
+      password: password,
+      firstName,
+      lastName,
+      phone,
+      telegramUsername,
+      dateOfBirth,
+      gender,
+      region,
+      district,
+      mfy,
+      diabetesType,
+      doctorName,
+      height: height ? Number(height) : undefined,
+      weight: weight ? Number(weight) : undefined,
+      assignedDoctor: assignedDoctor || null,
+      role: 'user',
+      isEmailVerified: true,
+      isProfileComplete: true
+    });
+
+    await logAction(req.user._id, 'CREATE_PATIENT', {
+      targetId: user._id,
+      targetType: 'User',
+      details: { login: lowerEmail },
+      req
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Bemor muvaffaqiyatli yaratildi',
+      user: user.toSafeObject()
+    });
+  } catch (err) {
+    console.error('Create patient error:', err);
+    res.status(500).json({ success: false, message: 'Server xatosi' });
+  }
+};
+
 // Delete all incomplete/unverified users (superadmin only)
 const purgeIncompleteUsers = async (req, res) => {
   try {
@@ -436,5 +499,6 @@ module.exports = {
   getAuditLogs,
   getDoctors,
   assignDoctor,
+  createPatient,
   purgeIncompleteUsers,
 };

@@ -49,11 +49,9 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const trimmedEmail = email.trim().toLowerCase();
-      const isGmailRegex = /^[a-zA-Z0-9._%+-]+@gmail(\.com)?$/;
-      const isValidFormat = trimmedEmail === 'admin' || isGmailRegex.test(trimmedEmail);
 
-      if (!isValidFormat) {
-        toast.error(t.invalidEmailFormat || 'Notogri login formati');
+      if (!trimmedEmail) {
+        toast.error('Login ni kiriting');
         setLoading(false);
         return;
       }
@@ -138,27 +136,16 @@ export default function LoginPage() {
         >
           {/* Official Banner */}
           <Box sx={{ bgcolor: alpha(theme.palette.primary.main, 0.02), p: 3, textAlign: 'center', borderBottom: `1px solid ${theme.palette.divider}` }}>
-            <Typography variant="caption" sx={{ display: 'block', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1, mb: 2, color: 'text.secondary' }}>
-              {t.noAccount}
+            <Typography variant="caption" sx={{ display: 'block', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1, color: 'text.secondary' }}>
+              Diqqat: Tizimga kirish uchun login va parolni shifokoringizdan oling.
             </Typography>
-            <Button
-              component={RouterLink}
-              to="/register"
-              variant="outlined"
-              size="small"
-              color="primary"
-              endIcon={<ArrowForwardIcon />}
-              sx={{ borderRadius: 1.5, px: 3 }}
-            >
-              {t.signUp}
-            </Button>
           </Box>
 
           <Box component="form" onSubmit={handleSubmit} sx={{ p: { xs: 4, md: 6 } }}>
             <Stack spacing={3}>
               <TextField
-                label={t.emailAddress}
-                placeholder="admin yoki email@mail.com"
+                label="Login (Tel yoki Email)"
+                placeholder="+998901234567 yoki email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -217,7 +204,7 @@ export default function LoginPage() {
               </Button>
 
               <Typography variant="caption" align="center" sx={{ fontWeight: 600, color: 'text.secondary' }}>
-                {t.noAccount} <Link component={RouterLink} to="/register" sx={{ color: 'primary.main', ml: 1, textDecoration: 'none', fontWeight: 800 }}>{t.register}</Link>
+                Tizimda ro'yxatdan o'tish uchun klinikaga murojaat qiling
               </Typography>
             </Stack>
           </Box>

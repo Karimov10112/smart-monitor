@@ -114,6 +114,19 @@ export default function AdminPage() {
 
   const [availableDoctors, setAvailableDoctors] = useState<any[]>([]);
 
+  // Add Patient State
+  const [isAddPatientModalOpen, setIsAddPatientModalOpen] = useState(false);
+  const [patientForm, setPatientForm] = useState({
+    email: '',
+    password: '',
+    firstName: '',
+    lastName: '',
+    phone: '',
+    region: '',
+    diabetesType: '2-toifa',
+    dateOfBirth: ''
+  });
+
   // Audit Logs State
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [auditLoading, setAuditLoading] = useState(false);
@@ -221,6 +234,19 @@ export default function AdminPage() {
       loadProducts();
       toast.success('Saqlandi');
     } catch { }
+  };
+
+  const handleSavePatient = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await adminAPI.createPatient(patientForm);
+      toast.success('Bemor muvaffaqiyatli qo\\'shildi');
+      setIsAddPatientModalOpen(false);
+      setPatientForm({ email: '', password: '', firstName: '', lastName: '', phone: '', region: '', diabetesType: '2-toifa', dateOfBirth: '' });
+      loadUsers(search, role);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Xato yuz berdi');
+    }
   };
 
   if (loading) return (
@@ -496,7 +522,7 @@ export default function AdminPage() {
             {currentTab === 'users' && !selectedUserId && (
               <Box>
                 <Paper elevation={0} sx={{ p: 2.5, mb: 4, borderRadius: 2, bgcolor: alpha(theme.palette.background.paper, 0.4), backdropFilter: 'blur(10px)', border: `1px solid ${theme.palette.divider}` }}>
-                  <Stack direction={isMobile ? 'column' : 'row'} spacing={2}>
+                  <Stack direction={isMobile ? 'column' : 'row'} spacing={2} alignItems="center">
                     <TextField
                       placeholder={t.searchUsers}
                       fullWidth
@@ -506,7 +532,7 @@ export default function AdminPage() {
                       onKeyDown={handleSearchKeyDown}
                       InputProps={{ startAdornment: <SearchIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} /> }}
                     />
-                    <FormControl size="small" sx={{ minWidth: 200 }}>
+                    <FormControl size="small" sx={{ minWidth: 150 }}>
                       <InputLabel>{t.role}</InputLabel>
                       <Select value={role} label={t.role} onChange={e => setRole(e.target.value)}>
                         <MenuItem value="">{t.allStatuses || 'All'}</MenuItem>
@@ -515,6 +541,7 @@ export default function AdminPage() {
                         <MenuItem value="admin">{t.admin}</MenuItem>
                       </Select>
                     </FormControl>
+                    <Button variant="contained" onClick={() => setIsAddPatientModalOpen(true)} startIcon={<AddIcon />} sx={{ borderRadius: 2, fontWeight: 900, whiteSpace: 'nowrap', py: 1 }}>Bemor qo'shish</Button>
                   </Stack>
                 </Paper>
 
@@ -821,6 +848,53 @@ export default function AdminPage() {
             </DialogActions>
           </form>
         </Dialog>
+
+        {/* Add Patient Modal */}
+        <Dialog open={isAddPatientModalOpen} onClose={() => setIsAddPatientModalOpen(false)} fullWidth maxWidth="sm" PaperProps={{ sx: { borderRadius: 2 } }}>
+          <DialogTitle sx={{ fontWeight: 900 }}>Bemor Qo'shish</DialogTitle>
+          <form onSubmit={handleSavePatient}>
+            <DialogContent>
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField fullWidth label="Ism" required size="small" value={patientForm.firstName} onChange={e => setPatientForm({...patientForm, firstName: e.target.value})} />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField fullWidth label="Familiya" required size="small" value={patientForm.lastName} onChange={e => setPatientForm({...patientForm, lastName: e.target.value})} />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField fullWidth label="Login (Tel raqam / Email)" required size="small" value={patientForm.email} onChange={e => setPatientForm({...patientForm, email: e.target.value})} />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField fullWidth label="Parol" required size="small" value={patientForm.password} onChange={e => setPatientForm({...patientForm, password: e.target.value})} />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField fullWidth label="Telefon" required size="small" value={patientForm.phone} onChange={e => setPatientForm({...patientForm, phone: e.target.value})} />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField fullWidth label="Tug'ilgan sana (YYYY-MM-DD)" size="small" value={patientForm.dateOfBirth} onChange={e => setPatientForm({...patientForm, dateOfBirth: e.target.value})} />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <FormControl fullWidth size="small">
+                    <InputLabel>Diabet Turi</InputLabel>
+                    <Select value={patientForm.diabetesType} label="Diabet Turi" onChange={e => setPatientForm({...patientForm, diabetesType: e.target.value})}>
+                      <MenuItem value="1-toifa">1-toifa</MenuItem>
+                      <MenuItem value="2-toifa">2-toifa</MenuItem>
+                      <MenuItem value="Homiladorlik">Homiladorlik</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField fullWidth label="Viloyat / Tuman" size="small" value={patientForm.region} onChange={e => setPatientForm({...patientForm, region: e.target.value})} />
+                </Grid>
+              </Grid>
+            </DialogContent>
+            <DialogActions sx={{ p: 2 }}>
+              <Button onClick={() => setIsAddPatientModalOpen(false)}>Bekor qilish</Button>
+              <Button type="submit" variant="contained" sx={{ fontWeight: 800 }}>Saqlash</Button>
+            </DialogActions>
+          </form>
+        </Dialog>
+
         <Toaster position="top-right" richColors />
       </Box>
     </Box>

@@ -15,6 +15,7 @@ const {
   oauthCallback,
   updateProfile,
   updatePassword,
+  verifyNewEmail,
 } = require('../controllers/authController');
 const { protect } = require('../middleware/auth');
 
@@ -33,6 +34,7 @@ router.post('/logout', protect, logout);
 router.post('/complete-profile', protect, completeProfile);
 router.put('/update-profile', protect, updateProfile);
 router.put('/update-password', protect, updatePassword);
+router.post('/verify-new-email', protect, verifyNewEmail);
 
 // Google OAuth
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'], session: false }));

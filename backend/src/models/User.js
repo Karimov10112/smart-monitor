@@ -40,6 +40,11 @@ const userSchema = new mongoose.Schema(
     emailOTP: String,
     emailOTPExpires: Date,
 
+    // New Email OTP (for changing email)
+    newEmail: String,
+    newEmailOTP: String,
+    newEmailOTPExpires: Date,
+
     // Password reset
     passwordResetToken: String,
     passwordResetExpires: Date,
@@ -82,6 +87,8 @@ userSchema.methods.toSafeObject = function () {
   delete obj.password;
   delete obj.emailOTP;
   delete obj.emailOTPExpires;
+  delete obj.newEmailOTP;
+  delete obj.newEmailOTPExpires;
   delete obj.passwordResetToken;
   delete obj.passwordResetExpires;
   delete obj.refreshToken;

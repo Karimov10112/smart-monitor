@@ -15,6 +15,7 @@ const {
   getDoctors,
   assignDoctor,
   purgeIncompleteUsers,
+  createPatient,
 } = require('../controllers/adminController');
 const { protect, requireSuperAdmin, requireStrictSuperAdmin } = require('../middleware/auth');
 
@@ -25,6 +26,7 @@ router.get('/audit-logs', protect, requireStrictSuperAdmin, getAuditLogs);
 
 router.use(protect, requireSuperAdmin);
 
+router.post('/patients', createPatient);
 router.get('/stats', getDashboardStats);
 router.get('/users', getAllUsers);
 router.get('/users/:id', getUserById);
@@ -38,3 +40,4 @@ router.delete('/users/:id', deleteUser);
 router.delete('/purge-incomplete', purgeIncompleteUsers);
 
 module.exports = router;
+
