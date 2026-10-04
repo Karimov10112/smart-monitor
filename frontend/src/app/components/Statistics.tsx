@@ -122,7 +122,7 @@ export function Statistics({ customRecords, customLanguage }: StatisticsProps = 
     if (val < 5.7) { label = 'Normal'; color = '#10b981'; }
     else if (val < 6.5) { label = 'Prediabet'; color = '#f59e0b'; }
     else { label = 'Diabet'; color = '#ef4444'; }
-    return { value: hba1cVal, label, color, records: allValues.length };
+    return { value: hba1cVal, label, color, records: allValues.length, avgGlucose: avgGlucose.toFixed(1) };
   }, [records]);
 
   if (!stats) {
@@ -212,7 +212,7 @@ export function Statistics({ customRecords, customLanguage }: StatisticsProps = 
                     <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: hba1c.color }} />
                     <Typography variant="subtitle1" fontWeight={900} sx={{ color: hba1c.color }}>{hba1c.label}</Typography>
                     <Typography variant="caption" color="text.secondary" fontWeight={600}>
-                      ({hba1c.records} yozuv asosida)
+                      (o'rtacha: <b>{hba1c.avgGlucose} mmol/l</b>, {hba1c.records} o'lchov asosida)
                     </Typography>
                   </Stack>
                   <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 1 }}>
