@@ -174,7 +174,7 @@ export function Statistics({ customRecords, customLanguage }: StatisticsProps = 
           </Box>
           <CardContent sx={{ p: 3 }}>
             <Grid container spacing={3} alignItems="center">
-              <Grid size={{ xs: 12, sm: 'auto' }}>
+              <Grid size={{ xs: 12, sm: 3 }}>
                 {/* Doira indikator */}
                 <Box sx={{
                   width: 100, height: 100, borderRadius: '50%', mx: { xs: 'auto', sm: 0 },
@@ -192,7 +192,7 @@ export function Statistics({ customRecords, customLanguage }: StatisticsProps = 
                   </Box>
                 </Box>
               </Grid>
-              <Grid size={{ xs: 12, sm: 'grow' }}>
+              <Grid size={{ xs: 12, sm: 9 }}>
                 <Stack spacing={1.5}>
                   <Stack direction="row" alignItems="center" spacing={1}>
                     <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: hba1c.color }} />
@@ -201,7 +201,7 @@ export function Statistics({ customRecords, customLanguage }: StatisticsProps = 
                       ({hba1c.records} yozuv asosida)
                     </Typography>
                   </Stack>
-                  <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                  <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 1 }}>
                     {[
                       { label: '< 5.7%', color: '#10b981', desc: 'Normal' },
                       { label: '5.7–6.4%', color: '#f59e0b', desc: 'Prediabet' },
