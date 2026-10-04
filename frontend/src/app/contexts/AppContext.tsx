@@ -37,7 +37,7 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-const SOCKET_URL = (import.meta as any).env?.VITE_API_URL || 'https://diabetmed.uz';
+const SOCKET_URL = (import.meta as any).env?.VITE_API_URL || 'https://smart-monitor-4fv9.onrender.com';
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const { isAuthenticated, user, updateUser } = useAuth();

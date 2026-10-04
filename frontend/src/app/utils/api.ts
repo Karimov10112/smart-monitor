@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE = `${(import.meta as any).env?.VITE_API_URL || 'https://smart-monitor-1-a037.onrender.com'}/api`;
+const API_BASE = `${(import.meta as any).env?.VITE_API_URL || 'https://smart-monitor-4fv9.onrender.com'}/api`;
 
 const api = axios.create({
   baseURL: API_BASE,
