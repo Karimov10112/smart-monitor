@@ -8,6 +8,7 @@ import { toast, Toaster } from 'sonner';
 import { format } from 'date-fns';
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Chat } from '../components/chat/ChatComponent';
 
 // MUI Components
 import {
@@ -51,8 +52,10 @@ import MenuIcon from '@mui/icons-material/Menu';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import NotificationsIcon from '@mui/icons-material/Notifications';
+import ChatIcon from '@mui/icons-material/Chat';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 
-type TabType = 'patients' | 'patient-detail';
+type TabType = 'patients' | 'patient-detail' | 'chat';
 
 export default function DoctorPage() {
   const { user, logout, isAdmin } = useAuth();
@@ -106,6 +109,71 @@ export default function DoctorPage() {
       toast.success(t.success || 'Saqlandi');
       setPatients(prev => prev.map(p => p._id === selectedPatient._id ? { ...p, doctorNotes: doctorNote } : p));
     } catch {}
+  };
+
+  const handleExportPDF = async () => {
+    if (!selectedPatient || records.length === 0) {
+      toast.error('Eksport uchun ma\'lumot yo\'q');
+      return;
+    }
+    try {
+      const { default: jsPDF } = await import('jspdf');
+      const { default: autoTable } = await import('jspdf-autotable');
+      const doc = new jsPDF();
+
+      // Header
+      doc.setFontSize(18);
+      doc.setFont('helvetica', 'bold');
+      doc.text('QAND NAZORATI - Bemor Hisoboti', 14, 20);
+
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Bemor: ${selectedPatient.firstName} ${selectedPatient.lastName}`, 14, 32);
+      doc.text(`Diabet turi: ${selectedPatient.diabetesType || 'Noma\'lum'}`, 14, 40);
+      doc.text(`Mintaqa: ${selectedPatient.region || '—'}`, 14, 48);
+      doc.text(`Sana: ${new Date().toLocaleDateString('uz')}`, 14, 56);
+
+      if (doctorNote) {
+        doc.setFont('helvetica', 'bold');
+        doc.text('Shifokor izohi:', 14, 68);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10);
+        const lines = doc.splitTextToSize(doctorNote, 180);
+        doc.text(lines, 14, 76);
+      }
+
+      // Table
+      const tableRows = records.map((r: any) => [
+        new Date(r.date).toLocaleDateString('uz'),
+        r.fastingLevel?.toFixed(1) ?? '—',
+        r.postMealLevel?.toFixed(1) ?? '—',
+        r.notes || '—',
+      ]);
+
+      autoTable(doc, {
+        startY: doctorNote ? 90 : 68,
+        head: [['Sana', 'Och qoringa (mmol/l)', 'Ovqatdan keyin (mmol/l)', 'Eslatma']],
+        body: tableRows,
+        headStyles: { fillColor: [99, 102, 241], fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: [248, 248, 255] },
+        styles: { fontSize: 9, cellPadding: 3 },
+      });
+
+      // Footer
+      const pageCount = (doc as any).internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(150);
+        doc.text(`DiabetMed © ${new Date().getFullYear()} | Sahifa ${i}/${pageCount}`, 14, doc.internal.pageSize.height - 10);
+      }
+
+      doc.save(`${selectedPatient.firstName}_${selectedPatient.lastName}_hisobot.pdf`);
+      toast.success('PDF muvaffaqiyatli yuklab olindi!');
+    } catch (err) {
+      console.error('PDF error:', err);
+      toast.error('PDF yaratishda xato');
+    }
   };
 
   const fastingRecords = records
@@ -192,6 +260,25 @@ export default function DoctorPage() {
               </ListItemButton>
             </ListItem>
 
+            <ListItem disablePadding sx={{ mb: 1 }}>
+              <ListItemButton
+                onClick={() => setCurrentTab('chat')}
+                selected={currentTab === 'chat'}
+                sx={{
+                  borderRadius: 8,
+                  py: 1.5,
+                  boxShadow: theme.palette.mode === 'dark' ? '4px 4px 10px rgba(0,0,0,0.4)' : '4px 4px 12px rgba(0,0,0,0.05), -4px -4px 12px rgba(255,255,255,0.8)',
+                  px: isMini ? 1.5 : 2,
+                  justifyContent: isMini ? 'center' : 'flex-start',
+                  color: currentTab === 'chat' ? 'secondary.main' : 'text.secondary',
+                  bgcolor: currentTab === 'chat' ? alpha(theme.palette.secondary.main, 0.1) : theme.palette.background.paper,
+                }}
+              >
+                <Box sx={{ minWidth: isMini ? 0 : 40 }}><ChatIcon /></Box>
+                {!isMini && <Typography sx={{ fontWeight: 800, fontSize: 13, textTransform: 'uppercase' }}>Chat</Typography>}
+              </ListItemButton>
+            </ListItem>
+
             {isAdmin && (
               <ListItem disablePadding sx={{ mt: 2 }}>
                 <ListItemButton
@@ -270,6 +357,21 @@ export default function DoctorPage() {
            >
                {t.patients}
            </Button>
+           <Button
+               onClick={() => setCurrentTab('chat')}
+               variant={currentTab === 'chat' ? 'contained' : 'outlined'}
+               startIcon={<ChatIcon />}
+               sx={{ 
+                 borderRadius: 8, flexShrink: 0, textTransform: 'none',
+                 boxShadow: currentTab === 'chat' ? '0 4px 12px rgba(0,0,0,0.1)' : 'none',
+                 bgcolor: currentTab === 'chat' ? 'secondary.main' : alpha(theme.palette.background.paper, 0.5),
+                 color: currentTab === 'chat' ? '#fff' : 'text.secondary',
+                 fontWeight: 800, px: 2,
+                 border: '1px solid', borderColor: currentTab === 'chat' ? 'transparent' : 'divider'
+               }}
+           >
+               Chat
+           </Button>
 
            {isAdmin && (
              <Button
@@ -305,10 +407,10 @@ export default function DoctorPage() {
         <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 4 }}>
           <Box>
             <Typography variant="h5" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 2 }}>
-              {currentTab === 'patient-detail' ? t.userDetail : t.myPatients}
+              {currentTab === 'patient-detail' ? t.userDetail : currentTab === 'chat' ? 'Chat' : t.myPatients}
             </Typography>
             <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', display: 'block' }}>
-              Doctor / {currentTab === 'patient-detail' ? 'Detail' : 'Patients'}
+              Doctor / {currentTab === 'patient-detail' ? 'Detail' : currentTab === 'chat' ? 'Xabarlar' : 'Patients'}
             </Typography>
           </Box>
           <Stack direction="row" spacing={2} alignItems="center">
@@ -319,7 +421,7 @@ export default function DoctorPage() {
 
         <AnimatePresence mode="wait">
           <motion.div
-            key={currentTab === 'patient-detail' ? `patient-${selectedPatient?._id}` : 'patients-list'}
+            key={currentTab === 'patient-detail' ? `patient-${selectedPatient?._id}` : currentTab}
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
@@ -393,10 +495,26 @@ export default function DoctorPage() {
               </Box>
             )}
 
+            {/* ===== CHAT TAB ===== */}
+            {currentTab === 'chat' && (
+              <Chat />
+            )}
+
             {/* ===== PATIENT DETAIL ===== */}
             {currentTab === 'patient-detail' && selectedPatient && (
               <Box>
-                <Button startIcon={<ArrowBackIcon />} onClick={() => setCurrentTab('patients')} sx={{ mb: 4, fontWeight: 900, borderRadius: 2, px: 3 }}>{t.patientList}</Button>
+                <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 4 }}>
+                  <Button startIcon={<ArrowBackIcon />} onClick={() => setCurrentTab('patients')} sx={{ fontWeight: 900, borderRadius: 2, px: 3 }}>{t.patientList}</Button>
+                  <Button
+                    startIcon={<PictureAsPdfIcon />}
+                    variant="contained"
+                    onClick={handleExportPDF}
+                    disabled={records.length === 0}
+                    sx={{ fontWeight: 800, borderRadius: 2, px: 3, bgcolor: '#ef4444', '&:hover': { bgcolor: '#dc2626' }, boxShadow: 'none' }}
+                  >
+                    PDF Yuklab olish
+                  </Button>
+                </Stack>
 
                 <Grid container spacing={4}>
                   <Grid size={{ xs: 12, lg: 8 }}>

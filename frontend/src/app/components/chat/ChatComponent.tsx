@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useApp } from '../contexts/AppContext';
-import { useAuth } from '../contexts/AuthContext';
-import api from '../utils/api';
+import { useApp } from '../../contexts/AppContext';
+import { useAuth } from '../../contexts/AuthContext';
+import api from '../../utils/api';
 import { toast } from 'sonner';
 
 import {
