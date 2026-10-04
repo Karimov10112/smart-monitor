@@ -92,6 +92,25 @@ export function Statistics({ customRecords, customLanguage }: StatisticsProps = 
     return { avgFasting, avgPostMeal, avgDiff, chartData };
   }, [records, language, timeRange]);
 
+  const hba1c = useMemo(() => {
+    if (records.length === 0) return null;
+    // Oxirgi 90 kun uchun o'rtacha qon shakari (mmol/L) -> HbA1c (%)
+    const now = new Date();
+    const cutoff = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+    const last90 = records.filter(r => new Date(r.date) >= cutoff);
+    if (last90.length === 0) return null;
+    const avgGlucose = last90.reduce((s, r) => s + (r.fastingLevel ?? r.level ?? 0), 0) / last90.length;
+    // IFCC formula: HbA1c (%) = (avgGlucose mmol/L + 2.59) / 1.59
+    const hba1cVal = ((avgGlucose + 2.59) / 1.59).toFixed(1);
+    const val = parseFloat(hba1cVal);
+    let label = '';
+    let color = '';
+    if (val < 5.7) { label = 'Normal'; color = '#10b981'; }
+    else if (val < 6.5) { label = 'Prediabet'; color = '#f59e0b'; }
+    else { label = 'Diabet'; color = '#ef4444'; }
+    return { value: hba1cVal, label, color, records: last90.length };
+  }, [records]);
+
   if (!stats) {
     return (
       <Box sx={{ py: 10, textAlign: 'center', opacity: 0.5 }}>
@@ -133,7 +152,7 @@ export function Statistics({ customRecords, customLanguage }: StatisticsProps = 
       </Box>
       
       {/* Overview Stats */}
-      <Grid container spacing={2} sx={{ mb: 4 }}>
+      <Grid container spacing={2} sx={{ mb: 3 }}>
         <Grid size={{ xs: 12, md: 4 }}>
           <StatCard icon={SpeedIcon} label={t.averageFasting} value={stats.avgFasting} color={theme.palette.primary.main} />
         </Grid>
@@ -144,6 +163,74 @@ export function Statistics({ customRecords, customLanguage }: StatisticsProps = 
           <StatCard icon={TrendingUpIcon} label={t.averageDifference} value={stats.avgDiff} color="#10b981" />
         </Grid>
       </Grid>
+
+      {/* HbA1c Kalkulyator */}
+      {hba1c && (
+        <Card elevation={0} sx={{ border: `1px solid ${theme.palette.divider}`, mb: 3 }}>
+          <Box sx={{ p: 2.5, px: 3, borderBottom: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.primary.main, 0.01) }}>
+            <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5 }}>
+              🩸 HbA1c Kalkulyator (So'nggi 90 kun)
+            </Typography>
+          </Box>
+          <CardContent sx={{ p: 3 }}>
+            <Grid container spacing={3} alignItems="center">
+              <Grid size={{ xs: 12, sm: 'auto' }}>
+                {/* Doira indikator */}
+                <Box sx={{
+                  width: 100, height: 100, borderRadius: '50%', mx: { xs: 'auto', sm: 0 },
+                  background: `conic-gradient(${hba1c.color} ${(parseFloat(hba1c.value) / 12) * 360}deg, ${alpha(hba1c.color, 0.1)} 0deg)`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  position: 'relative',
+                }}>
+                  <Box sx={{
+                    width: 76, height: 76, borderRadius: '50%',
+                    bgcolor: 'background.paper',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <Typography variant="h5" fontWeight={900} sx={{ color: hba1c.color, lineHeight: 1 }}>{hba1c.value}%</Typography>
+                    <Typography variant="caption" fontWeight={800} sx={{ color: hba1c.color, fontSize: 9 }}>HbA1c</Typography>
+                  </Box>
+                </Box>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 'grow' }}>
+                <Stack spacing={1.5}>
+                  <Stack direction="row" alignItems="center" spacing={1}>
+                    <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: hba1c.color }} />
+                    <Typography variant="subtitle1" fontWeight={900} sx={{ color: hba1c.color }}>{hba1c.label}</Typography>
+                    <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                      ({hba1c.records} yozuv asosida)
+                    </Typography>
+                  </Stack>
+                  <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                    {[
+                      { label: '< 5.7%', color: '#10b981', desc: 'Normal' },
+                      { label: '5.7–6.4%', color: '#f59e0b', desc: 'Prediabet' },
+                      { label: '≥ 6.5%', color: '#ef4444', desc: 'Diabet' },
+                    ].map(r => (
+                      <Chip
+                        key={r.label}
+                        label={`${r.label} — ${r.desc}`}
+                        size="small"
+                        sx={{
+                          bgcolor: alpha(r.color, 0.1),
+                          color: r.color,
+                          fontWeight: 800,
+                          fontSize: 10,
+                          border: `1px solid ${alpha(r.color, 0.2)}`,
+                        }}
+                      />
+                    ))}
+                  </Stack>
+                  <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                    ⚠️ Bu taxminiy ko'rsatkich. Aniq diagnoz uchun laboratoriya tekshiruvi zarur.
+                  </Typography>
+                </Stack>
+              </Grid>
+            </Grid>
+          </CardContent>
+        </Card>
+      )}
+
 
       {/* Chart Section */}
       <Card elevation={0} sx={{ border: `1px solid ${theme.palette.divider}`, mb: 4 }}>

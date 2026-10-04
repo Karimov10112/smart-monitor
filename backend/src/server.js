@@ -6,6 +6,7 @@ dns.setServers(['8.8.8.8', '8.8.4.4']);
 
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
 const express = require('express');
+const helmet = require('helmet');
 // Frontend dist path (only used if frontend is built locally)
 // const distPath = path.join(__dirname, '../../frontend/dist');
 const cors = require('cors');
@@ -58,18 +59,58 @@ app.set('io', io);
 io.on('connection', (socket) => {
   console.log('🔌 Yangi socket ulanishi:', socket.id);
 
+  // Foydalanuvchi o'z xonasiga qo'shiladi (userId bo'yicha)
   socket.on('join-room', (userId) => {
     socket.join(userId);
     console.log(`🏠 Foydalanuvchi xonaga qo'shildi: ${userId}`);
   });
 
-  socket.on('send-message', (data) => {
-    // data: { toUserProfileId, text, sender }
-    io.to(data.to).emit('new-message', data);
+  // Chat xabari yuborish va bazaga saqlash
+  socket.on('send-message', async (data) => {
+    // data: { to, text, senderId, senderName }
+    try {
+      const ChatMessage = require('./models/ChatMessage');
+      const getRoomId = (id1, id2) => [id1.toString(), id2.toString()].sort().join('_');
+      const room = getRoomId(data.senderId, data.to);
+
+      const message = await ChatMessage.create({
+        room,
+        sender: data.senderId,
+        receiver: data.to,
+        text: data.text,
+      });
+
+      const populated = await message.populate('sender', 'firstName lastName role avatar');
+
+      // Qabul qiluvchiga yuborish
+      io.to(data.to).emit('new-message', { message: populated });
+      // Yuboruvchiga ham echo
+      socket.emit('message-sent', { message: populated });
+    } catch (err) {
+      console.error('Socket send-message error:', err);
+      socket.emit('message-error', { error: 'Xabar yuborishda xato' });
+    }
   });
 
+  // Yozayapti indikatori
   socket.on('typing', (data) => {
-    socket.to(data.to).emit('user-typing', { isTyping: data.isTyping });
+    socket.to(data.to).emit('user-typing', { isTyping: data.isTyping, userId: data.userId });
+  });
+
+  // Xabarlarni o'qilgan deb belgilash
+  socket.on('mark-read', async (data) => {
+    try {
+      const ChatMessage = require('./models/ChatMessage');
+      const getRoomId = (id1, id2) => [id1.toString(), id2.toString()].sort().join('_');
+      const room = getRoomId(data.userId, data.fromId);
+      await ChatMessage.updateMany(
+        { room, receiver: data.userId, isRead: false },
+        { isRead: true, readAt: new Date() }
+      );
+      io.to(data.fromId).emit('messages-read', { by: data.userId });
+    } catch (err) {
+      console.error('mark-read error:', err);
+    }
   });
 
   socket.on('disconnect', () => {
@@ -78,6 +119,10 @@ io.on('connection', (socket) => {
 });
 
 // Middleware
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  contentSecurityPolicy: false, // Frontend alohida joylashtirilganligi sababli
+}));
 app.use(cors({
   origin: corsOriginFn,
   credentials: true,
@@ -106,12 +151,13 @@ app.use(async (req, res, next) => {
   }
 });
 
-// Rate limiting (Test uchun o'chirildi)
-// const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 });
-// const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20, message: { success: false, message: 'Juda ko\'p urinish. 15 daqiqadan keyin qayta urinib ko\'ring.' } });
+// Rate limiting
+const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 200, standardHeaders: true, legacyHeaders: false });
+const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20, standardHeaders: true, legacyHeaders: false, message: { success: false, message: 'Juda ko\'p urinish. 15 daqiqadan keyin qayta urinib ko\'ring.' } });
 
-// app.use('/api', limiter);
-// app.use('/api/auth', authLimiter);
+app.use('/api', limiter);
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/forgot-password', authLimiter);
 
 // Routes - mounted both with and without /api prefix to support Vercel rewriting
 const authRoutes = require('./routes/auth');
@@ -121,6 +167,7 @@ const aiRoutes = require('./routes/ai');
 const doctorRoutes = require('./routes/doctor');
 
 const reminderRoutes = require('./routes/reminders');
+const chatRoutes = require('./routes/chat');
 
 app.use('/api/auth', authRoutes);
 app.use('/auth', authRoutes);
@@ -141,6 +188,9 @@ app.use('/doctor', doctorRoutes);
 
 app.use('/api/reminders', reminderRoutes);
 app.use('/reminders', reminderRoutes);
+
+app.use('/api/chat', chatRoutes);
+app.use('/chat', chatRoutes);
 
 // Health check — v2.1 (createPatient endpoint included)
 const healthCheck = (req, res) => res.json({ status: 'ok', version: '2.1', time: new Date() });

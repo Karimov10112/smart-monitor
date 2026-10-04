@@ -4,6 +4,7 @@ export const translations: any = {
     dailyJournal: "Kunlik daftar",
     products: "Mahsulotlar",
     statistics: "Statistika",
+    chat: "Chat",
     
     // Daily Journal
     fastingBloodSugar: "Och qoringa shakar",

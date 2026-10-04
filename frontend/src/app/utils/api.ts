@@ -96,4 +96,12 @@ export const doctorAPI = {
   addNote: (id: string, notes: string) => api.patch(`/doctor/patients/${id}/notes`, { notes }),
 };
 
+export const chatAPI = {
+  getConversations: () => api.get('/chat/conversations'),
+  getMessages: (userId: string) => api.get(`/chat/messages/${userId}`),
+  sendMessage: (data: { receiverId: string; text: string }) => api.post('/chat/messages', data),
+  getUnreadCount: () => api.get('/chat/unread-count'),
+  getAvailableUsers: () => api.get('/chat/available-users'),
+};
+
 export default api;

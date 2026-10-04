@@ -56,9 +56,11 @@ import TelegramIcon from '@mui/icons-material/Telegram';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import ChatIcon from '@mui/icons-material/Chat';
 
 // Components
 import { DailyJournal } from './components/DailyJournal';
+import { Chat } from './components/chat/ChatComponent';
 
 import { Statistics } from './components/Statistics';
 import { ReminderModal } from './components/ReminderModal';
@@ -238,6 +240,7 @@ function App() {
         {(user?.isProfileComplete || isAdmin) && [
           { id: 'journal', label: t.dailyJournal || 'Journal', icon: <AssignmentIcon fontSize="small" />, path: '/?tab=journal' },
           { id: 'statistics', label: t.statistics || 'Stats', icon: <BarChartIcon fontSize="small" />, path: '/?tab=statistics' },
+          { id: 'chat', label: t.chat || 'Chat', icon: <ChatIcon fontSize="small" />, path: '/?tab=chat' },
         ].map((item) => (
           <ListItem key={item.id} disablePadding sx={{ mb: 0.5 }}>
             <ListItemButton
@@ -435,7 +438,9 @@ function App() {
             <Route path="/" element={
               user?.isProfileComplete ? (
                 activeTab === 'journal' ? <DailyJournal /> :
-                  <Statistics />
+                activeTab === 'statistics' ? <Statistics /> :
+                activeTab === 'chat' ? <Chat /> :
+                  <DailyJournal />
               ) : <Navigate to="/complete-profile" replace />
             } />
             <Route path="/complete-profile" element={<CompleteProfilePage />} />
