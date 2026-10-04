@@ -783,7 +783,17 @@ export default function AdminPage() {
                   <TextField fullWidth label="Telefon" required size="small" value={patientForm.phone} onChange={e => setPatientForm({...patientForm, phone: e.target.value})} />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField fullWidth label="Tug'ilgan sana (YYYY-MM-DD)" required size="small" value={patientForm.dateOfBirth} onChange={e => setPatientForm({...patientForm, dateOfBirth: e.target.value})} />
+                  <TextField
+                    fullWidth
+                    label="Tug'ilgan sana"
+                    required
+                    size="small"
+                    type="date"
+                    value={patientForm.dateOfBirth}
+                    onChange={e => setPatientForm({...patientForm, dateOfBirth: e.target.value})}
+                    InputLabelProps={{ shrink: true }}
+                    inputProps={{ max: new Date().toISOString().split('T')[0] }}
+                  />
                 </Grid>
                 {/* 3. Diabet turi va Bo'y */}
                 <Grid size={{ xs: 12, sm: 6 }}>
