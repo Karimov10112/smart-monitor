@@ -153,8 +153,16 @@ export function Chat({ initialUserId }: ChatProps = {}) {
       setOtherTyping(typing);
     };
 
-    const onMessagesRead = () => {
+    const onMessagesRead = ({ by }: { by?: string }) => {
       setMessages(prev => prev.map(m => ({ ...m, isRead: true })));
+      // Suhbatlar ro'yxatidagi oxirgi xabarni ham o'qilgan deb belgilash
+      if (by) {
+        setConversations(prev => prev.map(c => 
+          c.user._id === by && c.lastMessage 
+            ? { ...c, lastMessage: { ...c.lastMessage, isRead: true } } 
+            : c
+        ));
+      }
     };
 
     socket.on('new-message', onNewMessage);
@@ -185,6 +193,9 @@ export function Chat({ initialUserId }: ChatProps = {}) {
       setConversations(prev =>
         prev.map(c => c.user._id === chatUser._id ? { ...c, unreadCount: 0 } : c)
       );
+      if (socket) {
+        socket.emit('mark-read', { userId: user?._id, fromId: chatUser._id });
+      }
     } catch {
       toast.error('Xabarlarni yuklashda xato');
     } finally {
