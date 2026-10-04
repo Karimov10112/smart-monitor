@@ -1,5 +1,9 @@
 export const translations: any = {
   uz: {
+    addPatient: "Bemor qo'shish",
+    patientAdded: "Bemor muvaffaqiyatli qo'shildi",
+    passwordLengthError: "Parol kamida 6 ta belgi bo'lishi kerak",
+    patient: "Bemor",
     // Tabs
     dailyJournal: "Kunlik daftar",
     products: "Mahsulotlar",
@@ -324,6 +328,10 @@ export const translations: any = {
     sugarMonitoringTrends: "GLYUKOZA MONITORING TRENDLARI",
   },
   ru: {
+    addPatient: "Добавить пациента",
+    patientAdded: "Пациент успешно добавлен",
+    passwordLengthError: "Пароль должен содержать минимум 6 символов",
+    patient: "Пациент",
     // Tabs
     dailyJournal: "Дневник",
     products: "Продукты",
@@ -647,6 +655,10 @@ export const translations: any = {
     sugarMonitoringTrends: "ТРЕНДЫ МОНИТОРИНГА ГЛЮКОЗЫ",
   },
   en: {
+    addPatient: "Add Patient",
+    patientAdded: "Patient added successfully",
+    passwordLengthError: "Password must be at least 6 characters",
+    patient: "Patient",
     // Tabs
     dailyJournal: "Daily Journal",
     products: "Products",

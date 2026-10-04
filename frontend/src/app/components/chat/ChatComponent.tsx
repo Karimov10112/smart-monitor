@@ -387,7 +387,7 @@ export function Chat({ initialUserId }: ChatProps = {}) {
                     </Stack>
                     <Stack direction="row" alignItems="center" spacing={0.5}>
                       <Chip
-                        label={chatUser.role === 'doctor' ? '👨‍⚕️ Shifokor' : '🏥 Bemor'}
+                        label={chatUser.role === 'doctor' ? `👨‍⚕️ ${t.doctorRole || 'Shifokor'}` : `🏥 ${t.patient || 'Bemor'}`}
                         size="small"
                         sx={{ height: 16, fontSize: 9, fontWeight: 700, '& .MuiChip-label': { px: 0.5 } }}
                       />
@@ -438,7 +438,7 @@ export function Chat({ initialUserId }: ChatProps = {}) {
                   <>
                     <FiberManualRecordIcon sx={{ fontSize: 8, color: '#10b981' }} />
                     <Typography variant="caption" color="text.secondary" fontWeight={600}>
-                      {selectedUser.role === 'doctor' ? 'Shifokor' : 'Bemor'}
+                      {selectedUser.role === 'doctor' ? (t.doctorRole || 'Shifokor') : (t.patient || 'Bemor')}
                     </Typography>
                   </>
                 )}

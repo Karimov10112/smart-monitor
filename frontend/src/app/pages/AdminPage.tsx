@@ -214,7 +214,7 @@ export default function AdminPage() {
       setIsResettingPassword(true);
       const { data } = await adminAPI.resetPassword(selectedUserId, newPassword);
       if (data.success) {
-        toast.success(data.message || 'Parol muvaffaqiyatli yangilandi');
+        toast.success(data.message || t.passwordUpdated || 'Parol muvaffaqiyatli yangilandi');
         setNewPassword('');
       }
     } catch (err: any) {
@@ -230,7 +230,7 @@ export default function AdminPage() {
     e.preventDefault();
     try {
       await adminAPI.createPatient(patientForm);
-        toast.success("Bemor muvaffaqiyatli qo'shildi");
+        toast.success(t.patientAdded || "Bemor muvaffaqiyatli qo'shildi");
       setIsAddPatientModalOpen(false);
       setPatientForm({ email: '', password: '', firstName: '', lastName: '', phone: '', region: '', district: '', height: '', weight: '', diabetesType: '2-toifa', dateOfBirth: '' });
       loadUsers(search, role);
@@ -531,7 +531,7 @@ export default function AdminPage() {
                         <MenuItem value="admin">{t.admin}</MenuItem>
                       </Select>
                     </FormControl>
-                    <Button variant="contained" onClick={() => setIsAddPatientModalOpen(true)} startIcon={<AddIcon />} sx={{ borderRadius: 2, fontWeight: 900, whiteSpace: 'nowrap', py: 1 }}>Bemor qo'shish</Button>
+                    <Button variant="contained" onClick={() => setIsAddPatientModalOpen(true)} startIcon={<AddIcon />} sx={{ borderRadius: 2, fontWeight: 900, whiteSpace: 'nowrap', py: 1 }}>{t.addPatient || "Bemor qo'shish"}</Button>
                   </Stack>
                 </Paper>
 
@@ -673,7 +673,7 @@ export default function AdminPage() {
                          )}
                          {user?.role === 'superadmin' && (
                            <Grid size={{ xs: 12, md: 6 }}>
-                              <Typography variant="caption" sx={{ fontWeight: 800, mb: 1.5, display: 'block', textTransform: 'uppercase', color: 'error.main' }}>Parolni tiklash</Typography>
+                              <Typography variant="caption" sx={{ fontWeight: 800, mb: 1.5, display: 'block', textTransform: 'uppercase', color: 'error.main' }}>{t.resetPassword || 'Parolni tiklash'}</Typography>
                               <Stack direction="row" spacing={1}>
                                 <TextField
                                   fullWidth
@@ -767,16 +767,16 @@ export default function AdminPage() {
 
         {/* Add Patient Modal */}
         <Dialog open={isAddPatientModalOpen} onClose={() => setIsAddPatientModalOpen(false)} fullWidth maxWidth="sm" PaperProps={{ sx: { borderRadius: 2 } }}>
-          <DialogTitle sx={{ fontWeight: 900 }}>Bemor Qo'shish</DialogTitle>
+          <DialogTitle sx={{ fontWeight: 900 }}>{t.addPatient || "Bemor Qo'shish"}</DialogTitle>
           <form onSubmit={handleSavePatient}>
             <DialogContent>
               <Grid container spacing={2}>
                 {/* 1. Ism va Familiya */}
                 <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField fullWidth label="Ism" required size="small" value={patientForm.firstName} onChange={e => setPatientForm({...patientForm, firstName: e.target.value})} />
+                  <TextField fullWidth label={t.firstName || "Ism"} required size="small" value={patientForm.firstName} onChange={e => setPatientForm({...patientForm, firstName: e.target.value})} />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField fullWidth label="Familiya" required size="small" value={patientForm.lastName} onChange={e => setPatientForm({...patientForm, lastName: e.target.value})} />
+                  <TextField fullWidth label={t.lastName || "Familiya"} required size="small" value={patientForm.lastName} onChange={e => setPatientForm({...patientForm, lastName: e.target.value})} />
                 </Grid>
                 {/* 2. Telefon va Tug'ilgan sana */}
                 <Grid size={{ xs: 12, sm: 6 }}>
@@ -785,7 +785,7 @@ export default function AdminPage() {
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField
                     fullWidth
-                    label="Tug'ilgan sana"
+                    label={t.dob || "Tug'ilgan sana"}
                     required
                     size="small"
                     type="date"
@@ -814,7 +814,7 @@ export default function AdminPage() {
                   <TextField fullWidth label="Vazn (kg)" required size="small" type="number" value={patientForm.weight} onChange={e => setPatientForm({...patientForm, weight: e.target.value})} />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField fullWidth label="Viloyat" required size="small" value={patientForm.region} onChange={e => setPatientForm({...patientForm, region: e.target.value})} />
+                  <TextField fullWidth label={t.region || "Viloyat"} required size="small" value={patientForm.region} onChange={e => setPatientForm({...patientForm, region: e.target.value})} />
                 </Grid>
                 {/* 5. Tuman */}
                 <Grid size={{ xs: 12 }}>
@@ -830,13 +830,13 @@ export default function AdminPage() {
                   <TextField fullWidth label="Login (Tel raqam / Email)" required size="small" value={patientForm.email} onChange={e => setPatientForm({...patientForm, email: e.target.value})} />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField fullWidth label="Parol" required size="small" type="password" value={patientForm.password} onChange={e => setPatientForm({...patientForm, password: e.target.value})} />
+                  <TextField fullWidth label={t.password || "Parol"} required size="small" type="password" value={patientForm.password} onChange={e => setPatientForm({...patientForm, password: e.target.value})} />
                 </Grid>
               </Grid>
             </DialogContent>
             <DialogActions sx={{ p: 2 }}>
               <Button onClick={() => setIsAddPatientModalOpen(false)}>Bekor qilish</Button>
-              <Button type="submit" variant="contained" sx={{ fontWeight: 800 }}>Saqlash</Button>
+              <Button type="submit" variant="contained" sx={{ fontWeight: 800 }}>{t.save || 'Saqlash'}</Button>
             </DialogActions>
           </form>
         </Dialog>
