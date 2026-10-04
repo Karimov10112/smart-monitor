@@ -95,12 +95,25 @@ export function Statistics({ customRecords, customLanguage }: StatisticsProps = 
 
   const hba1c = useMemo(() => {
     if (records.length === 0) return null;
-    // Oxirgi 90 kun uchun o'rtacha qon shakari (mmol/L) -> HbA1c (%)
+    // Oxirgi 90 kun uchun BARCHA o'lchovlar (och va to'q qorin) o'rtachasi -> HbA1c
+    // HbA1c 24 soatlik umumiy glukozani aks ettiradi, shuning uchun har ikkisini qo'shamiz
     const now = new Date();
     const cutoff = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
     const last90 = records.filter(r => new Date(r.date) >= cutoff);
     if (last90.length === 0) return null;
-    const avgGlucose = last90.reduce((s, r) => s + (r.fastingLevel ?? r.level ?? 0), 0) / last90.length;
+
+    // Har bir yozuvdan mavjud barcha o'lchovlarni yig'amiz
+    const allValues: number[] = [];
+    last90.forEach(r => {
+      const fasting = r.fastingLevel ?? (r.category === 'fasting' ? r.level : null);
+      const postMeal = r.postMealLevel ?? (r.category === 'post-meal' ? r.level : null);
+      if (fasting != null && fasting > 0) allValues.push(fasting);
+      if (postMeal != null && postMeal > 0) allValues.push(postMeal);
+    });
+
+    if (allValues.length === 0) return null;
+
+    const avgGlucose = allValues.reduce((s, v) => s + v, 0) / allValues.length;
     // IFCC formula: HbA1c (%) = (avgGlucose mmol/L + 2.59) / 1.59
     const hba1cVal = ((avgGlucose + 2.59) / 1.59).toFixed(1);
     const val = parseFloat(hba1cVal);
@@ -109,7 +122,7 @@ export function Statistics({ customRecords, customLanguage }: StatisticsProps = 
     if (val < 5.7) { label = 'Normal'; color = '#10b981'; }
     else if (val < 6.5) { label = 'Prediabet'; color = '#f59e0b'; }
     else { label = 'Diabet'; color = '#ef4444'; }
-    return { value: hba1cVal, label, color, records: last90.length };
+    return { value: hba1cVal, label, color, records: allValues.length };
   }, [records]);
 
   if (!stats) {
