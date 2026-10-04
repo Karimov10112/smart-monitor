@@ -153,13 +153,13 @@ export function Statistics({ customRecords, customLanguage }: StatisticsProps = 
       
       {/* Overview Stats */}
       <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid size={{ xs: 12, md: 4 }}>
+        <Grid item xs={12} md={4}>
           <StatCard icon={SpeedIcon} label={t.averageFasting} value={stats.avgFasting} color={theme.palette.primary.main} />
         </Grid>
-        <Grid size={{ xs: 12, md: 4 }}>
+        <Grid item xs={12} md={4}>
           <StatCard icon={TimelineIcon} label={t.averagePostMeal} value={stats.avgPostMeal} color={theme.palette.secondary.main} />
         </Grid>
-        <Grid size={{ xs: 12, md: 4 }}>
+        <Grid item xs={12} md={4}>
           <StatCard icon={TrendingUpIcon} label={t.averageDifference} value={stats.avgDiff} color="#10b981" />
         </Grid>
       </Grid>
@@ -174,7 +174,7 @@ export function Statistics({ customRecords, customLanguage }: StatisticsProps = 
           </Box>
           <CardContent sx={{ p: 3 }}>
             <Grid container spacing={3} alignItems="center">
-              <Grid size={{ xs: 12, sm: 3 }}>
+              <Grid item xs={12} sm={3}>
                 {/* Doira indikator */}
                 <Box sx={{
                   width: 100, height: 100, borderRadius: '50%', mx: { xs: 'auto', sm: 0 },
@@ -192,7 +192,7 @@ export function Statistics({ customRecords, customLanguage }: StatisticsProps = 
                   </Box>
                 </Box>
               </Grid>
-              <Grid size={{ xs: 12, sm: 9 }}>
+              <Grid item xs={12} sm={9}>
                 <Stack spacing={1.5}>
                   <Stack direction="row" alignItems="center" spacing={1}>
                     <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: hba1c.color }} />
@@ -242,7 +242,7 @@ export function Statistics({ customRecords, customLanguage }: StatisticsProps = 
         <CardContent sx={{ p: 4, pt: 4 }}>
           <Grid container spacing={4}>
             {/* Fasting (Och qoringa) Chart */}
-            <Grid size={{ xs: 12, lg: 6 }}>
+            <Grid item xs={12} lg={6}>
               <Typography variant="overline" sx={{ fontWeight: 800, color: 'primary.main', display: 'block', mb: 2, letterSpacing: 1.5 }}>
                  {t.fasting} ({language === 'uz' ? 'Real vaqt grafik' : 'Real-time chart'})
               </Typography>
@@ -263,7 +263,7 @@ export function Statistics({ customRecords, customLanguage }: StatisticsProps = 
             </Grid>
 
             {/* Post Meal (To'q qoringa) Chart */}
-            <Grid size={{ xs: 12, lg: 6 }}>
+            <Grid item xs={12} lg={6}>
               <Typography variant="overline" sx={{ fontWeight: 800, color: 'secondary.main', display: 'block', mb: 2, letterSpacing: 1.5 }}>
                  {t.postMeal} ({language === 'uz' ? 'Real vaqt grafik' : 'Real-time chart'})
               </Typography>

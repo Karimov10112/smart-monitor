@@ -57,13 +57,10 @@ import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import ChatIcon from '@mui/icons-material/Chat';
-import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
 
 // Components
 import { DailyJournal } from './components/DailyJournal';
 import { Chat } from './components/chat/ChatComponent';
-import { Products } from './components/Products';
-import { NutritionAI } from './components/NutritionAI';
 
 import { Statistics } from './components/Statistics';
 import { ReminderModal } from './components/ReminderModal';
@@ -242,9 +239,7 @@ function App() {
       <List sx={{ flexGrow: 1 }}>
         {(user?.isProfileComplete || isAdmin) && [
           { id: 'journal', label: t.dailyJournal || 'Journal', icon: <AssignmentIcon fontSize="small" />, path: '/?tab=journal' },
-          { id: 'products', label: t.products || 'Products', icon: <RestaurantMenuIcon fontSize="small" />, path: '/?tab=products' },
           { id: 'statistics', label: t.statistics || 'Stats', icon: <BarChartIcon fontSize="small" />, path: '/?tab=statistics' },
-          { id: 'dietolog', label: 'AI Dietolog', icon: <AutoAwesomeIcon fontSize="small" />, path: '/?tab=dietolog' },
           { id: 'chat', label: t.chat || 'Chat', icon: <ChatIcon fontSize="small" />, path: '/?tab=chat' },
         ].map((item) => (
           <ListItem key={item.id} disablePadding sx={{ mb: 0.5 }}>
@@ -443,13 +438,7 @@ function App() {
             <Route path="/" element={
               user?.isProfileComplete ? (
                 activeTab === 'journal' ? <DailyJournal /> :
-                activeTab === 'products' ? <Products /> :
                 activeTab === 'statistics' ? <Statistics /> :
-                activeTab === 'dietolog' ? (
-                  <Box sx={{ p: { xs: 2, md: 4 } }}>
-                    <NutritionAI user={user} t={t} language={language} />
-                  </Box>
-                ) :
                 activeTab === 'chat' ? <Chat /> :
                   <DailyJournal />
               ) : <Navigate to="/complete-profile" replace />
