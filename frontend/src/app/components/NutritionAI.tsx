@@ -1,6 +1,13 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { Sparkles, Scale, Ruler, Flame, Loader2, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import ScaleIcon from '@mui/icons-material/Scale';
+import HeightIcon from '@mui/icons-material/Height';
+import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment';
+import CircularProgress from '@mui/material/CircularProgress';
+import AutorenewIcon from '@mui/icons-material/Autorenew';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import api from '../utils/api';
 
 interface NutritionAIProps {
@@ -102,7 +109,7 @@ export const NutritionAI: React.FC<NutritionAIProps> = ({ user, t, language }) =
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
-              <Sparkles className="w-5 h-5" />
+              <AutoAwesomeIcon sx={{ fontSize: 20 }} />
             </div>
             <div>
               <h3 className="font-black text-sm uppercase tracking-widest">{l.title}</h3>
@@ -113,7 +120,7 @@ export const NutritionAI: React.FC<NutritionAIProps> = ({ user, t, language }) =
             onClick={() => setExpanded(!expanded)}
             className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center hover:bg-white/30 transition-all"
           >
-            {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            {expanded ? <ExpandLessIcon sx={{ fontSize: 16 }} /> : <ExpandMoreIcon sx={{ fontSize: 16 }} />}
           </button>
         </div>
 
@@ -122,19 +129,19 @@ export const NutritionAI: React.FC<NutritionAIProps> = ({ user, t, language }) =
           <div className="flex gap-3 mt-4">
             {user?.height && (
               <div className="flex items-center gap-1.5 bg-white/15 rounded-lg px-3 py-1.5">
-                <Ruler className="w-3.5 h-3.5" />
+                <HeightIcon sx={{ fontSize: 14 }} />
                 <span className="text-xs font-black">{user.height} sm</span>
               </div>
             )}
             {user?.weight && (
               <div className="flex items-center gap-1.5 bg-white/15 rounded-lg px-3 py-1.5">
-                <Scale className="w-3.5 h-3.5" />
+                <ScaleIcon sx={{ fontSize: 14 }} />
                 <span className="text-xs font-black">{user.weight} kg</span>
               </div>
             )}
             {meta?.bmi && (
               <div className="flex items-center gap-1.5 bg-white/15 rounded-lg px-3 py-1.5">
-                <Flame className="w-3.5 h-3.5" />
+                <LocalFireDepartmentIcon sx={{ fontSize: 14 }} />
                 <span className="text-xs font-black">BMI: {meta.bmi}</span>
               </div>
             )}
@@ -154,8 +161,8 @@ export const NutritionAI: React.FC<NutritionAIProps> = ({ user, t, language }) =
             <div className="p-5">
               {!hasData ? (
                 <div className="text-center py-6">
-                  <div className="w-16 h-16 rounded-2xl bg-violet-50 dark:bg-violet-900/20 flex items-center justify-center mx-auto mb-3">
-                    <Ruler className="w-8 h-8 text-violet-500" />
+                  <div className="w-16 h-16 rounded-2xl bg-violet-50 dark:bg-violet-900/20 flex items-center justify-center mx-auto mb-3 text-violet-500">
+                    <HeightIcon sx={{ fontSize: 32 }} />
                   </div>
                   <p className="text-sm font-bold text-slate-500 dark:text-slate-400 mb-4">{l.noData}</p>
                   <a
@@ -176,7 +183,7 @@ export const NutritionAI: React.FC<NutritionAIProps> = ({ user, t, language }) =
                         onClick={fetchRecommendation}
                         className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:scale-105 transition-all shadow-lg shadow-violet-500/25"
                       >
-                        <Sparkles className="w-4 h-4" />
+                        <AutoAwesomeIcon sx={{ fontSize: 16 }} />
                         {l.getAdvice}
                       </button>
                     </div>
@@ -184,7 +191,7 @@ export const NutritionAI: React.FC<NutritionAIProps> = ({ user, t, language }) =
 
                   {loading && (
                     <div className="flex items-center justify-center gap-3 py-8">
-                      <Loader2 className="w-6 h-6 text-violet-500 animate-spin" />
+                      <CircularProgress size={24} sx={{ color: '#8b5cf6' }} />
                       <span className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
                         {language === 'uz' ? 'AI tahlil qilmoqda...' : 'AI is analyzing...'}
                       </span>
@@ -211,7 +218,7 @@ export const NutritionAI: React.FC<NutritionAIProps> = ({ user, t, language }) =
                           onClick={fetchRecommendation}
                           className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-violet-500 transition-all"
                         >
-                          <RefreshCw className="w-3 h-3" />
+                          <AutorenewIcon sx={{ fontSize: 12 }} />
                           {l.refresh}
                         </button>
                       </div>
