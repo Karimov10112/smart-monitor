@@ -95,16 +95,16 @@ export function Statistics({ customRecords, customLanguage }: StatisticsProps = 
 
   const hba1c = useMemo(() => {
     if (records.length === 0) return null;
-    // Oxirgi 90 kun uchun BARCHA o'lchovlar (och va to'q qorin) o'rtachasi -> HbA1c
+    // Oxirgi 30 kun uchun BARCHA o'lchovlar (och va to'q qorin) o'rtachasi -> HbA1c
     // HbA1c 24 soatlik umumiy glukozani aks ettiradi, shuning uchun har ikkisini qo'shamiz
     const now = new Date();
-    const cutoff = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-    const last90 = records.filter(r => new Date(r.date) >= cutoff);
-    if (last90.length === 0) return null;
+    const cutoff = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const last30 = records.filter(r => new Date(r.date) >= cutoff);
+    if (last30.length === 0) return null;
 
     // Har bir yozuvdan mavjud barcha o'lchovlarni yig'amiz
     const allValues: number[] = [];
-    last90.forEach(r => {
+    last30.forEach(r => {
       const fasting = r.fastingLevel ?? (r.category === 'fasting' ? r.level : null);
       const postMeal = r.postMealLevel ?? (r.category === 'post-meal' ? r.level : null);
       if (fasting != null && fasting > 0) allValues.push(fasting);
@@ -183,7 +183,7 @@ export function Statistics({ customRecords, customLanguage }: StatisticsProps = 
         <Card elevation={0} sx={{ border: `1px solid ${theme.palette.divider}`, mb: 3 }}>
           <Box sx={{ p: 2.5, px: 3, borderBottom: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.primary.main, 0.01) }}>
             <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5 }}>
-              🩸 HbA1c Kalkulyator (So'nggi 90 kun)
+              🩸 HbA1c Kalkulyator (So'nggi 30 kun)
             </Typography>
           </Box>
           <CardContent sx={{ p: 3 }}>
