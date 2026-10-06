@@ -3,6 +3,7 @@ import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../contexts/AuthContext';
 import api from '../../utils/api';
 import { toast } from 'sonner';
+import { translations } from '../../utils/translations';
 
 import {
   Box,
@@ -51,9 +52,11 @@ interface ChatProps {
 }
 
 export function Chat({ initialUserId }: ChatProps = {}) {
-  const { socket } = useApp();
+  const { socket, language } = useApp();
   const { user } = useAuth();
   const theme = useTheme();
+  
+  const t = translations[language] || translations['uz'];
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [availableUsers, setAvailableUsers] = useState<any[]>([]);
