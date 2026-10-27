@@ -71,3 +71,80 @@ exports.addNote = async (req, res) => {
     res.status(500).json({ success: false, message: 'Server xatosi' });
   }
 };
+
+// @desc    Connect patient to doctor by doctorCode
+// @route   POST /api/doctor/connect
+// @access  Private (Patient / User)
+exports.connectDoctorByCode = async (req, res) => {
+  try {
+    const { code } = req.body;
+    if (!code || typeof code !== 'string') {
+      return res.status(400).json({ success: false, message: 'Shifokor kodi kiritilmadi' });
+    }
+
+    const cleanCode = code.trim().toUpperCase();
+    const doctor = await userRepository.findOne({
+      role: { $in: ['doctor', 'superadmin', 'admin'] },
+      doctorCode: cleanCode
+    });
+
+    if (!doctor) {
+      return res.status(404).json({ success: false, message: 'Bunday kodli shifokor topilmadi. Kodni qayta tekshiring.' });
+    }
+
+    const doctorFullName = `${doctor.firstName || ''} ${doctor.lastName || ''}`.trim() || doctor.email;
+
+    // Update patient
+    const updatedUser = await userRepository.findByIdAndUpdate(
+      req.user._id,
+      {
+        assignedDoctor: doctor._id,
+        doctorName: doctorFullName
+      },
+      { new: true }
+    );
+
+    res.json({
+      success: true,
+      message: `Shifokor ${doctorFullName} muvaffaqiyatli biriktirildi!`,
+      doctor: {
+        _id: doctor._id,
+        firstName: doctor.firstName,
+        lastName: doctor.lastName,
+        doctorCode: doctor.doctorCode,
+      },
+      user: updatedUser.toSafeObject ? updatedUser.toSafeObject() : updatedUser
+    });
+  } catch (err) {
+    console.error('Connect doctor error:', err);
+    res.status(500).json({ success: false, message: 'Server xatosi' });
+  }
+};
+
+// @desc    Get or generate doctor's unique code
+// @route   GET /api/doctor/my-code
+// @access  Private (Doctor / Admin)
+exports.getMyDoctorCode = async (req, res) => {
+  try {
+    let doctor = await userRepository.findById(req.user._id);
+    if (!doctor) {
+      return res.status(404).json({ success: false, message: 'Topilmadi' });
+    }
+
+    if (!doctor.doctorCode) {
+      const randomDigits = Math.floor(1000 + Math.random() * 9000);
+      doctor.doctorCode = `DOC-${randomDigits}`;
+      await doctor.save();
+    }
+
+    res.json({
+      success: true,
+      doctorCode: doctor.doctorCode,
+      firstName: doctor.firstName,
+      lastName: doctor.lastName
+    });
+  } catch (err) {
+    console.error('Get doctor code error:', err);
+    res.status(500).json({ success: false, message: 'Server xatosi' });
+  }
+};

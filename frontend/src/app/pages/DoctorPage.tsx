@@ -73,6 +73,20 @@ export default function DoctorPage() {
   const [doctorNote, setDoctorNote] = useState('');
   const [loading, setLoading] = useState(true);
   const [isMini, setIsMini] = useState(false);
+  const [doctorCode, setDoctorCode] = useState<string>('');
+
+  useEffect(() => {
+    loadDoctorCode();
+  }, []);
+
+  const loadDoctorCode = async () => {
+    try {
+      const { data } = await doctorAPI.getMyCode();
+      if (data?.doctorCode) {
+        setDoctorCode(data.doctorCode);
+      }
+    } catch {}
+  };
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -430,6 +444,45 @@ export default function DoctorPage() {
             {/* ===== PATIENT LIST ===== */}
             {currentTab === 'patients' && (
               <Box>
+                {/* Doctor Code Card */}
+                {doctorCode && (
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      p: 2.5,
+                      mb: 3,
+                      borderRadius: 2.5,
+                      background: 'linear-gradient(135deg, rgba(79, 70, 229, 0.08), rgba(99, 102, 241, 0.03))',
+                      border: `1px solid ${alpha('#4f46e5', 0.2)}`,
+                      display: 'flex',
+                      flexDirection: { xs: 'column', sm: 'row' },
+                      alignItems: { xs: 'flex-start', sm: 'center' },
+                      justifyContent: 'space-between',
+                      gap: 2
+                    }}
+                  >
+                    <Box>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'primary.main', display: 'flex', alignItems: 'center', gap: 1 }}>
+                        🏷️ {t.myDoctorCodeTitle}: <Chip label={doctorCode} color="primary" sx={{ fontWeight: 900, fontSize: '1rem', letterSpacing: 1 }} />
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                        {t.myDoctorCodeDesc}
+                      </Typography>
+                    </Box>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      onClick={() => {
+                        navigator.clipboard.writeText(doctorCode);
+                        toast.success(t.copiedToClipboard);
+                      }}
+                      sx={{ borderRadius: 2, fontWeight: 700, textTransform: 'none', flexShrink: 0 }}
+                    >
+                      📋 {t.copiedToClipboard.replace('!', '')} (Nusxalash)
+                    </Button>
+                  </Paper>
+                )}
+
                 <Paper elevation={0} sx={{ p: 2.5, mb: 4, borderRadius: 2, bgcolor: alpha(theme.palette.background.paper, 0.4), backdropFilter: 'blur(20px)', border: `1px solid ${theme.palette.divider}` }}>
                   <TextField
                     placeholder={t.search}

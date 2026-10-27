@@ -25,6 +25,7 @@ const userSchema = new mongoose.Schema(
     diabetesType: { type: String, enum: ['type1', 'type2', 'prediabetes', 'gestational', 'none'] },
     doctorName: String,
     assignedDoctor: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    doctorCode: { type: String, sparse: true, uppercase: true, trim: true },
     height: { type: Number, min: 50, max: 250 },  // sm (santimetr)
     weight: { type: Number, min: 10, max: 300 },  // kg
     isProfileComplete: { type: Boolean, default: false },
@@ -67,8 +68,13 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Hash password before save
+// Pre-save hook: Hash password and ensure doctorCode
 userSchema.pre('save', async function (next) {
+  if (this.role === 'doctor' && !this.doctorCode) {
+    const randomDigits = Math.floor(1000 + Math.random() * 9000);
+    this.doctorCode = `DOC-${randomDigits}`;
+  }
+
   if (!this.isModified('password') || !this.password) return next();
   
   // Prevent double hashing if password already looks like a bcrypt hash

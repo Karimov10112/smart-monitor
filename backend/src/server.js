@@ -11,11 +11,10 @@ const helmet = require('helmet');
 // const distPath = path.join(__dirname, '../../frontend/dist');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
-const passport = require('./config/passport');
+
 const connectDB = require('./config/database');
 const User = require('./models/User');
 const bcrypt = require('bcryptjs');
-const seedProducts = require('./utils/seeder');
 
 const app = express();
 const http = require('http');
@@ -129,7 +128,7 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
-app.use(passport.initialize());
+
 
 // Request Logger for debugging
 app.use((req, res, next) => {
@@ -183,8 +182,6 @@ app.use('/ai', aiRoutes);
 
 app.use('/api/doctor', doctorRoutes);
 app.use('/doctor', doctorRoutes);
-
-
 
 app.use('/api/reminders', reminderRoutes);
 app.use('/reminders', reminderRoutes);
@@ -258,7 +255,6 @@ const initialize = async () => {
   try {
     await connectDB();
     await createSuperAdmin();
-    await seedProducts();
   } catch (err) {
     console.error('Initialization error:', err);
   }

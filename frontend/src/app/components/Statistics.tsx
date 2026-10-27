@@ -1,6 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { useApp } from '../contexts/AppContext';
+import { useAuth } from '../contexts/AuthContext';
 import { translations } from '../utils/translations';
+import { toast } from 'sonner';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 // MUI Components
@@ -22,6 +24,8 @@ import {
   Tab,
   Tabs,
   Chip,
+  Button,
+  CircularProgress,
   alpha,
   useTheme
 } from '@mui/material';
@@ -32,6 +36,7 @@ import SpeedIcon from '@mui/icons-material/Speed';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 
 interface StatisticsProps {
   customRecords?: any[];
@@ -40,11 +45,13 @@ interface StatisticsProps {
 
 export function Statistics({ customRecords, customLanguage }: StatisticsProps = {}) {
   const { language: appLanguage, records: appRecords } = useApp();
+  const { user } = useAuth();
   const language = customLanguage || appLanguage;
   const records = customRecords || appRecords;
   const theme = useTheme();
   const t = translations[language];
   const [timeRange, setTimeRange] = useState('7');
+  const [exportingPDF, setExportingPDF] = useState(false);
 
   const stats = useMemo(() => {
     if (records.length === 0) return null;
@@ -125,6 +132,106 @@ export function Statistics({ customRecords, customLanguage }: StatisticsProps = 
     return { value: hba1cVal, label, color, records: allValues.length, avgGlucose: avgGlucose.toFixed(1) };
   }, [records]);
 
+  const handleExportPDF = async () => {
+    if (!records || records.length === 0) {
+      toast.error('Eksport uchun ma\'lumot mavjud emas');
+      return;
+    }
+    setExportingPDF(true);
+    try {
+      const { default: jsPDF } = await import('jspdf');
+      const { default: autoTable } = await import('jspdf-autotable');
+      const doc = new jsPDF();
+
+      // Brand Header
+      doc.setFillColor(79, 70, 229);
+      doc.rect(0, 0, 210, 24, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text('QAND NAZORATI - QON SHAKARI VA SALOMATLIK HISOBOTI', 14, 15);
+
+      // Patient metadata
+      doc.setTextColor(30, 41, 59);
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      const patientName = user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email : 'Bemor';
+      const dType = user?.diabetesType ? user.diabetesType.toUpperCase() : 'Diabet turi ko\'rsatilmagan';
+      const periodLabel = timeRange === 'all' ? 'Barcha davr' : `Oxirgi ${timeRange} kun`;
+
+      doc.text(`Bemor: ${patientName}`, 14, 34);
+      doc.text(`Tashxis / Holat: ${dType}`, 14, 40);
+      doc.text(`Hisobot davri: ${periodLabel}`, 14, 46);
+      doc.text(`Sana: ${new Date().toLocaleDateString('uz')}`, 140, 34);
+
+      // Summary KPI Box
+      doc.setFillColor(243, 244, 246);
+      doc.roundedRect(14, 52, 182, 22, 2, 2, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.text('O\'rtacha Och Qoringa:', 18, 62);
+      doc.text(`${stats?.avgFasting || '—'} mmol/l`, 18, 69);
+
+      doc.text('O\'rtacha Ovqatdan Keyin:', 68, 62);
+      doc.text(`${stats?.avgPostMeal || '—'} mmol/l`, 68, 69);
+
+      doc.text('Hisoblangan HbA1c:', 120, 62);
+      doc.text(`${estimatedHbA1c?.value || '—'}%`, 120, 69);
+
+      doc.text('Jami O\'lchovlar:', 164, 62);
+      doc.text(`${records.length} ta`, 164, 69);
+
+      // Table of Records
+      const tableRows = records.slice(0, 100).map((r: any) => {
+        const d = new Date(r.date).toLocaleDateString('uz');
+        const f = r.fastingLevel != null ? Number(r.fastingLevel).toFixed(1) : (r.level != null ? Number(r.level).toFixed(1) : '—');
+        const p = r.postMealLevel != null ? Number(r.postMealLevel).toFixed(1) : '—';
+        const bp = (r.systolicPressure && r.diastolicPressure) ? `${r.systolicPressure}/${r.diastolicPressure}` : (r.pulse ? `${r.pulse} bpm` : '—');
+        const extra = [
+          r.carbsUnits ? `${r.carbsUnits} XE` : null,
+          r.insulinUnits ? `${r.insulinUnits} birlik` : null,
+          r.notes || null
+        ].filter(Boolean).join(' | ') || '—';
+
+        return [d, f, p, bp, extra];
+      });
+
+      autoTable(doc, {
+        startY: 80,
+        head: [['Sana', 'Och qoringa (mmol/l)', 'Ovqatdan keyin (mmol/l)', 'Bosim / Puls', 'XE / Insulin / Izoh']],
+        body: tableRows,
+        headStyles: { fillColor: [79, 70, 229], fontStyle: 'bold', fontSize: 9 },
+        alternateRowStyles: { fillColor: [249, 250, 251] },
+        styles: { fontSize: 8.5, cellPadding: 2.5 },
+      });
+
+      // Doctor signature line
+      const finalY = (doc as any).lastAutoTable?.finalY || 150;
+      if (finalY < 260) {
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'italic');
+        doc.text('Davolovchi shifokor imzosi: ________________________', 14, Math.min(270, finalY + 20));
+      }
+
+      // Page numbers footer
+      const pageCount = (doc as any).internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(150);
+        doc.text(`Qand Nazorati © ${new Date().getFullYear()} | Sahifa ${i}/${pageCount}`, 14, doc.internal.pageSize.height - 8);
+      }
+
+      doc.save(`qand_nazorati_hisobot_${new Date().toISOString().split('T')[0]}.pdf`);
+      toast.success('PDF hisobot muvaffaqiyatli yuklab olindi!');
+    } catch (err) {
+      console.error('PDF error:', err);
+      toast.error('PDF hisobot yaratishda xato yuz berdi');
+    } finally {
+      setExportingPDF(false);
+    }
+  };
+
   if (!stats) {
     return (
       <Box sx={{ py: 10, textAlign: 'center', opacity: 0.5 }}>
@@ -155,7 +262,26 @@ export function Statistics({ customRecords, customLanguage }: StatisticsProps = 
 
   return (
     <Box sx={{ spaceY: 4 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 1.5 }}>
+        <Button
+          variant="contained"
+          size="small"
+          startIcon={exportingPDF ? <CircularProgress size={16} color="inherit" /> : <PictureAsPdfIcon fontSize="small" />}
+          disabled={exportingPDF || records.length === 0}
+          onClick={handleExportPDF}
+          sx={{
+            borderRadius: 2,
+            fontWeight: 800,
+            textTransform: 'none',
+            fontSize: '0.8rem',
+            background: 'linear-gradient(135deg, #4f46e5, #6366f1)',
+            boxShadow: 'none',
+            '&:hover': { boxShadow: '0 4px 12px rgba(79, 70, 229, 0.3)' }
+          }}
+        >
+          {t.exportPDF || 'PDF Hisobot'}
+        </Button>
+
         <Tabs value={timeRange} onChange={(e, v) => setTimeRange(v)} sx={{ minHeight: 36, '& .MuiTab-root': { minHeight: 36, py: 0.5, fontWeight: 800, textTransform: 'none' } }}>
           <Tab value="1" label={language === 'uz' ? 'Bugun' : 'Today'} />
           <Tab value="7" label={language === 'uz' ? 'Haftalik' : 'Weekly'} />

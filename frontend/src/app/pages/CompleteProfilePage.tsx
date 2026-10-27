@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../contexts/AppContext';
 import { useAuth } from '../contexts/AuthContext';
-import { authAPI } from '../utils/api';
+import { authAPI, doctorAPI } from '../utils/api';
 import { translations } from '../utils/translations';
 import { toast } from 'sonner';
 
@@ -23,7 +23,6 @@ import {
   Select,
   MenuItem,
   Avatar,
-  IconButton,
   alpha,
   useTheme,
   CircularProgress,
@@ -68,6 +67,31 @@ export default function CompleteProfilePage() {
     email: '', currentPassword: '', newPassword: '',
   });
   const [loading, setLoading] = useState(false);
+  const [doctorCodeInput, setDoctorCodeInput] = useState('');
+  const [connectingDoctor, setConnectingDoctor] = useState(false);
+
+  const handleConnectDoctor = async () => {
+    if (!doctorCodeInput.trim()) {
+      toast.error('Shifokor kodini kiriting');
+      return;
+    }
+    setConnectingDoctor(true);
+    try {
+      const { data } = await doctorAPI.connectByCode(doctorCodeInput.trim());
+      if (data.success) {
+        toast.success(data.message || t.doctorConnectedSuccess);
+        if (data.user) {
+          updateUser(data.user);
+          setForm(prev => ({ ...prev, doctorName: data.user.doctorName || prev.doctorName }));
+        }
+        setDoctorCodeInput('');
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Xato yuz berdi');
+    } finally {
+      setConnectingDoctor(false);
+    }
+  };
 
   useEffect(() => {
     if (user) {
@@ -300,6 +324,35 @@ export default function CompleteProfilePage() {
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
                    <TextField fullWidth size="small" label={t.doctorName} value={form.doctorName} onChange={e => handleChange('doctorName', e.target.value)} placeholder="Dr. Falonchiyev" />
+                </Grid>
+
+                <Grid size={{ xs: 12 }}>
+                  <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 2, bgcolor: alpha(theme.palette.primary.main, 0.03) }}>
+                    <Typography variant="caption" sx={{ fontWeight: 800, textTransform: 'uppercase', color: 'primary.main', display: 'block', mb: 0.5 }}>
+                      🔗 {t.connectDoctor}
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 1.5 }}>
+                      {t.connectDoctorDesc}
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
+                      <TextField
+                        size="small"
+                        placeholder="DOC-1234"
+                        value={doctorCodeInput}
+                        onChange={e => setDoctorCodeInput(e.target.value.toUpperCase())}
+                        sx={{ maxWidth: 220 }}
+                      />
+                      <Button
+                        variant="contained"
+                        size="small"
+                        disabled={connectingDoctor || !doctorCodeInput.trim()}
+                        onClick={handleConnectDoctor}
+                        sx={{ borderRadius: 1.5, fontWeight: 800, px: 2.5 }}
+                      >
+                        {connectingDoctor ? <CircularProgress size={16} color="inherit" /> : t.connectDoctor}
+                      </Button>
+                    </Box>
+                  </Paper>
                 </Grid>
               </Grid>
             </Box>

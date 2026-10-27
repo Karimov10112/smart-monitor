@@ -1,0 +1,18 @@
+{
+  "short_name": "QandNazorati",
+  "name": "Qand Nazorati — Diabet Monitoringi",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#ffffff",
+  "theme_color": "#4f46e5",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "description": "Diabet monitoringi va salomatlik nazorati platformasi"
+}

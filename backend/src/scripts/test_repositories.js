@@ -4,7 +4,6 @@ require('dotenv').config({ path: path.join(__dirname, '../../.env') });
 
 const userRepository = require('../repositories/UserRepository');
 const bloodSugarRepository = require('../repositories/BloodSugarRepository');
-const productRepository = require('../repositories/ProductRepository');
 const reminderRepository = require('../repositories/ReminderRepository');
 
 async function test() {
@@ -20,9 +19,6 @@ async function test() {
 
     const recordCount = await bloodSugarRepository.countDocuments();
     console.log(`BloodSugarRepository: Found ${recordCount} records.`);
-
-    const productCount = await productRepository.countDocuments();
-    console.log(`ProductRepository: Found ${productCount} products.`);
 
     const reminderCount = await reminderRepository.countDocuments();
     console.log(`ReminderRepository: Found ${reminderCount} reminders.`);

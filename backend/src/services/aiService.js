@@ -52,8 +52,12 @@ const getAIResponse = async ({ userId, role, message, language = 'uz', conversat
     const User = require('../models/User');
     const admin = await User.findOne({ role: 'superadmin' }).select('deepseekApiKey');
     const apiKey = admin?.deepseekApiKey || process.env.DEEPSEEK_API_KEY;
+    const geminiKey = process.env.GEMINI_API_KEY;
 
-    if (!apiKey || apiKey.includes('your_')) {
+    const hasDeepSeek = apiKey && !apiKey.includes('your_');
+    const hasGemini = geminiKey && !geminiKey.includes('your_');
+
+    if (!hasDeepSeek && !hasGemini) {
       return "AI xizmati hozircha sozlanmagan.";
     }
 
@@ -64,34 +68,60 @@ const getAIResponse = async ({ userId, role, message, language = 'uz', conversat
 
     const systemPrompt = getSystemPrompt(language, role, recentRecords);
 
-    const messages = [
-      ...conversationHistory.slice(-10), 
-      { role: 'user', content: message },
-    ];
+    // If Gemini key is available, use fast Gemini 2.5 Flash
+    if (hasGemini) {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`;
+      const conversationContext = conversationHistory.slice(-6).map(m => `${m.role === 'user' ? 'Foydalanuvchi' : 'AI'}: ${m.content}`).join('\n');
+      const fullPrompt = `${systemPrompt}\n\n${conversationContext ? `Oldingi suhbat:\n${conversationContext}\n\n` : ''}Foydalanuvchi savoli: ${message}`;
 
-    const response = await fetch(DEEPSEEK_API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'deepseek-chat',
-        messages: [{ role: 'system', content: systemPrompt }, ...messages],
-        max_tokens: 1000,
-        temperature: 0.7,
-        stream: false,
-      }),
-    });
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: fullPrompt }] }],
+          generationConfig: {
+            temperature: 0.6,
+            maxOutputTokens: 1200,
+            thinkingConfig: { thinkingBudget: 0 }
+          }
+        })
+      });
 
-    if (!response.ok) {
-      const errText = await response.text();
-      console.error(`DeepSeek error (${response.status}):`, errText);
-      return "Kechirasiz, AI xizmatida vaqtinchalik xatolik yuz berdi.";
+      if (response.ok) {
+        const data = await response.json();
+        return data?.candidates?.[0]?.content?.parts?.[0]?.text || 'Javob olindi.';
+      }
     }
 
-    const data = await response.json();
-    return data.choices?.[0]?.message?.content || 'Javob olishda xato yuz berdi.';
+    // Otherwise fallback to DeepSeek if key is valid
+    if (hasDeepSeek) {
+      const messages = [
+        ...conversationHistory.slice(-10), 
+        { role: 'user', content: message },
+      ];
+
+      const response = await fetch(DEEPSEEK_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: 'deepseek-chat',
+          messages: [{ role: 'system', content: systemPrompt }, ...messages],
+          max_tokens: 1000,
+          temperature: 0.7,
+          stream: false,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return data.choices?.[0]?.message?.content || 'Javob olishda xato yuz berdi.';
+      }
+    }
+
+    return "Kechirasiz, AI xizmatida vaqtinchalik xatolik yuz berdi.";
   } catch (err) {
     console.error('AI Service error:', err);
     return "Server xatosi tufayli AI javob bera olmadi.";

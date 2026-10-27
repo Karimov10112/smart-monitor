@@ -1,6 +1,15 @@
 import axios from 'axios';
 
-const API_BASE = `${(import.meta as any).env?.VITE_API_URL || 'https://smart-monitor-4fv9.onrender.com'}/api`;
+const isLocal = typeof window !== 'undefined' && (
+  window.location.hostname === 'localhost' ||
+  window.location.hostname === '127.0.0.1' ||
+  window.location.hostname.startsWith('192.168.') ||
+  window.location.hostname.startsWith('10.')
+);
+
+const API_BASE = isLocal
+  ? 'http://localhost:5000/api'
+  : `${(import.meta as any).env?.VITE_API_URL || 'https://smart-monitor-4fv9.onrender.com'}/api`;
 
 const api = axios.create({
   baseURL: API_BASE,
@@ -81,8 +90,6 @@ export const adminAPI = {
   resetPassword: (id: string, newPassword: string) => api.patch(`/admin/users/${id}/reset-password`, { newPassword }),
 };
 
-
-
 export const reminderAPI = {
   getAll: () => api.get('/reminders'),
   create: (data: any) => api.post('/reminders', data),
@@ -94,6 +101,8 @@ export const doctorAPI = {
   getPatients: (params?: any) => api.get('/doctor/patients', { params }),
   getPatientRecords: (id: string) => api.get(`/doctor/patients/${id}/records`),
   addNote: (id: string, notes: string) => api.patch(`/doctor/patients/${id}/notes`, { notes }),
+  getMyCode: () => api.get('/doctor/my-code'),
+  connectByCode: (code: string) => api.post('/doctor/connect', { code }),
 };
 
 export const chatAPI = {

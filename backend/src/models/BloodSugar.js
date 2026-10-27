@@ -12,6 +12,11 @@ const bloodSugarSchema = new mongoose.Schema(
     medication: Boolean,
     medicationName: String,
     mealDescription: String,
+    systolicPressure: Number,
+    diastolicPressure: Number,
+    pulse: Number,
+    insulinUnits: Number,
+    carbsUnits: Number,
   },
   { timestamps: true }
 );

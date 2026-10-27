@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useApp } from '../contexts/AppContext';
 import { useAuth } from '../contexts/AuthContext';
 import { translations } from '../utils/translations';
@@ -25,7 +25,15 @@ import {
   useTheme,
   CircularProgress,
   Collapse,
-  IconButton
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  FormControlLabel,
+  Checkbox,
+  Alert,
+  AlertTitle
 } from '@mui/material';
 
 // MUI Icons
@@ -44,6 +52,13 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import CalculateIcon from '@mui/icons-material/Calculate';
+import DirectionsRunIcon from '@mui/icons-material/DirectionsRun';
+import MedicationIcon from '@mui/icons-material/Medication';
+import FavoriteIcon from '@mui/icons-material/Favorite';
+import SpeedIcon from '@mui/icons-material/Speed';
+import TuneIcon from '@mui/icons-material/Tune';
 
 export function DailyJournal() {
   const { language, addRecord } = useApp();
@@ -58,7 +73,52 @@ export function DailyJournal() {
     postMealLevel: '',
     notes: '',
     date: new Date().toISOString().split('T')[0],
+    systolicPressure: '',
+    diastolicPressure: '',
+    pulse: '',
+    insulinUnits: '',
+    carbsUnits: '',
+    exercise: false,
+    medication: false,
   });
+
+  const [showExtraParams, setShowExtraParams] = useState(false);
+  const [isXeModalOpen, setIsXeModalOpen] = useState(false);
+
+  // XE Calculator state
+  const [xeCarbs100, setXeCarbs100] = useState('50');
+  const [xeWeight, setXeWeight] = useState('100');
+  const [xeRatio, setXeRatio] = useState('1.0');
+
+  const parsedXE = useMemo(() => {
+    const c = parseFloat(xeCarbs100) || 0;
+    const w = parseFloat(xeWeight) || 0;
+    const xe = (w * c) / 100 / 12;
+    return Math.max(0, parseFloat(xe.toFixed(2)));
+  }, [xeCarbs100, xeWeight]);
+
+  const estimatedInsulin = useMemo(() => {
+    const r = parseFloat(xeRatio) || 1;
+    return (parsedXE * r).toFixed(1);
+  }, [parsedXE, xeRatio]);
+
+  const applyXeToForm = () => {
+    setFormData(prev => ({
+      ...prev,
+      carbsUnits: parsedXE > 0 ? String(parsedXE) : prev.carbsUnits,
+      insulinUnits: parseFloat(estimatedInsulin) > 0 ? String(estimatedInsulin) : prev.insulinUnits,
+      notes: prev.notes ? `${prev.notes} | ${parsedXE} XE` : `${parsedXE} XE`,
+    }));
+    setShowExtraParams(true);
+    setIsXeModalOpen(false);
+    toast.success('XE va insulin shaklga kiritildi!');
+  };
+
+  // Hypo / Hyper live detection
+  const fastingVal = parseFloat(formData.fastingLevel);
+  const postMealVal = parseFloat(formData.postMealLevel);
+  const isHypo = (fastingVal > 0 && fastingVal < 3.9) || (postMealVal > 0 && postMealVal < 3.9);
+  const isHyper = (fastingVal >= 13.0) || (postMealVal >= 13.0);
 
   // AI State
   const [aiLoading, setAiLoading] = useState(false);
@@ -69,14 +129,12 @@ export function DailyJournal() {
   const [aiError, setAiError] = useState<string | null>(null);
   const aiSectionRef = useRef<HTMLDivElement>(null);
 
-
-
-  const fetchAIRecommendation = async () => {
+  const fetchAIRecommendation = async (force: boolean = true) => {
     setAiLoading(true);
     setAiRecommendation(null);
     setAiError(null);
     try {
-      const { data } = await api.post('/ai/nutrition', { language });
+      const { data } = await api.post('/ai/nutrition', { language, forceRefresh: force });
       if (data.success) {
         setAiRecommendation(data.recommendation);
         setAiMeta(data.meta);
@@ -106,10 +164,17 @@ export function DailyJournal() {
     setLoading(true);
     try {
       await addRecord({
-        fastingLevel: parseFloat(formData.fastingLevel),
+        fastingLevel: formData.fastingLevel ? parseFloat(formData.fastingLevel) : (undefined as any),
         postMealLevel: formData.postMealLevel ? parseFloat(formData.postMealLevel) : undefined,
         notes: formData.notes,
         date: new Date(formData.date).toISOString(),
+        systolicPressure: formData.systolicPressure ? parseFloat(formData.systolicPressure) : undefined,
+        diastolicPressure: formData.diastolicPressure ? parseFloat(formData.diastolicPressure) : undefined,
+        pulse: formData.pulse ? parseFloat(formData.pulse) : undefined,
+        insulinUnits: formData.insulinUnits ? parseFloat(formData.insulinUnits) : undefined,
+        carbsUnits: formData.carbsUnits ? parseFloat(formData.carbsUnits) : undefined,
+        exercise: formData.exercise,
+        medication: formData.medication,
       });
       toast.success(t.success);
       setSavedRecord(true);
@@ -118,12 +183,17 @@ export function DailyJournal() {
         postMealLevel: '',
         notes: '',
         date: new Date().toISOString().split('T')[0],
+        systolicPressure: '',
+        diastolicPressure: '',
+        pulse: '',
+        insulinUnits: '',
+        carbsUnits: '',
+        exercise: false,
+        medication: false,
       });
 
       // Auto-fetch AI recommendation after saving
-      if (user?.height && user?.weight) {
-        await fetchAIRecommendation();
-      }
+      await fetchAIRecommendation();
     } finally {
       setLoading(false);
     }
@@ -214,6 +284,38 @@ export function DailyJournal() {
 
               <Box component="form" onSubmit={handleSubmit} noValidate>
                 <Stack spacing={3}>
+                  {/* SOS Hypoglycemia Alert */}
+                  {isHypo && (
+                    <Alert 
+                      severity="error" 
+                      icon={<WarningAmberIcon fontSize="inherit" />}
+                      sx={{ 
+                        borderRadius: 2, 
+                        border: '1px solid #ef4444', 
+                        bgcolor: alpha('#ef4444', 0.1)
+                      }}
+                    >
+                      <AlertTitle sx={{ fontWeight: 800 }}>{t.hypoWarningTitle}</AlertTitle>
+                      {t.hypoRule15}
+                    </Alert>
+                  )}
+
+                  {/* Hyperglycemia Alert */}
+                  {isHyper && (
+                    <Alert 
+                      severity="warning" 
+                      icon={<WarningAmberIcon fontSize="inherit" />}
+                      sx={{ 
+                        borderRadius: 2, 
+                        border: '1px solid #f59e0b',
+                        bgcolor: alpha('#f59e0b', 0.1)
+                      }}
+                    >
+                      <AlertTitle sx={{ fontWeight: 800 }}>{t.hyperWarningTitle}</AlertTitle>
+                      {t.hyperAdvice}
+                    </Alert>
+                  )}
+
                   <TextField
                     label={t.date}
                     type="date"
@@ -261,6 +363,135 @@ export function DailyJournal() {
                     </Grid>
                   </Grid>
 
+                  {/* Tools Row: XE Calculator & Extra Params */}
+                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center' }}>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      color="secondary"
+                      startIcon={<CalculateIcon fontSize="small" />}
+                      onClick={() => setIsXeModalOpen(true)}
+                      sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700 }}
+                    >
+                      {t.xeCalculator}
+                    </Button>
+                    <Button
+                      size="small"
+                      variant="text"
+                      color="primary"
+                      startIcon={<TuneIcon fontSize="small" />}
+                      endIcon={showExtraParams ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
+                      onClick={() => setShowExtraParams(!showExtraParams)}
+                      sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700 }}
+                    >
+                      {t.extraParams}
+                    </Button>
+                  </Box>
+
+                  {/* Collapsible Extra Health Metrics */}
+                  <Collapse in={showExtraParams}>
+                    <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 2, bgcolor: alpha(theme.palette.primary.main, 0.02) }}>
+                      <Stack spacing={2}>
+                        <Typography variant="caption" sx={{ fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1, color: 'text.secondary' }}>
+                          {t.extraParams}
+                        </Typography>
+
+                        <Grid container spacing={2}>
+                          <Grid size={{ xs: 6, sm: 4 }}>
+                            <TextField
+                              label={t.systolicPressure}
+                              type="number"
+                              size="small"
+                              placeholder="120"
+                              value={formData.systolicPressure}
+                              onChange={(e) => setFormData({ ...formData, systolicPressure: e.target.value })}
+                              fullWidth
+                              InputProps={{
+                                startAdornment: <SpeedIcon sx={{ mr: 1, color: 'text.secondary', fontSize: 18 }} />
+                              }}
+                            />
+                          </Grid>
+                          <Grid size={{ xs: 6, sm: 4 }}>
+                            <TextField
+                              label={t.diastolicPressure}
+                              type="number"
+                              size="small"
+                              placeholder="80"
+                              value={formData.diastolicPressure}
+                              onChange={(e) => setFormData({ ...formData, diastolicPressure: e.target.value })}
+                              fullWidth
+                              InputProps={{
+                                startAdornment: <SpeedIcon sx={{ mr: 1, color: 'text.secondary', fontSize: 18 }} />
+                              }}
+                            />
+                          </Grid>
+                          <Grid size={{ xs: 12, sm: 4 }}>
+                            <TextField
+                              label={t.pulse}
+                              type="number"
+                              size="small"
+                              placeholder="72"
+                              value={formData.pulse}
+                              onChange={(e) => setFormData({ ...formData, pulse: e.target.value })}
+                              fullWidth
+                              InputProps={{
+                                startAdornment: <FavoriteIcon sx={{ mr: 1, color: 'error.main', fontSize: 18 }} />
+                              }}
+                            />
+                          </Grid>
+                        </Grid>
+
+                        <Grid container spacing={2}>
+                          <Grid size={{ xs: 6 }}>
+                            <TextField
+                              label={t.carbsUnitsXE}
+                              type="number"
+                              size="small"
+                              inputProps={{ step: 0.1 }}
+                              placeholder="2.0"
+                              value={formData.carbsUnits}
+                              onChange={(e) => setFormData({ ...formData, carbsUnits: e.target.value })}
+                              fullWidth
+                              InputProps={{
+                                startAdornment: <RestaurantIcon sx={{ mr: 1, color: 'text.secondary', fontSize: 18 }} />
+                              }}
+                            />
+                          </Grid>
+                          <Grid size={{ xs: 6 }}>
+                            <TextField
+                              label={t.insulinDose}
+                              type="number"
+                              size="small"
+                              inputProps={{ step: 0.5 }}
+                              placeholder="4.0"
+                              value={formData.insulinUnits}
+                              onChange={(e) => setFormData({ ...formData, insulinUnits: e.target.value })}
+                              fullWidth
+                              InputProps={{
+                                startAdornment: <MedicationIcon sx={{ mr: 1, color: 'text.secondary', fontSize: 18 }} />
+                              }}
+                            />
+                          </Grid>
+                        </Grid>
+
+                        <FormControlLabel
+                          control={
+                            <Checkbox
+                              checked={formData.exercise}
+                              onChange={(e) => setFormData({ ...formData, exercise: e.target.checked })}
+                              color="primary"
+                            />
+                          }
+                          label={
+                            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                              🏃‍♂️ {t.exerciseDone}
+                            </Typography>
+                          }
+                        />
+                      </Stack>
+                    </Paper>
+                  </Collapse>
+
                   <TextField
                     label={t.notes}
                     placeholder={t.notes + '...'}
@@ -295,7 +526,7 @@ export function DailyJournal() {
           </Card>
 
           {/* AI Recommendation Section (shown after saving or when triggered) */}
-          {(aiLoading || aiRecommendation || savedRecord || aiError) && hasProfile && (
+          {(aiLoading || aiRecommendation || savedRecord || aiError) && (
             <Box ref={aiSectionRef} sx={{ mb: 3 }}>
               {/* Loading state */}
               {aiLoading && (
@@ -372,7 +603,7 @@ export function DailyJournal() {
                         fontWeight: 900, textTransform: 'uppercase', letterSpacing: 2,
                         color: 'rgba(255,255,255,0.9)', display: 'block', fontSize: 9
                       }}>
-                        ✨ GEMINI AI
+                        ✨ GEMINI 2.5 FLASH AI
                       </Typography>
                       <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.75)', fontWeight: 700 }}>
                         {t.aiPersonalizedAdvice}
@@ -545,8 +776,8 @@ export function DailyJournal() {
             </Card>
           )}
 
-          {/* Quick AI Button (if profile complete and no recommendation yet) */}
-          {hasProfile && !aiRecommendation && !aiLoading && !aiError && (
+          {/* Quick AI Button (if no recommendation yet) */}
+          {!aiRecommendation && !aiLoading && !aiError && (
             <Card elevation={0} sx={{
               border: `1px solid ${alpha('#8b5cf6', 0.2)}`,
               background: `linear-gradient(135deg, ${alpha('#8b5cf6', 0.03)}, ${alpha('#6366f1', 0.05)})`,
@@ -582,6 +813,104 @@ export function DailyJournal() {
           )}
         </Stack>
       </Grid>
+
+      {/* XE Calculator Dialog */}
+      <Dialog 
+        open={isXeModalOpen} 
+        onClose={() => setIsXeModalOpen(false)}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: 3 } }}
+      >
+        <DialogTitle sx={{ fontWeight: 800, display: 'flex', alignItems: 'center', gap: 1 }}>
+          <CalculateIcon color="primary" /> {t.xeCalculator}
+        </DialogTitle>
+        <DialogContent dividers>
+          <Stack spacing={2.5} sx={{ pt: 1 }}>
+            {/* Quick Presets */}
+            <Box>
+              <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', mb: 1, display: 'block' }}>
+                Tezkor tanlov:
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 0.8, flexWrap: 'wrap' }}>
+                {[
+                  { name: 'Oq non', carbs: 50 },
+                  { name: 'Javdar non', carbs: 40 },
+                  { name: 'Guruch', carbs: 28 },
+                  { name: 'Kartoshka', carbs: 16 },
+                  { name: 'Makaron', carbs: 30 },
+                  { name: 'Olma', carbs: 14 },
+                ].map((preset) => (
+                  <Chip
+                    key={preset.name}
+                    label={`${preset.name} (${preset.carbs}%)`}
+                    size="small"
+                    onClick={() => setXeCarbs100(String(preset.carbs))}
+                    clickable
+                    variant={xeCarbs100 === String(preset.carbs) ? 'filled' : 'outlined'}
+                    color="primary"
+                  />
+                ))}
+              </Box>
+            </Box>
+
+            <TextField
+              label={t.foodCarbs100g}
+              type="number"
+              size="small"
+              value={xeCarbs100}
+              onChange={(e) => setXeCarbs100(e.target.value)}
+              fullWidth
+            />
+            <TextField
+              label={t.foodWeightGram}
+              type="number"
+              size="small"
+              value={xeWeight}
+              onChange={(e) => setXeWeight(e.target.value)}
+              fullWidth
+            />
+            <TextField
+              label="Insulin koeffitsienti (1 XE ga doza)"
+              type="number"
+              size="small"
+              inputProps={{ step: 0.1 }}
+              value={xeRatio}
+              onChange={(e) => setXeRatio(e.target.value)}
+              fullWidth
+            />
+
+            <Paper sx={{ p: 2, bgcolor: alpha(theme.palette.primary.main, 0.08), borderRadius: 2 }}>
+              <Grid container spacing={2} textAlign="center">
+                <Grid size={{ xs: 6 }}>
+                  <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary' }}>
+                    Non birligi (XE)
+                  </Typography>
+                  <Typography variant="h5" sx={{ fontWeight: 900, color: 'primary.main' }}>
+                    {parsedXE} XE
+                  </Typography>
+                </Grid>
+                <Grid size={{ xs: 6 }}>
+                  <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary' }}>
+                    Tavsiya insulin
+                  </Typography>
+                  <Typography variant="h5" sx={{ fontWeight: 900, color: 'secondary.main' }}>
+                    ~{estimatedInsulin} birlik
+                  </Typography>
+                </Grid>
+              </Grid>
+            </Paper>
+          </Stack>
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={() => setIsXeModalOpen(false)} sx={{ fontWeight: 700 }}>
+            {t.cancel}
+          </Button>
+          <Button onClick={applyXeToForm} variant="contained" sx={{ fontWeight: 800 }}>
+            {t.applyToForm}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Grid>
   );
 }

@@ -16,6 +16,11 @@ export interface BloodSugarRecord {
   mood?: string;
   exercise?: boolean;
   medication?: boolean;
+  systolicPressure?: number;
+  diastolicPressure?: number;
+  pulse?: number;
+  insulinUnits?: number;
+  carbsUnits?: number;
   createdAt?: string;
 }
 
@@ -37,7 +42,16 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-const SOCKET_URL = (import.meta as any).env?.VITE_API_URL || 'https://smart-monitor-4fv9.onrender.com';
+const isLocalHost = typeof window !== 'undefined' && (
+  window.location.hostname === 'localhost' ||
+  window.location.hostname === '127.0.0.1' ||
+  window.location.hostname.startsWith('192.168.') ||
+  window.location.hostname.startsWith('10.')
+);
+
+const SOCKET_URL = isLocalHost
+  ? 'http://localhost:5000'
+  : ((import.meta as any).env?.VITE_API_URL || 'https://smart-monitor-4fv9.onrender.com');
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const { isAuthenticated, user, updateUser } = useAuth();
