@@ -11,7 +11,10 @@
  *       ├── nutrition.js
  *       └── alertDoctor.js
  *
- * LLM: Gemini 2.5 Flash (primary) → Groq Llama 3.3 70B (fallback)
+ * Resilient Multi-Provider Strategy:
+ *   Primary:   Google Gemini 2.5 Flash (with function-calling)
+ *   Fallback:  Groq OpenAI/GPT-120B (with full OpenAI-compatible function-calling)
+ *   Result: If Gemini hits free quota (429), Groq takes over seamlessly without user noticing.
  */
 
 const getAgentSystemPrompt = require('./prompts');
@@ -27,8 +30,8 @@ const GROQ_MODEL         = 'openai/gpt-oss-120b';
 const getGeminiKey = () => process.env.GEMINI_API_KEY;
 const getGroqKey   = () => process.env.GROQ_API_KEY;
 
-// ─── Tool declarations for Gemini function-calling ──────────────────────────
-const TOOL_DECLARATIONS = [
+// ─── Gemini Tool declarations ────────────────────────────────────────────────
+const GEMINI_TOOL_DECLARATIONS = [
   {
     name: 'get_blood_sugar',
     description: 'Foydalanuvchining qon shakari yozuvlarini DB dan oladi. Qand darajasi, o\'rtacha va trend.',
@@ -61,7 +64,7 @@ const TOOL_DECLARATIONS = [
   },
   {
     name: 'alert_doctor',
-    description: 'Kritik holatlarda shifokorga ogohlantirish. FAQAT qand ≥14 yoki ≤3 mmol/l bo\'lsa chaqiring.',
+    description: 'Kritik holatlarda shifokorga ogohlantirish. Och qoringa ≥11 yoki to\'q qoringa ≥14, yoxud ≤3.5 mmol/l bo\'lsa chaqiring.',
     parameters: {
       type: 'object',
       properties: {
@@ -73,20 +76,30 @@ const TOOL_DECLARATIONS = [
   },
 ];
 
-// ─── Tool executor — userId always from JWT (req.user._id) ──────────────────
+// ─── Groq (OpenAI-compatible) Tool declarations ─────────────────────────────
+const GROQ_TOOL_DECLARATIONS = GEMINI_TOOL_DECLARATIONS.map(t => ({
+  type: 'function',
+  function: {
+    name: t.name,
+    description: t.description,
+    parameters: t.parameters,
+  },
+}));
+
+// ─── Tool executor ──────────────────────────────────────────────────────────
 const executeTool = async (name, args, userId, io, language) => {
-  console.log('🔧 Tool:', name, '| User:', userId);
+  console.log('🔧 Tool:', name, '| User:', userId, '| Args:', args);
 
   switch (name) {
-    case 'get_blood_sugar':    return await getBloodSugar(userId, args);
-    case 'get_user_profile':   return await getUserProfile(userId);
+    case 'get_blood_sugar':      return await getBloodSugar(userId, args);
+    case 'get_user_profile':     return await getUserProfile(userId);
     case 'get_nutrition_advice': return await getNutritionAdvice(userId, args);
-    case 'alert_doctor':       return await alertDoctor(userId, args, io, language);
-    default:                   return { error: 'Noma\'lum tool: ' + name };
+    case 'alert_doctor':         return await alertDoctor(userId, args, io, language);
+    default:                     return { error: 'Noma\'lum tool: ' + name };
   }
 };
 
-// ─── Gemini call with function declarations ──────────────────────────────────
+// ─── 1. Call Gemini ─────────────────────────────────────────────────────────
 const callGemini = async (systemPrompt, contents) => {
   const apiKey = getGeminiKey();
   if (!apiKey || apiKey.includes('your_')) throw new Error('GEMINI_API_KEY sozlanmagan');
@@ -99,7 +112,7 @@ const callGemini = async (systemPrompt, contents) => {
     body: JSON.stringify({
       systemInstruction: { parts: [{ text: systemPrompt }] },
       contents,
-      tools: [{ functionDeclarations: TOOL_DECLARATIONS }],
+      tools: [{ functionDeclarations: GEMINI_TOOL_DECLARATIONS }],
       generationConfig: {
         temperature: 0.7,
         maxOutputTokens: 1500,
@@ -115,8 +128,8 @@ const callGemini = async (systemPrompt, contents) => {
   return await response.json();
 };
 
-// ─── Groq fallback (no function calling — plain chat) ───────────────────────
-const callGroq = async (systemPrompt, history, userMessage) => {
+// ─── 2. Call Groq with full tool-calling ────────────────────────────────────
+const runGroqAgentLoop = async ({ systemPrompt, history, userMessage, userId, io, language }) => {
   const apiKey = getGroqKey();
   if (!apiKey || apiKey.includes('your_')) throw new Error('GROQ_API_KEY sozlanmagan');
 
@@ -129,101 +142,148 @@ const callGroq = async (systemPrompt, history, userMessage) => {
     { role: 'user', content: userMessage },
   ];
 
-  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + apiKey,
-    },
-    body: JSON.stringify({ model: GROQ_MODEL, messages, temperature: 0.7, max_tokens: 1200 }),
-  });
+  const toolsUsed = [];
+  const MAX_TOOL_STEPS = 4;
 
-  if (!response.ok) {
-    const err = await response.text().catch(() => '');
-    throw new Error(`Groq ${response.status}: ${err.slice(0, 200)}`);
+  for (let step = 0; step < MAX_TOOL_STEPS; step++) {
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + apiKey,
+      },
+      body: JSON.stringify({
+        model: GROQ_MODEL,
+        messages,
+        tools: GROQ_TOOL_DECLARATIONS,
+        tool_choice: 'auto',
+        temperature: 0.7,
+        max_tokens: 1500,
+      }),
+    });
+
+    if (!response.ok) {
+      const err = await response.text().catch(() => '');
+      throw new Error(`Groq ${response.status}: ${err.slice(0, 200)}`);
+    }
+
+    const data = await response.json();
+    const choice = data?.choices?.[0];
+    const assistantMsg = choice?.message;
+
+    if (!assistantMsg) break;
+
+    messages.push(assistantMsg);
+
+    // If no tool calls, return final message
+    if (!assistantMsg.tool_calls || assistantMsg.tool_calls.length === 0) {
+      return {
+        text: assistantMsg.content || '',
+        toolsUsed,
+      };
+    }
+
+    // Execute each tool call
+    for (const tc of assistantMsg.tool_calls) {
+      const toolName = tc.function.name;
+      toolsUsed.push(toolName);
+      let parsedArgs = {};
+      try {
+        parsedArgs = JSON.parse(tc.function.arguments || '{}');
+      } catch (_) {}
+
+      const toolResult = await executeTool(toolName, parsedArgs, userId, io, language);
+
+      messages.push({
+        role: 'tool',
+        tool_call_id: tc.id,
+        content: JSON.stringify(toolResult),
+      });
+    }
   }
-  const data = await response.json();
-  return data?.choices?.[0]?.message?.content || '';
+
+  // Fallback if loop ended with a tool response
+  const lastMsg = messages[messages.length - 1];
+  return {
+    text: lastMsg?.content || 'Javob tayyorlandi.',
+    toolsUsed,
+  };
 };
 
 // ─── Main agent loop ─────────────────────────────────────────────────────────
-/**
- * @param {string}   userId            - req.user._id (JWT verified — NEVER trust client)
- * @param {string}   message           - user's message
- * @param {string}   language          - 'uz' | 'ru' | 'en'
- * @param {Array}    conversationHistory - [{role, content}] max last 20
- * @param {object}   io                - socket.io instance (app.get('io'))
- */
 const runAgentLoop = async ({ userId, message, language, conversationHistory, io }) => {
   language            = language || 'uz';
   conversationHistory = Array.isArray(conversationHistory) ? conversationHistory : [];
 
   const systemPrompt = getAgentSystemPrompt(language);
 
-  // Build Gemini-format contents from history
-  const contents = conversationHistory.slice(-20).map(turn => ({
-    role: turn.role === 'assistant' ? 'model' : 'user',
-    parts: [{ text: turn.content }],
-  }));
-  contents.push({ role: 'user', parts: [{ text: message }] });
+  // ── Try Gemini Loop First ──────────────────────────────────────────────────
+  try {
+    const contents = conversationHistory.slice(-20).map(turn => ({
+      role: turn.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: turn.content }],
+    }));
+    contents.push({ role: 'user', parts: [{ text: message }] });
 
-  let finalText = '';
-  let usedProvider = 'Gemini';
-  let toolsUsed = [];
+    let finalText = '';
+    const toolsUsed = [];
+    const MAX_ITERATIONS = 5;
 
-  const MAX_ITERATIONS = 5;
+    for (let i = 0; i < MAX_ITERATIONS; i++) {
+      console.log(`🤖 Gemini iteration ${i + 1}/${MAX_ITERATIONS}`);
 
-  for (let i = 0; i < MAX_ITERATIONS; i++) {
-    console.log(`🤖 Agent iteration ${i + 1}/${MAX_ITERATIONS}`);
+      const responseData = await callGemini(systemPrompt, contents);
+      const parts = responseData?.candidates?.[0]?.content?.parts || [];
+      const functionCalls = parts.filter(p => p.functionCall);
 
-    let responseData;
-    try {
-      responseData = await callGemini(systemPrompt, contents);
-    } catch (geminiErr) {
-      console.error('⚠️ Gemini failed, trying Groq:', geminiErr.message);
-      try {
-        finalText = await callGroq(systemPrompt, conversationHistory, message);
-        usedProvider = 'Groq';
-      } catch (groqErr) {
-        throw new Error('Gemini: ' + geminiErr.message + ' | Groq: ' + groqErr.message);
+      if (functionCalls.length === 0) {
+        finalText = parts.map(p => p.text || '').join('').trim();
+        break;
       }
-      break;
+
+      contents.push({ role: 'model', parts });
+
+      const toolResultParts = [];
+      for (const part of functionCalls) {
+        const { name, args } = part.functionCall;
+        toolsUsed.push(name);
+        const result = await executeTool(name, args || {}, userId, io, language);
+        toolResultParts.push({
+          functionResponse: { name, response: { result } },
+        });
+      }
+
+      contents.push({ role: 'user', parts: toolResultParts });
     }
 
-    const parts = responseData?.candidates?.[0]?.content?.parts || [];
-    const functionCalls = parts.filter(p => p.functionCall);
-
-    if (functionCalls.length === 0) {
-      finalText = parts.map(p => p.text || '').join('').trim();
-      break;
+    if (finalText) {
+      return { text: finalText, provider: 'Gemini', toolsUsed };
     }
-
-    // Model response with function calls → append to context
-    contents.push({ role: 'model', parts });
-
-    // Execute tools and collect results
-    const toolResultParts = [];
-    for (const part of functionCalls) {
-      const { name, args } = part.functionCall;
-      toolsUsed.push(name);
-      const result = await executeTool(name, args || {}, userId, io, language);
-      toolResultParts.push({
-        functionResponse: { name, response: { result } },
-      });
-    }
-
-    contents.push({ role: 'user', parts: toolResultParts });
+  } catch (geminiErr) {
+    console.warn('⚠️ Gemini error or quota reached, falling back to Groq:', geminiErr.message);
   }
 
-  if (!finalText) {
-    finalText = {
-      uz: 'Kechirasiz, javob generatsiyasida muammo yuz berdi. Qayta urinib ko\'ring.',
-      ru: 'Извините, проблема при генерации ответа. Попробуйте снова.',
-      en: 'Sorry, there was an issue generating a response. Please try again.',
-    }[language] || 'Xato yuz berdi.';
-  }
+  // ── Seamless Groq Fallback with full Tool-Calling ──────────────────────────
+  try {
+    console.log('🚀 Running Groq Tool-Calling Agent Fallback...');
+    const groqResult = await runGroqAgentLoop({
+      systemPrompt,
+      history: conversationHistory,
+      userMessage: message,
+      userId,
+      io,
+      language,
+    });
 
-  return { text: finalText, provider: usedProvider, toolsUsed };
+    return {
+      text: groqResult.text,
+      provider: 'Groq',
+      toolsUsed: groqResult.toolsUsed,
+    };
+  } catch (groqErr) {
+    console.error('❌ Groq fallback also failed:', groqErr.message);
+    throw new Error('AI xizmatlarida xatolik yuz berdi. Iltimos, bir ozdan keyin urinib ko\'ring.');
+  }
 };
 
 module.exports = { runAgentLoop };
