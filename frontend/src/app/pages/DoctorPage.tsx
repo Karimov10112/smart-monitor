@@ -54,6 +54,7 @@ import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import ChatIcon from '@mui/icons-material/Chat';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import NotificationBell from '../components/NotificationBell';
 
 type TabType = 'patients' | 'patient-detail' | 'chat';
 
@@ -428,7 +429,7 @@ export default function DoctorPage() {
             </Typography>
           </Box>
           <Stack direction="row" spacing={2} alignItems="center">
-            <IconButton sx={{ bgcolor: alpha(theme.palette.divider, 0.4) }}><NotificationsIcon fontSize="small" /></IconButton>
+            <NotificationBell />
             <Avatar src={user?.avatar} sx={{ width: 44, height: 44, borderRadius: 2, bgcolor: 'secondary.main', fontWeight: 900 }}>{user?.firstName?.[0]}</Avatar>
           </Stack>
         </Stack>

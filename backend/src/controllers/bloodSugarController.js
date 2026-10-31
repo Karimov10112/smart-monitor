@@ -1,42 +1,102 @@
 const bloodSugarRepository = require('../repositories/BloodSugarRepository');
-
 const User = require('../models/User');
 const AuditLog = require('../models/AuditLog');
+const Notification = require('../models/Notification');
 
 const addRecord = async (req, res) => {
   try {
     const record = await bloodSugarRepository.create({ ...req.body, user: req.user._id });
 
-    // ── Avtomatik shifokorga ogohlantirish (≥ 14 yoki ≤ 3.0 mmol/l) ──────────────
-    const level = parseFloat(record.fastingLevel || record.postMealLevel || record.level || 0);
-    if (!isNaN(level) && (level >= 14 || (level <= 3.0 && level > 0))) {
+    // ── Shifokorga avtomatik ogohlantirish mezonlari ─────────────────────────
+    // Och qoringa:  ≥ 11.0 mmol/l yoki ≤ 3.5 mmol/l
+    // To'q qoringa:  ≥ 14.0 mmol/l yoki ≤ 3.5 mmol/l
+    const fasting = parseFloat(record.fastingLevel || 0);
+    const postMeal = parseFloat(record.postMealLevel || 0);
+
+    let isCritical = false;
+    let criticalLevel = 0;
+    let category = '';
+    let alertType = 'CRITICAL_HIGH';
+
+    if (fasting > 0) {
+      if (fasting >= 11.0) {
+        isCritical = true;
+        criticalLevel = fasting;
+        category = 'fasting';
+        alertType = 'CRITICAL_HIGH';
+      } else if (fasting <= 3.5) {
+        isCritical = true;
+        criticalLevel = fasting;
+        category = 'fasting';
+        alertType = 'CRITICAL_LOW';
+      }
+    }
+
+    if (!isCritical && postMeal > 0) {
+      if (postMeal >= 14.0) {
+        isCritical = true;
+        criticalLevel = postMeal;
+        category = 'post-meal';
+        alertType = 'CRITICAL_HIGH';
+      } else if (postMeal <= 3.5) {
+        isCritical = true;
+        criticalLevel = postMeal;
+        category = 'post-meal';
+        alertType = 'CRITICAL_LOW';
+      }
+    }
+
+    if (isCritical) {
       try {
         const patient = await User.findById(req.user._id).select('firstName lastName assignedDoctor');
         const io = req.app.get('io');
-        if (patient && patient.assignedDoctor && io) {
-          const alertType = level >= 14 ? 'CRITICAL_HIGH' : 'CRITICAL_LOW';
+        if (patient && patient.assignedDoctor) {
           const patientName = `${patient.firstName || ''} ${patient.lastName || ''}`.trim() || 'Bemor';
-          
-          io.to(patient.assignedDoctor.toString()).emit('doctor-alert', {
+          const catLabel = category === 'fasting' ? 'Och qoringa' : 'Ovqatdan keyin (to\'q qoringa)';
+          const dangerText = alertType === 'CRITICAL_HIGH' ? 'O\'TA YUQORI' : 'XAVFLI DARAJADA PAST';
+
+          const title = `🚨 Shoshilinch ogohlantirish: ${patientName}`;
+          const message = `Qand darajasi: ${criticalLevel} mmol/l (${catLabel}) — ${dangerText}! Zudlik bilan tekshiring.`;
+
+          // 1. Bazada bildirishnomani saqlash (o'qilmaguncha saqlanib turadi)
+          const newNotif = await Notification.create({
+            recipient: patient.assignedDoctor,
+            sender: req.user._id,
             type: alertType,
-            patientId: req.user._id,
-            patientName,
-            sugarLevel: level,
-            message: `🚨 Bemor ${patientName} kritik qand darajasini saqladi: ${level} mmol/l!`,
-            timestamp: new Date().toISOString(),
+            title,
+            message,
+            sugarLevel: criticalLevel,
+            category,
+            isRead: false,
           });
 
+          // 2. Real-time socket orqali shifokorga yetkazish
+          if (io) {
+            io.to(patient.assignedDoctor.toString()).emit('doctor-alert', {
+              _id: newNotif._id,
+              type: alertType,
+              patientId: req.user._id,
+              patientName,
+              sugarLevel: criticalLevel,
+              category,
+              message,
+              timestamp: newNotif.createdAt,
+            });
+          }
+
+          // 3. Tizim audit logiga yozish
           await AuditLog.create({
             user: req.user._id,
             action: 'AGENT_DOCTOR_ALERT',
             details: {
-              sugarLevel: level,
+              sugarLevel: criticalLevel,
+              category,
               alertType,
               doctorId: patient.assignedDoctor,
               source: 'JOURNAL_AUTO_ALERT',
             },
           });
-          console.log(`🚨 Auto-alert sent to doctor ${patient.assignedDoctor} for sugar level ${level}`);
+          console.log(`🚨 Auto-alert sent & saved for doctor ${patient.assignedDoctor}: ${criticalLevel} mmol/l (${category})`);
         }
       } catch (alertErr) {
         console.error('Auto doctor alert error:', alertErr.message);

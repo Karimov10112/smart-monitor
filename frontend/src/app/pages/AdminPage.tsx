@@ -67,6 +67,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import NotificationsIcon from '@mui/icons-material/Notifications';
+import NotificationBell from '../components/NotificationBell';
 
 type TabType = 'dashboard' | 'users' | 'audit';
 
@@ -435,7 +436,7 @@ export default function AdminPage() {
              <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary' }}>{t.admin} / {t[currentTab] || currentTab}</Typography>
           </Box>
           <Stack direction="row" spacing={2} alignItems="center">
-            <IconButton sx={{ bgcolor: alpha(theme.palette.divider, 0.4) }}><NotificationsIcon fontSize="small" /></IconButton>
+            <NotificationBell />
             <Avatar src={user?.avatar} sx={{ width: 44, height: 44, borderRadius: 2, bgcolor: 'primary.main', fontWeight: 900 }}>{user?.firstName?.[0]}</Avatar>
           </Stack>
         </Stack>

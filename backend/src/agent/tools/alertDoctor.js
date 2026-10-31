@@ -16,6 +16,7 @@
 
 const User = require('../../models/User');
 const AuditLog = require('../../models/AuditLog');
+const Notification = require('../../models/Notification');
 
 const CRITICAL_HIGH = 14; // mmol/l — strict server-side threshold
 const CRITICAL_LOW  = 3.0;
@@ -78,17 +79,34 @@ module.exports = async function alertDoctor(userId, args, io, lang) {
 
   const alertText = alertMessages[lang] || alertMessages.uz;
 
-  // ── 3. Socket.io real-time notification to doctor ────────────────────────
+  // ── 3. Save Notification in DB & emit Socket.io real-time event ─────────
+  let notifDoc = null;
+  try {
+    notifDoc = await Notification.create({
+      recipient: patient.assignedDoctor,
+      sender: userId,
+      type: alertType,
+      title: `🚨 Kritik ogohlantirish: ${patientName}`,
+      message: alertText,
+      sugarLevel,
+      category: sugarLevel >= CRITICAL_HIGH ? 'critical-high' : 'critical-low',
+      isRead: false,
+    });
+  } catch (dbErr) {
+    console.error('Notification create error:', dbErr.message);
+  }
+
   let socketSent = false;
   if (io) {
     try {
       io.to(patient.assignedDoctor.toString()).emit('doctor-alert', {
+        _id: notifDoc?._id,
         type: alertType,
         patientId: userId,
         patientName,
         sugarLevel,
         message: alertText,
-        timestamp: new Date().toISOString(),
+        timestamp: notifDoc?.createdAt || new Date().toISOString(),
       });
       socketSent = true;
       console.log(`🚨 Doctor alert socket sent to room: ${patient.assignedDoctor}`);

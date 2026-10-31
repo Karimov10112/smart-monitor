@@ -167,12 +167,16 @@ const doctorRoutes = require('./routes/doctor');
 
 const reminderRoutes = require('./routes/reminders');
 const chatRoutes = require('./routes/chat');
+const notificationRoutes = require('./routes/notifications');
 
 app.use('/api/auth', authRoutes);
 app.use('/auth', authRoutes);
 
 app.use('/api/admin', adminRoutes);
 app.use('/admin', adminRoutes);
+
+app.use('/api/notifications', notificationRoutes);
+app.use('/notifications', notificationRoutes);
 
 app.use('/api/blood-sugar', bloodSugarRoutes);
 app.use('/blood-sugar', bloodSugarRoutes);

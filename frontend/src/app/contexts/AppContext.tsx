@@ -38,6 +38,11 @@ interface AppContextType {
   setCurrentFasting: (v?: number) => void;
   setCurrentPostMeal: (v?: number) => void;
   socket: any;
+  notifications: any[];
+  unreadNotificationsCount: number;
+  loadNotifications: () => Promise<void>;
+  markNotificationRead: (id: string) => Promise<void>;
+  markAllNotificationsRead: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -70,6 +75,36 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [records, setRecords] = useState<BloodSugarRecord[]>([]);
   const [currentFasting, setCurrentFasting] = useState<number | undefined>();
   const [currentPostMeal, setCurrentPostMeal] = useState<number | undefined>();
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [unreadNotificationsCount, setUnreadNotificationsCount] = useState<number>(0);
+
+  const loadNotifications = useCallback(async () => {
+    if (!isAuthenticated) return;
+    try {
+      const { notificationAPI } = await import('../utils/api');
+      const { data } = await notificationAPI.getAll();
+      setNotifications(data.notifications || []);
+      setUnreadNotificationsCount(data.unreadCount || 0);
+    } catch {}
+  }, [isAuthenticated]);
+
+  const markNotificationRead = async (id: string) => {
+    try {
+      const { notificationAPI } = await import('../utils/api');
+      await notificationAPI.markAsRead(id);
+      setNotifications(prev => prev.map(n => n._id === id ? { ...n, isRead: true } : n));
+      setUnreadNotificationsCount(prev => Math.max(0, prev - 1));
+    } catch {}
+  };
+
+  const markAllNotificationsRead = async () => {
+    try {
+      const { notificationAPI } = await import('../utils/api');
+      await notificationAPI.markAllAsRead();
+      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+      setUnreadNotificationsCount(0);
+    } catch {}
+  };
 
   // Socket initialization
   const socket = useMemo(() => io(SOCKET_URL, {
@@ -101,10 +136,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (isAuthenticated && socket) {
       const handleDoctorAlert = (data: {
+        _id?: string;
         type: string;
         patientId: string;
         patientName: string;
         sugarLevel: number;
+        category?: string;
         message: string;
         timestamp: string;
       }) => {
@@ -113,8 +150,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
           sound.play().catch(() => {});
         } catch (_) {}
 
+        // Add to notifications list immediately
+        setNotifications(prev => [{
+          _id: data._id || Date.now().toString(),
+          title: `🚨 Shoshilinch: ${data.patientName}`,
+          message: data.message,
+          sugarLevel: data.sugarLevel,
+          category: data.category,
+          type: data.type,
+          isRead: false,
+          createdAt: data.timestamp || new Date().toISOString(),
+          sender: { firstName: data.patientName },
+        }, ...prev]);
+
+        setUnreadNotificationsCount(prev => prev + 1);
+
         toast.error(`🚨 SHIFOKOR OGOHLANTIRISHI: ${data.patientName}`, {
-          description: `Qand darajasi: ${data.sugarLevel} mmol/l (${data.type === 'CRITICAL_HIGH' ? 'O\'ta yuqori' : 'O\'ta past'}). Zudlik bilan tekshiring!`,
+          description: `Qand darajasi: ${data.sugarLevel} mmol/l (${data.type === 'CRITICAL_HIGH' ? 'O\'ta yuqori' : 'Xavfli darajada past'}).`,
           duration: 15000,
         });
       };
@@ -126,6 +178,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       };
     }
   }, [isAuthenticated, socket]);
+
+  useEffect(() => {
+    if (isAuthenticated && (user?.role === 'doctor' || user?.role === 'superadmin' || user?.role === 'admin')) {
+      loadNotifications();
+    }
+  }, [isAuthenticated, user?.role, loadNotifications]);
 
   useEffect(() => { localStorage.setItem('language', language); }, [language]);
 
@@ -171,7 +229,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       isDarkMode, toggleDarkMode,
       records, loadRecords, addRecord, deleteRecord, 
       currentFasting, currentPostMeal, setCurrentFasting, setCurrentPostMeal,
-      socket
+      socket,
+      notifications,
+      unreadNotificationsCount,
+      loadNotifications,
+      markNotificationRead,
+      markAllNotificationsRead,
     }}>
       {children}
     </AppContext.Provider>

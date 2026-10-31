@@ -113,4 +113,10 @@ export const chatAPI = {
   getAvailableUsers: () => api.get('/chat/available-users'),
 };
 
+export const notificationAPI = {
+  getAll: () => api.get('/notifications'),
+  markAsRead: (id: string) => api.patch(`/notifications/${id}/read`),
+  markAllAsRead: () => api.patch('/notifications/read-all'),
+};
+
 export default api;
