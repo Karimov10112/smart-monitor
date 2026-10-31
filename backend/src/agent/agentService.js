@@ -22,7 +22,7 @@ const alertDoctor          = require('./tools/alertDoctor');
 
 const GEMINI_MODEL       = 'gemini-2.5-flash';
 const GEMINI_API_VERSION = 'v1beta';
-const GROQ_MODEL         = 'llama-3.3-70b-versatile';
+const GROQ_MODEL         = 'openai/gpt-oss-120b';
 
 const getGeminiKey = () => process.env.GEMINI_API_KEY;
 const getGroqKey   = () => process.env.GROQ_API_KEY;
