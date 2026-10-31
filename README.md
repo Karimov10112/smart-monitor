@@ -76,8 +76,11 @@ FACEBOOK_CALLBACK_URL=http://localhost:5000/api/auth/facebook/callback
 
 FRONTEND_URL=http://localhost:5173
 
-# DeepSeek AI (platform.deepseek.com)
-DEEPSEEK_API_KEY=your_deepseek_api_key
+# Gemini AI (aistudio.google.com) - Asosiy Agent LLM
+GEMINI_API_KEY=your_gemini_api_key
+
+# Groq Cloud (console.groq.com) - Zaxira Agent LLM (Llama 3.3 70B)
+GROQ_API_KEY=your_groq_api_key
 
 # Super Admin (birinchi ishga tushganda avtomatik yaratiladi)
 SUPER_ADMIN_EMAIL=admin@diabetesapp.uz
@@ -124,12 +127,17 @@ SUPER_ADMIN_PASSWORD=SuperAdmin123!
 - ✅ Statistika
 - ✅ Maslahatlar
 
-### 🤖 DeepSeek AI Chat
-- ✅ Footer'da suzuvchi chat tugmasi
-- ✅ Diabet, ovqatlanish, sog'liq bo'yicha savollar
-- ✅ Statistikani avtomatik tahlil qilish
-- ✅ 3 tilda javob (uz/ru/en)
-- ✅ Chat tarixi
+### 🤖 AI Agent (Gemini 2.5 Flash + Groq Llama 3.3 70B)
+- ✅ Barcha sahifalarda suzuvchi (floating) AI maslahatchi
+- ✅ Agentic Loop & Tool Calling (avtomatik asboblar chaqirish)
+- ✅ `get_recent_blood_sugar` — oxirgi qand ko'rsatkichlarini DB'dan olish
+- ✅ `get_user_profile` — xavfsiz profil ma'lumotlarini o'qish (parol/tokenlar chiqarilmaydi)
+- ✅ `get_nutrition_advice` — uglevod, non birligi (XE), glikemik indeks maslahatlari
+- ✅ `alert_doctor` — server tomonida tekshiriluvchi kritik qand holatida shifokorga real-time ogohlantirish (Socket.io) va AuditLog
+- ✅ Gemini birlamchi + Groq zaxira (har doim bepul va yuqori tezlikda)
+- ✅ Ko'p muloqotli xotira (Multi-turn conversation history)
+- ✅ 3 tilda javob (uz/ru/en) va tezkor takliflar (Quick prompts)
+- ✅ Rate limiting (har bir autentifikatsiyalangan foydalanuvchiga 20 so'rov/daqiqa)
 
 ### UI/UX
 - ✅ Dark / Light mode
@@ -178,10 +186,11 @@ PATCH  /api/admin/users/:id/notes    - Admin eslatmasi
 DELETE /api/admin/users/:id          - O'chirish
 ```
 
-### AI Chat
+### AI Agent
 ```
-POST /api/ai/chat      - AI bilan suhbat
-POST /api/ai/analyze   - Statistikani tahlil qilish
+POST /api/ai/agent      - AI Agent bilan suhbat (Tool-calling, Gemini + Groq)
+POST /api/ai/chat       - Oddiy AI chat
+POST /api/ai/analyze    - Statistikani tahlil qilish
 ```
 
 ---
@@ -191,21 +200,22 @@ POST /api/ai/analyze   - Statistikani tahlil qilish
 ### Backend
 - **Node.js** + **Express** — server
 - **MongoDB** + **Mongoose** — database
-- **JWT** — autentifikatsiya
+- **JWT** — autentifikatsiya (Access + Refresh tokens)
+- **Socket.io** — real-time shifokor ogohlantirishlari va chat
 - **Passport.js** — Google/Facebook OAuth
-- **Nodemailer** — email yuborish
+- **Nodemailer / Resend** — email xizmatlari
 - **bcryptjs** — parol shifrlash
-- **express-rate-limit** — himoya
+- **express-rate-limit** — xavfsizlik va DDoS himoyasi
 
 ### Frontend
 - **React 18** + **TypeScript**
 - **React Router v6** — routing
 - **Axios** — API so'rovlar
-- **Tailwind CSS v4** — stil
-- **Motion (Framer)** — animatsiya
-- **Recharts** — grafiklar
-- **Lucide React** — ikonlar
+- **Material-UI (MUI)** & **Tailwind CSS** — dizayn tizimi
+- **Framer Motion** — premium animatsiyalar
+- **Recharts** — interaktiv tibbiy grafiklar
 - **Sonner** — bildirishnomalar
 
-### AI
-- **DeepSeek Chat API** — AI maslahatchi
+### AI Texnologiyalari
+- **Google Gemini 2.5 Flash** (`@google/generative-ai`) — Tool-calling qobiliyatiga ega asosiy aqlli agent
+- **Groq Cloud API** (`llama-3.3-70b-versatile`) — yuqori tezlikdagi zaxira LLM provider

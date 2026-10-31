@@ -100,10 +100,29 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (isAuthenticated && socket) {
-      // Global synchronization listeners (if any needed in future)
-      
+      const handleDoctorAlert = (data: {
+        type: string;
+        patientId: string;
+        patientName: string;
+        sugarLevel: number;
+        message: string;
+        timestamp: string;
+      }) => {
+        try {
+          const sound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+          sound.play().catch(() => {});
+        } catch (_) {}
+
+        toast.error(`🚨 SHIFOKOR OGOHLANTIRISHI: ${data.patientName}`, {
+          description: `Qand darajasi: ${data.sugarLevel} mmol/l (${data.type === 'CRITICAL_HIGH' ? 'O\'ta yuqori' : 'O\'ta past'}). Zudlik bilan tekshiring!`,
+          duration: 15000,
+        });
+      };
+
+      socket.on('doctor-alert', handleDoctorAlert);
+
       return () => {
-        // Cleanup listeners
+        socket.off('doctor-alert', handleDoctorAlert);
       };
     }
   }, [isAuthenticated, socket]);

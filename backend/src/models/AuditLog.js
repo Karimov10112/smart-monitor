@@ -5,7 +5,12 @@ const auditLogSchema = new mongoose.Schema(
     adminId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: true
+      required: false  // optional: admin actions use adminId, agent actions use user
+    },
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: false
     },
     action: {
       type: String,
@@ -19,7 +24,8 @@ const auditLogSchema = new mongoose.Schema(
         'UPDATE_PRODUCT',
         'DELETE_PRODUCT',
         'UPDATE_ADMIN_CONTACTS',
-        'PURGE_INCOMPLETE_USERS'
+        'PURGE_INCOMPLETE_USERS',
+        'AGENT_DOCTOR_ALERT'
       ]
     },
     targetId: {

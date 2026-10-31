@@ -61,6 +61,7 @@ import ChatIcon from '@mui/icons-material/Chat';
 // Components
 import { DailyJournal } from './components/DailyJournal';
 import { Chat } from './components/chat/ChatComponent';
+import AIAgentChat from './components/AIAgentChat';
 
 import { Statistics } from './components/Statistics';
 import { ReminderModal } from './components/ReminderModal';
@@ -466,6 +467,9 @@ function App() {
         reminders={reminders}
         onRefresh={loadReminders}
       />
+
+      {/* AI Agent Floating Chat */}
+      <AIAgentChat />
 
       <Toaster position="top-right" richColors />
     </Box>
