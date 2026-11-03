@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { doctorAPI } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useApp } from '../contexts/AppContext';
@@ -132,9 +132,11 @@ export default function DoctorPage() {
       return;
     }
     try {
-      const { default: jsPDF } = await import('jspdf');
-      const { default: autoTable } = await import('jspdf-autotable');
-      const doc = new jsPDF();
+      const jspdfModule = await import('jspdf');
+      const JsPdfConstructor: any = jspdfModule.jsPDF || (typeof jspdfModule.default === 'function' ? jspdfModule.default : (jspdfModule.default as any)?.jsPDF);
+      const autotableModule = await import('jspdf-autotable');
+      const autoTable: any = autotableModule.default || autotableModule;
+      const doc = new JsPdfConstructor();
 
       // Header
       doc.setFontSize(18);

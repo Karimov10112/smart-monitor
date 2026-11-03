@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+﻿import React, { useMemo, useState } from 'react';
 import { useApp } from '../contexts/AppContext';
 import { useAuth } from '../contexts/AuthContext';
 import { translations } from '../utils/translations';
@@ -139,9 +139,11 @@ export function Statistics({ customRecords, customLanguage }: StatisticsProps = 
     }
     setExportingPDF(true);
     try {
-      const { default: jsPDF } = await import('jspdf');
-      const { default: autoTable } = await import('jspdf-autotable');
-      const doc = new jsPDF();
+      const jspdfModule = await import('jspdf');
+      const JsPdfConstructor: any = jspdfModule.jsPDF || (typeof jspdfModule.default === 'function' ? jspdfModule.default : (jspdfModule.default as any)?.jsPDF);
+      const autotableModule = await import('jspdf-autotable');
+      const autoTable: any = autotableModule.default || autotableModule;
+      const doc = new JsPdfConstructor();
 
       // Brand Header
       doc.setFillColor(79, 70, 229);

@@ -1,5 +1,6 @@
-export const translations: any = {
+﻿export const translations: any = {
   uz: {
+    addRecord: "Yozuv qo'shish",
     addPatient: "Bemor qo'shish",
     patientAdded: "Bemor muvaffaqiyatli qo'shildi",
     passwordLengthError: "Parol kamida 6 ta belgi bo'lishi kerak",
@@ -352,6 +353,7 @@ export const translations: any = {
     copiedToClipboard: "Nusxalandi!",
   },
   ru: {
+    addRecord: "Добавить запись",
     addPatient: "Добавить пациента",
     patientAdded: "Пациент успешно добавлен",
     passwordLengthError: "Пароль должен содержать минимум 6 символов",
@@ -703,6 +705,7 @@ export const translations: any = {
     copiedToClipboard: "Скопировано!",
   },
   en: {
+    addRecord: "Add Record",
     addPatient: "Add Patient",
     patientAdded: "Patient added successfully",
     passwordLengthError: "Password must be at least 6 characters",
