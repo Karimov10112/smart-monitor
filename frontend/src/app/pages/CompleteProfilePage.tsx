@@ -72,7 +72,7 @@ export default function CompleteProfilePage() {
 
   const handleConnectDoctor = async () => {
     if (!doctorCodeInput.trim()) {
-      toast.error('Shifokor kodini kiriting');
+      toast.error('Şifokor kodini kiriting');
       return;
     }
     setConnectingDoctor(true);
@@ -171,7 +171,7 @@ export default function CompleteProfilePage() {
           {user?.firstName?.[0] || <PersonIcon fontSize="large" />}
         </Avatar>
         <Typography variant="h4" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 2 }}>
-          {isEditing ? (t.editProfile || 'Profilni tahrirlash') : t.profileTitle}
+          {isEditing ? (t.editProfile || 'Profilni tahrirlaş') : t.profileTitle}
         </Typography>
         <Typography variant="overline" sx={{ fontWeight: 800, color: 'text.secondary', letterSpacing: 1 }}>
           {isEditing ? (t.updateYourData || 'O\'z ma\'lumotlaringizni yangilang') : t.profileSubtitle}

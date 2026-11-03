@@ -65,7 +65,7 @@ export default function RegisterPage() {
       return;
     }
     if (password.length < 6) {
-      toast.error(language === 'uz' ? 'Parol kamida 6 ta belgidan iborat bo\'lishi kerak' : 'Min 6 characters');
+      toast.error(language === 'uz' ? 'Parol kamida 6 ta belgidan iborat bõlişi kerak' : 'Min 6 characters');
       return;
     }
     setLoading(true);

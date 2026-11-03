@@ -2,102 +2,102 @@
 // Mahalla data is manually curated from official UZ government sources
 
 export const UZ_REGIONS = [
-  "Qoraqalpog'iston Respublikasi",
+  "Qoraqalpoğiston Respublikasi",
   'Andijon viloyati',
   'Buxoro viloyati',
   'Jizzax viloyati',
-  'Qashqadaryo viloyati',
+  'Qaşqadaryo viloyati',
   'Navoiy viloyati',
   'Namangan viloyati',
   'Samarqand viloyati',
   'Sirdaryo viloyati',
   'Surxondaryo viloyati',
-  'Toshkent viloyati',
-  'Toshkent shahri',
-  "Farg'ona viloyati",
+  'Toşkent viloyati',
+  'Toşkent şahri',
+  "Farğona viloyati",
   'Xorazm viloyati',
 ];
 
 export const UZ_DISTRICTS: Record<string, string[]> = {
-  "Qoraqalpog'iston Respublikasi": [
-    'Nukus shahri', 'Taxiatosh shahri', 'Amudaryo tumani', 'Beruniy tumani',
-    "Bo'zatov tumani", 'Chimboy tumani', "Ellikqal'a tumani", 'Kegayli tumani',
-    "Mo'ynoq tumani", 'Nukus tumani', "Qonliko'l tumani", "Qorao'zak tumani",
-    "Qo'ng'irot tumani", 'Shumanay tumani', "Taxtako'pir tumani", "To'rtko'l tumani",
-    "Xo'jayli tumani",
+  "Qoraqalpoğiston Respublikasi": [
+    'Nukus şahri', 'Taxiatoş şahri', 'Amudaryo tumani', 'Beruniy tumani',
+    "Bõzatov tumani", 'Çimboy tumani', "Ellikqal'a tumani", 'Kegayli tumani',
+    "Mõynoq tumani", 'Nukus tumani', "Qonlikõl tumani", "Qoraõzak tumani",
+    "Qõnğirot tumani", 'Şumanay tumani', "Taxtakõpir tumani", "Tõrtkõl tumani",
+    "Xõjayli tumani",
   ],
   'Andijon viloyati': [
-    'Andijon shahri', 'Asaka shahri', 'Andijon tumani', 'Asaka tumani',
-    'Baliqchi tumani', 'Buloqboshi tumani', "Bo'z tumani", 'Jalaquduq tumani',
-    'Izbosgan tumani', 'Qorasuv shahri', "Qo'rg'ontepa tumani", 'Marhamat tumani',
-    "Oltinko'l tumani", 'Paxtaobod tumani', "Ulug'nor tumani", 'Xonabod tumani',
-    "Xo'jaobod tumani", 'Shahrixon tumani',
+    'Andijon şahri', 'Asaka şahri', 'Andijon tumani', 'Asaka tumani',
+    'Baliqçi tumani', 'Buloqboşi tumani', "Bõz tumani", 'Jalaquduq tumani',
+    'Izbosgan tumani', 'Qorasuv şahri', "Qõrğontepa tumani", 'Marhamat tumani',
+    "Oltinkõl tumani", 'Paxtaobod tumani', "Uluğnor tumani", 'Xonabod tumani',
+    "Xõjaobod tumani", 'Şahrixon tumani',
   ],
   'Buxoro viloyati': [
-    'Buxoro shahri', 'Kogon shahri', 'Buxoro tumani', "G'ijduvon tumani",
-    'Jondor tumani', 'Kogon tumani', "Qorako'l tumani", 'Qorovulbozor tumani',
-    'Olot tumani', 'Peshku tumani', 'Romitan tumani', 'Shofirkon tumani', 'Vobkent tumani',
+    'Buxoro şahri', 'Kogon şahri', 'Buxoro tumani', "Ğijduvon tumani",
+    'Jondor tumani', 'Kogon tumani', "Qorakõl tumani", 'Qorovulbozor tumani',
+    'Olot tumani', 'Peşku tumani', 'Romitan tumani', 'Şofirkon tumani', 'Vobkent tumani',
   ],
   'Jizzax viloyati': [
-    'Jizzax shahri', 'Arnasoy tumani', 'Baxmal tumani', "Do'stlik tumani",
-    "G'allaorol tumani", 'Forish tumani', 'Mirzacho\'l tumani', 'Paxtakor tumani',
-    'Sh.Rashidov tumani', 'Yangiobod tumani', 'Zafarobod tumani', 'Zarbdor tumani', 'Zomin tumani',
+    'Jizzax şahri', 'Arnasoy tumani', 'Baxmal tumani', "Dõstlik tumani",
+    "Ğallaorol tumani", 'Foriş tumani', 'Mirzaçõl tumani', 'Paxtakor tumani',
+    'Ş.Raşidov tumani', 'Yangiobod tumani', 'Zafarobod tumani', 'Zarbdor tumani', 'Zomin tumani',
   ],
-  'Qashqadaryo viloyati': [
-    'Qarshi shahri', 'Shahrisabz shahri', 'Chiroqchi tumani', 'Dehqonobod tumani',
-    "G'uzor tumani", 'Qamashi tumani', 'Qarshi tumani', 'Kasbi tumani',
-    "Ko'kdala tumani", 'Kitob tumani', 'Koson tumani', 'Mirishkor tumani',
-    'Muborak tumani', 'Nishon tumani', 'Shahrisabz tumani', "Yakkabog' tumani",
+  'Qaşqadaryo viloyati': [
+    'Qarşi şahri', 'Şahrisabz şahri', 'Çiroqçi tumani', 'Dehqonobod tumani',
+    "Ğuzor tumani", 'Qamaşi tumani', 'Qarşi tumani', 'Kasbi tumani',
+    "Kõkdala tumani", 'Kitob tumani', 'Koson tumani', 'Mirişkor tumani',
+    'Muborak tumani', 'Nişon tumani', 'Şahrisabz tumani', "Yakkaboğ tumani",
   ],
   'Navoiy viloyati': [
-    'Navoiy shahri', 'Zarafshon shahri', 'Karmana tumani', "Ko'kdala tumani",
+    'Navoiy şahri', 'Zarafşon şahri', 'Karmana tumani', "Kõkdala tumani",
     'Konimex tumani', 'Navbahor tumani', 'Nurota tumani', 'Qiziltepa tumani',
-    'Tomdi tumani', 'Uchkuduk tumani', 'Xatirchi tumani',
+    'Tomdi tumani', 'Uçkuduk tumani', 'Xatirçi tumani',
   ],
   'Namangan viloyati': [
-    'Namangan shahri', 'Chortoq tumani', 'Chust tumani', 'Kosonsoy tumani',
+    'Namangan şahri', 'Çortoq tumani', 'Çust tumani', 'Kosonsoy tumani',
     'Mingbuloq tumani', 'Namangan tumani', 'Norin tumani', 'Pop tumani',
-    "To'raqo'rg'on tumani", "Uchqo'rg'on tumani", 'Uychi tumani',
-    "Yangiqo'rg'on tumani",
+    "Tõraqõrğon tumani", "Uçqõrğon tumani", 'Uyçi tumani',
+    "Yangiqõrğon tumani",
   ],
   'Samarqand viloyati': [
-    'Samarqand shahri', "Kattaqo'rg'on shahri", "Bulung'ur tumani", 'Ishtixon tumani',
-    'Jomboy tumani', "Kattaqo'rg'on tumani", 'Narpay tumani', 'Nurobod tumani',
-    'Oqdaryo tumani', 'Pastdarg\'om tumani', 'Paxtachi tumani', "Qo'shrabot tumani",
+    'Samarqand şahri', "Kattaqõrğon şahri", "Bulunğur tumani", 'Iştixon tumani',
+    'Jomboy tumani', "Kattaqõrğon tumani", 'Narpay tumani', 'Nurobod tumani',
+    'Oqdaryo tumani', 'Pastdarğom tumani', 'Paxtaçi tumani', "Qõşrabot tumani",
     'Samarqand tumani', 'Toyloq tumani', 'Urgut tumani',
   ],
   'Sirdaryo viloyati': [
-    'Guliston shahri', 'Shirin shahri', 'Yangiyer shahri', 'Boyovut tumani',
+    'Guliston şahri', 'Şirin şahri', 'Yangiyer şahri', 'Boyovut tumani',
     'Guliston tumani', 'Mirzaobod tumani', 'Oqoltin tumani', 'Sardoba tumani',
     'Sayxunobod tumani', 'Sirdaryo tumani', 'Xovos tumani',
   ],
   'Surxondaryo viloyati': [
-    'Termiz shahri', 'Angor tumani', 'Bandixon tumani', 'Boysun tumani',
-    'Denov tumani', 'Jarqo\'rg\'on tumani', 'Muzrabot tumani', 'Oltinsoy tumani',
-    'Qiziriq tumani', "Qumqo'rg'on tumani", 'Sariosiyo tumani', "Sho'rchi tumani",
-    'Sherobod tumani', 'Termiz tumani', 'Uzun tumani',
+    'Termiz şahri', 'Angor tumani', 'Bandixon tumani', 'Boysun tumani',
+    'Denov tumani', 'Jarqõrğon tumani', 'Muzrabot tumani', 'Oltinsoy tumani',
+    'Qiziriq tumani', "Qumqõrğon tumani", 'Sariosiyo tumani', "Şõrçi tumani",
+    'Şerobod tumani', 'Termiz tumani', 'Uzun tumani',
   ],
-  'Toshkent viloyati': [
-    'Angren shahri', 'Bekobod shahri', 'Chirchiq shahri', 'Olmaliq shahri',
-    'Bekobod tumani', "Bo'stonliq tumani", 'Chinoz tumani', 'Oqqo\'rg\'on tumani',
+  'Toşkent viloyati': [
+    'Angren şahri', 'Bekobod şahri', 'Çirçiq şahri', 'Olmaliq şahri',
+    'Bekobod tumani', "Bõstonliq tumani", 'Çinoz tumani', 'Oqqõrğon tumani',
     'Olmaliq tumani', 'Parkent tumani', 'Piskent tumani', 'Qibray tumani',
-    'Yuqorichirchiq tumani', 'Yangiyo\'l tumani', 'Zangiota tumani', 'Zangibobod tumani',
+    'Yuqoriçirçiq tumani', 'Yangiyõl tumani', 'Zangiota tumani', 'Zangibobod tumani',
   ],
-  'Toshkent shahri': [
-    'Bektemir tumani', 'Chilonzor tumani', 'Hamza tumani', 'Mirobod tumani',
-    "Mirzo Ulug'bek tumani", 'Olmazor tumani', 'Sergeli tumani', 'Shayxontohur tumani',
-    'Uchtepa tumani', 'Yakkasaroy tumani', 'Yunusobod tumani', 'Yashnobod tumani',
+  'Toşkent şahri': [
+    'Bektemir tumani', 'Çilonzor tumani', 'Hamza tumani', 'Mirobod tumani',
+    "Mirzo Uluğbek tumani", 'Olmazor tumani', 'Sergeli tumani', 'Şayxontohur tumani',
+    'Uçtepa tumani', 'Yakkasaroy tumani', 'Yunusobod tumani', 'Yaşnobod tumani',
   ],
-  "Farg'ona viloyati": [
-    "Farg'ona shahri", "Marg'ilon shahri", "Qo'qon shahri", "Quvasoy shahri",
-    'Bag\'dod tumani', 'Besharik tumani', "Buvayda tumani", "Dang'ara tumani",
-    "Farg'ona tumani", "Furqat tumani", "Oltiariq tumani", "O'zbekiston tumani",
-    'Quva tumani', 'Rishton tumani', 'Sux tumani', 'Toshloq tumani', 'Uchko\'prik tumani',
+  "Farğona viloyati": [
+    "Farğona şahri", "Marğilon şahri", "Qõqon şahri", "Quvasoy şahri",
+    'Bağdod tumani', 'Beşarik tumani', "Buvayda tumani", "Danğara tumani",
+    "Farğona tumani", "Furqat tumani", "Oltiariq tumani", "Õzbekiston tumani",
+    'Quva tumani', 'Rişton tumani', 'Sux tumani', 'Toşloq tumani', 'Uçkõprik tumani',
     'Yozyovon tumani',
   ],
   'Xorazm viloyati': [
-    'Urganch shahri', "Xiva shahri", "Bog'ot tumani", "Gurlan tumani",
-    'Hazorasp tumani', 'Urganch tumani', "Qo'shko'pir tumani", 'Shovot tumani',
+    'Urganç şahri', "Xiva şahri", "Boğot tumani", "Gurlan tumani",
+    'Hazorasp tumani', 'Urganç tumani', "Qõşkõpir tumani", 'Şovot tumani',
     'Tuproqqala tumani', 'Xiva tumani', 'Xonqa tumani', 'Yangiariq tumani', 'Yangibozor tumani',
   ],
 };
@@ -107,489 +107,489 @@ export const UZ_MAHALLAS: Record<string, string[]> = {
   'Bektemir tumani': [
     'Bektemir', 'Yangi Bektemir', 'Qorasaroy', 'Kamolon', 'Yangiobod', 'Hamkorlik',
   ],
-  'Chilonzor tumani': [
+  'Çilonzor tumani': [
     '1-mavze', '2-mavze', '3-mavze', '4-mavze', '5-mavze', '6-mavze', '7-mavze',
     '8-mavze', '9-mavze', '10-mavze', '11-mavze', '12-mavze', '13-mavze', '14-mavze',
-    'Cho\'ponota', "Do'mbiraobod", 'Naqqoshlik', 'Qatortol', 'Oqtepa', 'Dilxush',
+    'Çõponota', "Dõmbiraobod", 'Naqqoşlik', 'Qatortol', 'Oqtepa', 'Dilxuş',
     'Lutfiy', 'Gullar', 'Mextar',
   ],
   'Hamza tumani': [
-    'Hamza', 'Yangihayot', 'Ipakchi', 'Paxtakor', 'Zarqaynar', 'Navro\'z',
+    'Hamza', 'Yangihayot', 'Ipakçi', 'Paxtakor', 'Zarqaynar', 'Navrõz',
   ],
   'Mirobod tumani': [
-    'Afrosiyob', 'Banokatiy', 'Dil', 'Inom', 'Mirobod', "Navro'z",
-    "Oqyo'l", 'Salar', "Tog'ay", 'Tong', 'Fotimabibi',
+    'Afrosiyob', 'Banokatiy', 'Dil', 'Inom', 'Mirobod', "Navrõz",
+    "Oqyõl", 'Salar', "Toğay", 'Tong', 'Fotimabibi',
   ],
-  "Mirzo Ulug'bek tumani": [
-    'Alisherobod', 'Bobur', "Buyuk Ipak yo'li", 'Gelios', 'Jaloliddin Ar-Rumi',
-    'Mustaqillik', 'Nur', 'Oydin', 'Oqibat', 'Sohibqiron', 'Turon', "Uyg'onish", 'Xumoyun',
-    'Sharq yulduzi', "Beruniy", 'Furqat',
+  "Mirzo Uluğbek tumani": [
+    'Alişerobod', 'Bobur', "Buyuk Ipak yõli", 'Gelios', 'Jaloliddin Ar-Rumi',
+    'Mustaqillik', 'Nur', 'Oydin', 'Oqibat', 'Sohibqiron', 'Turon', "Uyğoniş", 'Xumoyun',
+    'Şarq yulduzi', "Beruniy", 'Furqat',
   ],
   'Olmazor tumani': [
-    'Baxt', 'Bo\'ston', "Do'stlik", 'Gavhar', 'Gulzor', 'Hamkor', 'Ma\'rifat',
-    'Mustaqillik', 'Navro\'z', 'Olmazor', 'Qahramon',
+    'Baxt', 'Bõston', "Dõstlik", 'Gavhar', 'Gulzor', 'Hamkor', 'Ma\'rifat',
+    'Mustaqillik', 'Navrõz', 'Olmazor', 'Qahramon',
   ],
   'Sergeli tumani': [
-    'Abay', "Cho'ponota", "Do'stlik", 'Humo', 'Itifoq', 'Junariq', 'Nilufar',
-    'Olmazor', 'Qoraqamish', 'Sergeli-1', 'Sergeli-2', 'Sohibqiron', 'Vatan',
+    'Abay', "Çõponota", "Dõstlik", 'Humo', 'Itifoq', 'Junariq', 'Nilufar',
+    'Olmazor', 'Qoraqamiş', 'Sergeli-1', 'Sergeli-2', 'Sohibqiron', 'Vatan',
   ],
-  'Shayxontohur tumani': [
-    'Amir Temur', 'Beshyog\'och', "Do'stlik", 'Navruz', 'Ozod', 'Qatortol',
-    'Shayxontohur', 'Tabassum',
+  'Şayxontohur tumani': [
+    'Amir Temur', 'Beşyoğoç', "Dõstlik", 'Navruz', 'Ozod', 'Qatortol',
+    'Şayxontohur', 'Tabassum',
   ],
-  'Uchtepa tumani': [
-    'Bog\'ishamol', "Bo'ston", 'Gulsanam', 'Ismoil Somoni', 'Komil', 'Qorasaroy',
-    'Uchtepa', 'Yoshlik', 'Ziyokor',
+  'Uçtepa tumani': [
+    'Boğişamol', "Bõston", 'Gulsanam', 'Ismoil Somoni', 'Komil', 'Qorasaroy',
+    'Uçtepa', 'Yoşlik', 'Ziyokor',
   ],
   'Yakkasaroy tumani': [
-    'Abdulla Qodiriy', 'Amir Temur', 'Ko\'ksil', 'Navqiran', 'Oltin kuz', 'Yakkasaroy',
+    'Abdulla Qodiriy', 'Amir Temur', 'Kõksil', 'Navqiran', 'Oltin kuz', 'Yakkasaroy',
   ],
   'Yunusobod tumani': [
-    "Ming o'rik", 'Bodomzor', 'Bilimdon', 'Islomobod', 'Yangi Yunusobod',
-    'Oloy', 'Minor', 'Matonat', 'Xurriyat', 'Adolat', "G'ayratiy", "Bo'ston", 'Obshir',
-    'Qorasaroy', 'Sharq', 'Yangi Sergeli',
+    "Ming õrik", 'Bodomzor', 'Bilimdon', 'Islomobod', 'Yangi Yunusobod',
+    'Oloy', 'Minor', 'Matonat', 'Xurriyat', 'Adolat', "Ğayratiy", "Bõston", 'Obşir',
+    'Qorasaroy', 'Şarq', 'Yangi Sergeli',
   ],
-  'Yashnobod tumani': [
-    'Alimkent', 'Amir Temur', 'Ayrilish', 'Birlashgan', "Do'stlik", 'Istiqlol',
-    'Loyihalash', 'Maxmur', "Navro'zabad", 'Oltintepa', 'Tuzel', 'Xovli',
+  'Yaşnobod tumani': [
+    'Alimkent', 'Amir Temur', 'Ayriliş', 'Birlaşgan', "Dõstlik", 'Istiqlol',
+    'Loyihalaş', 'Maxmur', "Navrõzabad", 'Oltintepa', 'Tuzel', 'Xovli',
     'Yangi hayot',
   ],
 
   // ─────────────────── ANDIJON VILOYATI ───────────────────
-  'Andijon shahri': [
-    'Amir Temur', 'Bobur', 'Bahodir', "Do'stlik", 'Istiqlol', "Jalol ota",
-    "Jaloliddin Manguberdi", 'Mustaqillik', 'Navoiy', 'Navro\'z', 'Sabo', 'Sayhun',
-    "Ulug'bek", 'Xumo', 'Yangi hayot', "Zulfiya",
+  'Andijon şahri': [
+    'Amir Temur', 'Bobur', 'Bahodir', "Dõstlik", 'Istiqlol', "Jalol ota",
+    "Jaloliddin Manguberdi", 'Mustaqillik', 'Navoiy', 'Navrõz', 'Sabo', 'Sayhun',
+    "Uluğbek", 'Xumo', 'Yangi hayot', "Zulfiya",
   ],
   'Andijon tumani': [
-    "Bo'z", "Do'stlik", 'Oqdaryo', 'Yangiqo\'rg\'on', 'Baxt', 'Yangiobod',
-    'Polvontosh', 'Qorajar', 'Rishton',
+    "Bõz", "Dõstlik", 'Oqdaryo', 'Yangiqõrğon', 'Baxt', 'Yangiobod',
+    'Polvontoş', 'Qorajar', 'Rişton',
   ],
   'Asaka tumani': [
-    "Asaka", "Navro'z", 'Istiqlol', 'Olot', "Qo'shchinor", 'Obod', "Do'stlik",
+    "Asaka", "Navrõz", 'Istiqlol', 'Olot', "Qõşçinor", 'Obod', "Dõstlik",
     'Yangi hayot', 'Guliston', 'Baxt', 'Mehnat', 'Oqjar',
   ],
-  'Asaka shahri': [
-    'Markaziy', "Guliston", 'Baxt', "Do'stlik", 'Mustaqillik',
+  'Asaka şahri': [
+    'Markaziy', "Guliston", 'Baxt', "Dõstlik", 'Mustaqillik',
   ],
-  'Shahrixon tumani': [
-    'Abdubiy', 'Ahmadbek', 'Ahtalik', 'Andijonlik', 'Azamat', 'Bekbachcha',
-    "Bo'ston", 'Bobochek', "Bolg'ali", "Cho'ntak", "Cho'ja", 'Chuqurcha',
-    "Do'lan", "Do'rmon", 'Dorikash', 'Dorilamon', 'Eshonqishloq',
-    "Eski-Qo'rg'oncha", 'Guliston', 'Gulqishloq', 'Haqiqat', "Ho'jaobod",
-    'Honkuruq', 'Kamoltepa', 'Karnaychi', 'Koramuyin', "Qo'rg'oncha",
-    'Qumaryq', 'Quruqsoy', 'Nazarmahram', 'Naynavo', "O'zbekiston",
-    "O'rta Shahrixon", 'Paxtaobod', "Paxtako'l", 'Qalacha', "Qipchoqqo'rg'on",
-    'Segaza', 'Segazaqum', 'Shaydo', 'Sohiobod', 'Suzok', 'Tegirmonboshi',
-    'Tojik', 'Tojikaram', 'Tolmozor', 'Toshtepa', 'Tumor', 'Vaxim',
-    'Xidirsho', "Yangiyo'l", 'Yangi Naynavo', 'Yangi Mahalla', 'Yuqori Shahrixon', 'Yuzlar',
+  'Şahrixon tumani': [
+    'Abdubiy', 'Ahmadbek', 'Ahtalik', 'Andijonlik', 'Azamat', 'Bekbaçça',
+    "Bõston", 'Boboçek', "Bolğali", "Çõntak", "Çõja", 'Çuqurça',
+    "Dõlan", "Dõrmon", 'Dorikaş', 'Dorilamon', 'Eşonqişloq',
+    "Eski-Qõrğonça", 'Guliston', 'Gulqişloq', 'Haqiqat', "Hõjaobod",
+    'Honkuruq', 'Kamoltepa', 'Karnayçi', 'Koramuyin', "Qõrğonça",
+    'Qumaryq', 'Quruqsoy', 'Nazarmahram', 'Naynavo', "Õzbekiston",
+    "Õrta Şahrixon", 'Paxtaobod', "Paxtakõl", 'Qalaça', "Qipçoqqõrğon",
+    'Segaza', 'Segazaqum', 'Şaydo', 'Sohiobod', 'Suzok', 'Tegirmonboşi',
+    'Tojik', 'Tojikaram', 'Tolmozor', 'Toştepa', 'Tumor', 'Vaxim',
+    'Xidirşo', "Yangiyõl", 'Yangi Naynavo', 'Yangi Mahalla', 'Yuqori Şahrixon', 'Yuzlar',
   ],
-  'Baliqchi tumani': [
-    'Baliqchi', 'Chuqurko\'prik', 'Zartepa', 'Qo\'ng\'irot', "Do'stlik",
+  'Baliqçi tumani': [
+    'Baliqçi', 'Çuqurkõprik', 'Zartepa', 'Qõnğirot', "Dõstlik",
     'Yangi hayot', 'Oqjar',
   ],
-  'Buloqboshi tumani': [
-    'Buloqboshi', 'Yetimqo\'rg\'on', 'Nayman', "Bo'ston", 'Ulmas', 'Mehnat',
+  'Buloqboşi tumani': [
+    'Buloqboşi', 'Yetimqõrğon', 'Nayman', "Bõston", 'Ulmas', 'Mehnat',
   ],
-  "Bo'z tumani": [
-    "Bo'z", 'Kosonsoy', 'Yunusobod', "Do'stlik", 'Bahodir',
+  "Bõz tumani": [
+    "Bõz", 'Kosonsoy', 'Yunusobod', "Dõstlik", 'Bahodir',
   ],
   'Jalaquduq tumani': [
-    'Jalaquduq', "To'g'on", "Oqqo'rg'on", 'Yangi hayot', 'Xoliqobod',
+    'Jalaquduq', "Tõğon", "Oqqõrğon", 'Yangi hayot', 'Xoliqobod',
   ],
   'Izbosgan tumani': [
-    'Izbosgan', 'Marjon', 'Toshbuloq', 'Sitorabonu', 'Mehnat',
+    'Izbosgan', 'Marjon', 'Toşbuloq', 'Sitorabonu', 'Mehnat',
   ],
-  "Qo'rg'ontepa tumani": [
-    "Qo'rg'ontepa", 'Bahodir', 'Mehnatobod', "Do'stlik", 'Gulbahor',
+  "Qõrğontepa tumani": [
+    "Qõrğontepa", 'Bahodir', 'Mehnatobod', "Dõstlik", 'Gulbahor',
   ],
   'Marhamat tumani': [
     'Marhamat', 'Guliston', 'Yangi hayot', 'Navruz', 'Xoliqobod',
   ],
-  "Oltinko'l tumani": [
-    "Oltinko'l", 'Yangi hayot', 'Mehnat', 'Istiqlol', 'Toshobod',
+  "Oltinkõl tumani": [
+    "Oltinkõl", 'Yangi hayot', 'Mehnat', 'Istiqlol', 'Toşobod',
   ],
   'Paxtaobod tumani': [
-    'Paxtaobod', 'Yangi hayot', 'Gulzor', "Do'stlik", 'Oltinariq',
+    'Paxtaobod', 'Yangi hayot', 'Gulzor', "Dõstlik", 'Oltinariq',
   ],
-  "Ulug'nor tumani": [
-    "Ulug'nor", 'Yangi hayot', 'Mehnat', 'Bahodir',
+  "Uluğnor tumani": [
+    "Uluğnor", 'Yangi hayot', 'Mehnat', 'Bahodir',
   ],
   'Xonabod tumani': [
-    'Xonabod', "Do'stlik", 'Yangi hayot', 'Baxt',
+    'Xonabod', "Dõstlik", 'Yangi hayot', 'Baxt',
   ],
-  "Xo'jaobod tumani": [
-    "Xo'jaobod", 'Yangi hayot', "Do'stlik", 'Mehnat',
+  "Xõjaobod tumani": [
+    "Xõjaobod", 'Yangi hayot', "Dõstlik", 'Mehnat',
   ],
 
   // ─────────────────── BUXORO VILOYATI ───────────────────
-  'Buxoro shahri': [
-    'Amir Temur', 'Ark', "Bog'i Shamol", 'Devonbegi', 'Ismoil Somoniy',
-    'Lyabi Hovuz', 'Navro\'z', 'Registon', 'Shahriston', 'Zargaron',
-    'Janub', 'G\'arb', 'Sharq', 'Shimol',
+  'Buxoro şahri': [
+    'Amir Temur', 'Ark', "Boği Şamol", 'Devonbegi', 'Ismoil Somoniy',
+    'Lyabi Hovuz', 'Navrõz', 'Registon', 'Şahriston', 'Zargaron',
+    'Janub', 'Ğarb', 'Şarq', 'Şimol',
   ],
   'Buxoro tumani': [
-    "Do'stlik", 'Mehnat', 'Yangi hayot', 'Qorovul', 'Navruz', 'Baxt',
+    "Dõstlik", 'Mehnat', 'Yangi hayot', 'Qorovul', 'Navruz', 'Baxt',
   ],
-  "G'ijduvon tumani": [
-    "G'ijduvon", 'Yangi hayot', 'Baxt', "Do'stlik", 'Mehnat',
+  "Ğijduvon tumani": [
+    "Ğijduvon", 'Yangi hayot', 'Baxt', "Dõstlik", 'Mehnat',
   ],
   'Jondor tumani': [
-    'Jondor', "Do'stlik", 'Yangi hayot', 'Mehnat', 'Navruz',
+    'Jondor', "Dõstlik", 'Yangi hayot', 'Mehnat', 'Navruz',
   ],
-  'Kogon shahri': [
-    'Markaziy', 'Yangi Kogon', "Do'stlik", 'Baxt',
+  'Kogon şahri': [
+    'Markaziy', 'Yangi Kogon', "Dõstlik", 'Baxt',
   ],
   'Kogon tumani': [
-    'Kogon', "Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt',
+    'Kogon', "Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt',
   ],
-  "Qorako'l tumani": [
-    "Qorako'l", 'Yangi hayot', 'Mehnat', 'Baxt',
+  "Qorakõl tumani": [
+    "Qorakõl", 'Yangi hayot', 'Mehnat', 'Baxt',
   ],
   'Qorovulbozor tumani': [
-    'Qorovulbozor', 'Yangi hayot', "Do'stlik", 'Mehnat',
+    'Qorovulbozor', 'Yangi hayot', "Dõstlik", 'Mehnat',
   ],
   'Olot tumani': [
-    'Olot', 'Yangi hayot', "Do'stlik", 'Mehnat', 'Baxt',
+    'Olot', 'Yangi hayot', "Dõstlik", 'Mehnat', 'Baxt',
   ],
-  'Peshku tumani': [
-    'Peshku', "Do'stlik", 'Yangi hayot', 'Mehnat',
+  'Peşku tumani': [
+    'Peşku', "Dõstlik", 'Yangi hayot', 'Mehnat',
   ],
   'Romitan tumani': [
-    'Romitan', 'Yangi hayot', "Do'stlik", 'Baxt', 'Mehnat',
+    'Romitan', 'Yangi hayot', "Dõstlik", 'Baxt', 'Mehnat',
   ],
-  'Shofirkon tumani': [
-    'Shofirkon', "Do'stlik", 'Yangi hayot', 'Mehnat', 'Navruz',
+  'Şofirkon tumani': [
+    'Şofirkon', "Dõstlik", 'Yangi hayot', 'Mehnat', 'Navruz',
   ],
   'Vobkent tumani': [
-    'Vobkent', "Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt',
+    'Vobkent', "Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt',
   ],
 
   // ─────────────────── SAMARQAND VILOYATI ───────────────────
-  'Samarqand shahri': [
-    'Al-Xorazmiy', 'Amir Temur', 'Beruniy', "Bog'ishamol", 'Gullar', 'Lolazor',
-    'Navoiy', 'Sariosiyo', 'Siyob', 'Universitet', 'Vatan', "Xo'ja Axror Vali",
-    'Registon', 'Motrit', "Ko'kalosh", 'Qorabag\'', "To'da", 'Qiziltepa',
+  'Samarqand şahri': [
+    'Al-Xorazmiy', 'Amir Temur', 'Beruniy', "Boğişamol", 'Gullar', 'Lolazor',
+    'Navoiy', 'Sariosiyo', 'Siyob', 'Universitet', 'Vatan', "Xõja Axror Vali",
+    'Registon', 'Motrit', "Kõkaloş", 'Qorabağ', "Tõda", 'Qiziltepa',
     'Zangi ota',
   ],
-  "Kattaqo'rg'on shahri": [
-    "Kattaqo'rg'on", 'Markaziy', 'Yangi hayot', "Do'stlik", 'Baxt',
+  "Kattaqõrğon şahri": [
+    "Kattaqõrğon", 'Markaziy', 'Yangi hayot', "Dõstlik", 'Baxt',
   ],
-  "Bulung'ur tumani": [
-    "Bulung'ur", "Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt',
+  "Bulunğur tumani": [
+    "Bulunğur", "Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt',
   ],
-  'Ishtixon tumani': [
-    'Ishtixon', "Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt',
+  'Iştixon tumani': [
+    'Iştixon', "Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt',
   ],
   'Jomboy tumani': [
-    'Jomboy', "Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt',
+    'Jomboy', "Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt',
   ],
-  "Kattaqo'rg'on tumani": [
-    "Kattaqo'rg'on", "Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt',
+  "Kattaqõrğon tumani": [
+    "Kattaqõrğon", "Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt',
   ],
   'Narpay tumani': [
-    'Narpay', "Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt',
+    'Narpay', "Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt',
   ],
   'Nurobod tumani': [
-    'Nurobod', "Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt',
+    'Nurobod', "Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt',
   ],
   'Oqdaryo tumani': [
-    'Oqdaryo', "Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt',
+    'Oqdaryo', "Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt',
   ],
-  "Pastdarg'om tumani": [
-    "Pastdarg'om", "Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt',
+  "Pastdarğom tumani": [
+    "Pastdarğom", "Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt',
   ],
-  'Paxtachi tumani': [
-    'Paxtachi', "Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt',
+  'Paxtaçi tumani': [
+    'Paxtaçi', "Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt',
   ],
-  "Qo'shrabot tumani": [
-    "Qo'shrabot", "Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt',
+  "Qõşrabot tumani": [
+    "Qõşrabot", "Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt',
   ],
   'Samarqand tumani': [
-    "Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt', 'Navruz',
+    "Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt', 'Navruz',
   ],
   'Toyloq tumani': [
-    'Toyloq', "Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt',
+    'Toyloq', "Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt',
   ],
   'Urgut tumani': [
-    'Urgut', "Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt', 'Yangi Urgut',
+    'Urgut', "Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt', 'Yangi Urgut',
   ],
 
   // ─────────────────── NAMANGAN VILOYATI ───────────────────
-  'Namangan shahri': [
-    'Beshqo\'rg\'on', 'Chortepa', "Do'stlik", 'Gavhar', 'Ismoil Somoniy',
-    'Kamolot', 'Kosonsoy', 'Labzak', "Namangan ko'chasi", 'Navro\'z',
-    "Oltin vodiy", 'Registon', 'Uychi', 'Yuksalish', 'Yangi hayot',
+  'Namangan şahri': [
+    'Beşqõrğon', 'Çortepa', "Dõstlik", 'Gavhar', 'Ismoil Somoniy',
+    'Kamolot', 'Kosonsoy', 'Labzak', "Namangan kõçasi", 'Navrõz',
+    "Oltin vodiy", 'Registon', 'Uyçi', 'Yuksaliş', 'Yangi hayot',
   ],
-  'Chortoq tumani': [
-    'Chortoq', "Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt',
+  'Çortoq tumani': [
+    'Çortoq', "Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt',
   ],
-  'Chust tumani': [
-    'Chust', "Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt', "Yangi Chust",
+  'Çust tumani': [
+    'Çust', "Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt', "Yangi Çust",
   ],
   'Kosonsoy tumani': [
-    'Kosonsoy', "Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt',
+    'Kosonsoy', "Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt',
   ],
   'Mingbuloq tumani': [
-    'Mingbuloq', "Do'stlik", 'Yangi hayot', 'Mehnat',
+    'Mingbuloq', "Dõstlik", 'Yangi hayot', 'Mehnat',
   ],
   'Namangan tumani': [
-    "Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt', 'Navruz',
+    "Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt', 'Navruz',
   ],
   'Norin tumani': [
-    'Norin', "Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt',
+    'Norin', "Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt',
   ],
   'Pop tumani': [
-    'Pop', "Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt', 'Yangi Pop',
+    'Pop', "Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt', 'Yangi Pop',
   ],
-  "To'raqo'rg'on tumani": [
-    "To'raqo'rg'on", "Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt',
+  "Tõraqõrğon tumani": [
+    "Tõraqõrğon", "Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt',
   ],
-  "Uchqo'rg'on tumani": [
-    "Uchqo'rg'on", "Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt',
+  "Uçqõrğon tumani": [
+    "Uçqõrğon", "Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt',
   ],
-  'Uychi tumani': [
-    'Uychi', "Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt',
+  'Uyçi tumani': [
+    'Uyçi', "Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt',
   ],
-  "Yangiqo'rg'on tumani": [
-    "Yangiqo'rg'on", "Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt',
+  "Yangiqõrğon tumani": [
+    "Yangiqõrğon", "Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt',
   ],
 
   // ─────────────────── FARG'ONA VILOYATI ───────────────────
-  "Farg'ona shahri": [
-    'Bahor', 'Bog\'bon', "Do'stlik", "Farg'ona", 'Gavhar', 'Istiqlol',
-    'Kirguli', 'Marifat', 'Mustaqillik', 'Nur', 'Oydin', "O'zbekiston",
+  "Farğona şahri": [
+    'Bahor', 'Boğbon', "Dõstlik", "Farğona", 'Gavhar', 'Istiqlol',
+    'Kirguli', 'Marifat', 'Mustaqillik', 'Nur', 'Oydin', "Õzbekiston",
     'Sohil', 'Tong', 'Yangi hayot', 'Yulduz',
   ],
-  "Marg'ilon shahri": [
-    'Amir Temur', 'Bog\'bon', "Do'stlik", 'Ipakchi', "Marg'ilon",
-    'Navro\'z', 'Silk Road', 'Yangi hayot',
+  "Marğilon şahri": [
+    'Amir Temur', 'Boğbon', "Dõstlik", 'Ipakçi', "Marğilon",
+    'Navrõz', 'Silk Road', 'Yangi hayot',
   ],
-  "Qo'qon shahri": [
-    'Amir Temur', 'Bahodir', "Do'stlik", 'Khan', 'Muqimiy',
-    'Navro\'z', 'Yangi hayot', "Qo'qon",
+  "Qõqon şahri": [
+    'Amir Temur', 'Bahodir', "Dõstlik", 'Khan', 'Muqimiy',
+    'Navrõz', 'Yangi hayot', "Qõqon",
   ],
-  "Quvasoy shahri": [
-    'Quvasoy', 'Markaziy', "Do'stlik", 'Yangi hayot',
+  "Quvasoy şahri": [
+    'Quvasoy', 'Markaziy', "Dõstlik", 'Yangi hayot',
   ],
-  "Bag'dod tumani": [
-    "Bag'dod", "Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt',
+  "Bağdod tumani": [
+    "Bağdod", "Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt',
   ],
-  'Besharik tumani': [
-    'Besharik', "Do'stlik", 'Yangi hayot', 'Mehnat',
+  'Beşarik tumani': [
+    'Beşarik', "Dõstlik", 'Yangi hayot', 'Mehnat',
   ],
   'Buvayda tumani': [
-    'Buvayda', "Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt',
+    'Buvayda', "Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt',
   ],
-  "Dang'ara tumani": [
-    "Dang'ara", "Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt',
+  "Danğara tumani": [
+    "Danğara", "Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt',
   ],
-  "Farg'ona tumani": [
-    "Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt', 'Navruz',
+  "Farğona tumani": [
+    "Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt', 'Navruz',
   ],
   'Furqat tumani': [
-    'Furqat', "Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt',
+    'Furqat', "Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt',
   ],
   'Oltiariq tumani': [
-    'Oltiariq', "Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt',
+    'Oltiariq', "Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt',
   ],
-  "O'zbekiston tumani": [
-    "O'zbekiston", "Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt',
+  "Õzbekiston tumani": [
+    "Õzbekiston", "Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt',
   ],
   'Quva tumani': [
-    'Quva', "Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt',
+    'Quva', "Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt',
   ],
-  'Rishton tumani': [
-    'Rishton', "Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt',
+  'Rişton tumani': [
+    'Rişton', "Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt',
   ],
   'Sux tumani': [
-    'Sux', "Do'stlik", 'Yangi hayot', 'Mehnat',
+    'Sux', "Dõstlik", 'Yangi hayot', 'Mehnat',
   ],
-  'Toshloq tumani': [
-    'Toshloq', "Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt',
+  'Toşloq tumani': [
+    'Toşloq', "Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt',
   ],
-  "Uchko'prik tumani": [
-    "Uchko'prik", "Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt',
+  "Uçkõprik tumani": [
+    "Uçkõprik", "Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt',
   ],
   'Yozyovon tumani': [
-    'Yozyovon', "Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt',
+    'Yozyovon', "Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt',
   ],
 
   // ─────────────────── QASHQADARYO VILOYATI ───────────────────
-  'Qarshi shahri': [
-    'Amir Temur', 'Ark', "Do'stlik", 'Gavhar', 'Istiqlol', 'Mustaqillik',
-    'Navro\'z', 'Nishon', 'Yangi hayot', 'Yangi Qarshi', 'Yuksalish',
+  'Qarşi şahri': [
+    'Amir Temur', 'Ark', "Dõstlik", 'Gavhar', 'Istiqlol', 'Mustaqillik',
+    'Navrõz', 'Nişon', 'Yangi hayot', 'Yangi Qarşi', 'Yuksaliş',
   ],
-  'Shahrisabz shahri': [
-    'Amir Temur', "Do'stlik", 'Markaziy', 'Mustaqillik', 'Shahrisabz',
+  'Şahrisabz şahri': [
+    'Amir Temur', "Dõstlik", 'Markaziy', 'Mustaqillik', 'Şahrisabz',
     'Yangi hayot',
   ],
-  'Chiroqchi tumani': [
-    'Chiroqchi', "Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt',
+  'Çiroqçi tumani': [
+    'Çiroqçi', "Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt',
   ],
   'Dehqonobod tumani': [
-    'Dehqonobod', "Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt',
+    'Dehqonobod', "Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt',
   ],
-  "G'uzor tumani": [
-    "G'uzor", "Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt',
+  "Ğuzor tumani": [
+    "Ğuzor", "Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt',
   ],
-  'Qamashi tumani': [
-    'Qamashi', "Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt',
+  'Qamaşi tumani': [
+    'Qamaşi', "Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt',
   ],
-  'Qarshi tumani': [
-    "Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt', 'Navruz',
+  'Qarşi tumani': [
+    "Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt', 'Navruz',
   ],
   'Kasbi tumani': [
-    'Kasbi', "Do'stlik", 'Yangi hayot', 'Mehnat',
+    'Kasbi', "Dõstlik", 'Yangi hayot', 'Mehnat',
   ],
-  "Ko'kdala tumani": [
-    "Ko'kdala", "Do'stlik", 'Yangi hayot', 'Mehnat',
+  "Kõkdala tumani": [
+    "Kõkdala", "Dõstlik", 'Yangi hayot', 'Mehnat',
   ],
   'Kitob tumani': [
-    'Kitob', "Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt',
+    'Kitob', "Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt',
   ],
   'Koson tumani': [
-    'Koson', "Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt',
+    'Koson', "Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt',
   ],
-  'Mirishkor tumani': [
-    'Mirishkor', "Do'stlik", 'Yangi hayot', 'Mehnat',
+  'Mirişkor tumani': [
+    'Mirişkor', "Dõstlik", 'Yangi hayot', 'Mehnat',
   ],
   'Muborak tumani': [
-    'Muborak', "Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt',
+    'Muborak', "Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt',
   ],
-  'Nishon tumani': [
-    'Nishon', "Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt',
+  'Nişon tumani': [
+    'Nişon', "Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt',
   ],
-  'Shahrisabz tumani': [
-    "Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt', 'Navruz',
+  'Şahrisabz tumani': [
+    "Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt', 'Navruz',
   ],
-  "Yakkabog' tumani": [
-    "Yakkabog'", "Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt',
+  "Yakkaboğ tumani": [
+    "Yakkaboğ", "Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt',
   ],
 
   // ─────────────────── SURXONDARYO VILOYATI ───────────────────
-  'Termiz shahri': [
-    'Amir Temur', 'Ark', "Do'stlik", 'Navro\'z', 'Termiz', 'Yangi hayot',
+  'Termiz şahri': [
+    'Amir Temur', 'Ark', "Dõstlik", 'Navrõz', 'Termiz', 'Yangi hayot',
     'Mustaqillik', 'Vatan',
   ],
-  'Angor tumani': ['Angor', "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  'Bandixon tumani': ['Bandixon', "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  'Boysun tumani': ['Boysun', "Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt'],
-  'Denov tumani': ['Denov', "Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt'],
-  "Jarqo'rg'on tumani": ["Jarqo'rg'on", "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  'Muzrabot tumani': ['Muzrabot', "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  'Oltinsoy tumani': ['Oltinsoy', "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  'Qiziriq tumani': ['Qiziriq', "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  "Qumqo'rg'on tumani": ["Qumqo'rg'on", "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  'Sariosiyo tumani': ['Sariosiyo', "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  "Sho'rchi tumani": ["Sho'rchi", "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  'Sherobod tumani': ['Sherobod', "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  'Termiz tumani': ["Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt'],
-  'Uzun tumani': ['Uzun', "Do'stlik", 'Yangi hayot', 'Mehnat'],
+  'Angor tumani': ['Angor', "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  'Bandixon tumani': ['Bandixon', "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  'Boysun tumani': ['Boysun', "Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt'],
+  'Denov tumani': ['Denov', "Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt'],
+  "Jarqõrğon tumani": ["Jarqõrğon", "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  'Muzrabot tumani': ['Muzrabot', "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  'Oltinsoy tumani': ['Oltinsoy', "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  'Qiziriq tumani': ['Qiziriq', "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  "Qumqõrğon tumani": ["Qumqõrğon", "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  'Sariosiyo tumani': ['Sariosiyo', "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  "Şõrçi tumani": ["Şõrçi", "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  'Şerobod tumani': ['Şerobod', "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  'Termiz tumani': ["Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt'],
+  'Uzun tumani': ['Uzun', "Dõstlik", 'Yangi hayot', 'Mehnat'],
 
   // ─────────────────── NAVOIY VILOYATI ───────────────────
-  'Navoiy shahri': [
-    'Amir Temur', "Do'stlik", 'Kimyogar', 'Mustaqillik', 'Navro\'z',
-    'Navoiy', 'Yangi hayot', 'Yuksalish',
+  'Navoiy şahri': [
+    'Amir Temur', "Dõstlik", 'Kimyogar', 'Mustaqillik', 'Navrõz',
+    'Navoiy', 'Yangi hayot', 'Yuksaliş',
   ],
-  'Zarafshon shahri': ['Zarafshon', 'Markaziy', "Do'stlik", 'Yangi hayot'],
-  'Karmana tumani': ['Karmana', "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  'Konimex tumani': ['Konimex', "Do'stlik", 'Yangi hayot'],
-  'Navbahor tumani': ['Navbahor', "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  'Nurota tumani': ['Nurota', "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  'Qiziltepa tumani': ['Qiziltepa', "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  'Tomdi tumani': ['Tomdi', "Do'stlik", 'Yangi hayot'],
-  'Uchkuduk tumani': ['Uchkuduk', "Do'stlik", 'Yangi hayot'],
-  'Xatirchi tumani': ['Xatirchi', "Do'stlik", 'Yangi hayot', 'Mehnat'],
+  'Zarafşon şahri': ['Zarafşon', 'Markaziy', "Dõstlik", 'Yangi hayot'],
+  'Karmana tumani': ['Karmana', "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  'Konimex tumani': ['Konimex', "Dõstlik", 'Yangi hayot'],
+  'Navbahor tumani': ['Navbahor', "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  'Nurota tumani': ['Nurota', "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  'Qiziltepa tumani': ['Qiziltepa', "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  'Tomdi tumani': ['Tomdi', "Dõstlik", 'Yangi hayot'],
+  'Uçkuduk tumani': ['Uçkuduk', "Dõstlik", 'Yangi hayot'],
+  'Xatirçi tumani': ['Xatirçi', "Dõstlik", 'Yangi hayot', 'Mehnat'],
 
   // ─────────────────── JIZZAX VILOYATI ───────────────────
-  'Jizzax shahri': [
-    'Amir Temur', "Do'stlik", 'Gulzor', 'Istiqlol', 'Jizzax', 'Mustaqillik',
-    'Navro\'z', 'Yangi hayot',
+  'Jizzax şahri': [
+    'Amir Temur', "Dõstlik", 'Gulzor', 'Istiqlol', 'Jizzax', 'Mustaqillik',
+    'Navrõz', 'Yangi hayot',
   ],
-  'Arnasoy tumani': ['Arnasoy', "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  'Baxmal tumani': ['Baxmal', "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  "Do'stlik tumani": ["Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt'],
-  "G'allaorol tumani": ["G'allaorol", "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  'Forish tumani': ['Forish', "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  "Mirzacho'l tumani": ["Mirzacho'l", "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  'Paxtakor tumani': ['Paxtakor', "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  'Sh.Rashidov tumani': ['Sh.Rashidov', "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  'Yangiobod tumani': ['Yangiobod', "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  'Zafarobod tumani': ['Zafarobod', "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  'Zarbdor tumani': ['Zarbdor', "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  'Zomin tumani': ['Zomin', "Do'stlik", 'Yangi hayot', 'Mehnat'],
+  'Arnasoy tumani': ['Arnasoy', "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  'Baxmal tumani': ['Baxmal', "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  "Dõstlik tumani": ["Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt'],
+  "Ğallaorol tumani": ["Ğallaorol", "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  'Foriş tumani': ['Foriş', "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  "Mirzaçõl tumani": ["Mirzaçõl", "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  'Paxtakor tumani': ['Paxtakor', "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  'Ş.Raşidov tumani': ['Ş.Raşidov', "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  'Yangiobod tumani': ['Yangiobod', "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  'Zafarobod tumani': ['Zafarobod', "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  'Zarbdor tumani': ['Zarbdor', "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  'Zomin tumani': ['Zomin', "Dõstlik", 'Yangi hayot', 'Mehnat'],
 
   // ─────────────────── SIRDARYO VILOYATI ───────────────────
-  'Guliston shahri': [
-    'Amir Temur', "Do'stlik", 'Guliston', 'Mustaqillik', 'Navro\'z', 'Yangi hayot',
+  'Guliston şahri': [
+    'Amir Temur', "Dõstlik", 'Guliston', 'Mustaqillik', 'Navrõz', 'Yangi hayot',
   ],
-  'Shirin shahri': ['Shirin', 'Markaziy', "Do'stlik", 'Yangi hayot'],
-  'Yangiyer shahri': ['Yangiyer', 'Markaziy', "Do'stlik", 'Yangi hayot'],
-  'Boyovut tumani': ['Boyovut', "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  'Guliston tumani': ["Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt'],
-  'Mirzaobod tumani': ['Mirzaobod', "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  'Oqoltin tumani': ['Oqoltin', "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  'Sardoba tumani': ['Sardoba', "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  'Sayxunobod tumani': ['Sayxunobod', "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  'Sirdaryo tumani': ["Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt'],
-  'Xovos tumani': ['Xovos', "Do'stlik", 'Yangi hayot', 'Mehnat'],
+  'Şirin şahri': ['Şirin', 'Markaziy', "Dõstlik", 'Yangi hayot'],
+  'Yangiyer şahri': ['Yangiyer', 'Markaziy', "Dõstlik", 'Yangi hayot'],
+  'Boyovut tumani': ['Boyovut', "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  'Guliston tumani': ["Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt'],
+  'Mirzaobod tumani': ['Mirzaobod', "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  'Oqoltin tumani': ['Oqoltin', "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  'Sardoba tumani': ['Sardoba', "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  'Sayxunobod tumani': ['Sayxunobod', "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  'Sirdaryo tumani': ["Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt'],
+  'Xovos tumani': ['Xovos', "Dõstlik", 'Yangi hayot', 'Mehnat'],
 
   // ─────────────────── TOSHKENT VILOYATI ───────────────────
-  'Angren shahri': ['Angren', 'Markaziy', "Do'stlik", 'Yangi hayot', 'Konchi'],
-  'Bekobod shahri': ['Bekobod', 'Markaziy', "Do'stlik", 'Yangi hayot'],
-  'Chirchiq shahri': ['Chirchiq', 'Markaziy', "Do'stlik", 'Yangi hayot', 'Sanoat'],
-  'Olmaliq shahri': ['Olmaliq', 'Markaziy', "Do'stlik", 'Yangi hayot', 'Metallurg'],
-  'Bekobod tumani': ['Bekobod', "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  "Bo'stonliq tumani": ["Bo'stonliq", "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  'Chinoz tumani': ['Chinoz', "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  "Oqqo'rg'on tumani": ["Oqqo'rg'on", "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  'Olmaliq tumani': ["Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt'],
-  'Parkent tumani': ['Parkent', "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  'Piskent tumani': ['Piskent', "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  'Qibray tumani': ['Qibray', "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  'Yuqorichirchiq tumani': ['Yuqorichirchiq', "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  "Yangiyo'l tumani": ["Yangiyo'l", "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  'Zangiota tumani': ['Zangiota', "Do'stlik", 'Yangi hayot', 'Mehnat', 'Qibray'],
-  'Zangibobod tumani': ['Zangibobod', "Do'stlik", 'Yangi hayot'],
+  'Angren şahri': ['Angren', 'Markaziy', "Dõstlik", 'Yangi hayot', 'Konçi'],
+  'Bekobod şahri': ['Bekobod', 'Markaziy', "Dõstlik", 'Yangi hayot'],
+  'Çirçiq şahri': ['Çirçiq', 'Markaziy', "Dõstlik", 'Yangi hayot', 'Sanoat'],
+  'Olmaliq şahri': ['Olmaliq', 'Markaziy', "Dõstlik", 'Yangi hayot', 'Metallurg'],
+  'Bekobod tumani': ['Bekobod', "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  "Bõstonliq tumani": ["Bõstonliq", "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  'Çinoz tumani': ['Çinoz', "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  "Oqqõrğon tumani": ["Oqqõrğon", "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  'Olmaliq tumani': ["Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt'],
+  'Parkent tumani': ['Parkent', "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  'Piskent tumani': ['Piskent', "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  'Qibray tumani': ['Qibray', "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  'Yuqoriçirçiq tumani': ['Yuqoriçirçiq', "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  "Yangiyõl tumani": ["Yangiyõl", "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  'Zangiota tumani': ['Zangiota', "Dõstlik", 'Yangi hayot', 'Mehnat', 'Qibray'],
+  'Zangibobod tumani': ['Zangibobod', "Dõstlik", 'Yangi hayot'],
 
   // ─────────────────── XORAZM VILOYATI ───────────────────
-  'Urganch shahri': [
-    'Amir Temur', "Do'stlik", 'Ipakchi', 'Mustaqillik', 'Navro\'z',
-    'Urganch', 'Yangi hayot',
+  'Urganç şahri': [
+    'Amir Temur', "Dõstlik", 'Ipakçi', 'Mustaqillik', 'Navrõz',
+    'Urganç', 'Yangi hayot',
   ],
-  'Xiva shahri': ['Xiva', 'Markaziy', "Do'stlik", 'Ichanqala', 'Yangi hayot'],
-  "Bog'ot tumani": ["Bog'ot", "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  'Gurlan tumani': ['Gurlan', "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  'Hazorasp tumani': ['Hazorasp', "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  'Urganch tumani': ["Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt'],
-  "Qo'shko'pir tumani": ["Qo'shko'pir", "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  'Shovot tumani': ['Shovot', "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  'Tuproqqala tumani': ['Tuproqqala', "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  'Xiva tumani': ["Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt'],
-  'Xonqa tumani': ['Xonqa', "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  'Yangiariq tumani': ['Yangiariq', "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  'Yangibozor tumani': ['Yangibozor', "Do'stlik", 'Yangi hayot', 'Mehnat'],
+  'Xiva şahri': ['Xiva', 'Markaziy', "Dõstlik", 'Içanqala', 'Yangi hayot'],
+  "Boğot tumani": ["Boğot", "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  'Gurlan tumani': ['Gurlan', "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  'Hazorasp tumani': ['Hazorasp', "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  'Urganç tumani': ["Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt'],
+  "Qõşkõpir tumani": ["Qõşkõpir", "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  'Şovot tumani': ['Şovot', "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  'Tuproqqala tumani': ['Tuproqqala', "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  'Xiva tumani': ["Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt'],
+  'Xonqa tumani': ['Xonqa', "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  'Yangiariq tumani': ['Yangiariq', "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  'Yangibozor tumani': ['Yangibozor', "Dõstlik", 'Yangi hayot', 'Mehnat'],
 
   // ─────────────────── QORAQALPOG'ISTON ───────────────────
-  'Nukus shahri': [
-    'Amir Temur', "Do'stlik", 'Navro\'z', 'Nukus', 'Yangi hayot', 'Markaz',
-    'Qo\'ng\'irot',
+  'Nukus şahri': [
+    'Amir Temur', "Dõstlik", 'Navrõz', 'Nukus', 'Yangi hayot', 'Markaz',
+    'Qõnğirot',
   ],
-  'Taxiatosh shahri': ['Taxiatosh', 'Markaziy', "Do'stlik", 'Yangi hayot'],
-  'Amudaryo tumani': ['Amudaryo', "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  'Beruniy tumani': ['Beruniy', "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  "Bo'zatov tumani": ["Bo'zatov", "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  'Chimboy tumani': ['Chimboy', "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  "Ellikqal'a tumani": ["Ellikqal'a", "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  'Kegayli tumani': ['Kegayli', "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  "Mo'ynoq tumani": ["Mo'ynoq", "Do'stlik", 'Yangi hayot'],
-  'Nukus tumani': ["Do'stlik", 'Yangi hayot', 'Mehnat', 'Baxt'],
-  "Qonliko'l tumani": ["Qonliko'l", "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  "Qorao'zak tumani": ["Qorao'zak", "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  "Qo'ng'irot tumani": ["Qo'ng'irot", "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  'Shumanay tumani': ['Shumanay', "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  "Taxtako'pir tumani": ["Taxtako'pir", "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  "To'rtko'l tumani": ["To'rtko'l", "Do'stlik", 'Yangi hayot', 'Mehnat'],
-  "Xo'jayli tumani": ["Xo'jayli", "Do'stlik", 'Yangi hayot', 'Mehnat'],
+  'Taxiatoş şahri': ['Taxiatoş', 'Markaziy', "Dõstlik", 'Yangi hayot'],
+  'Amudaryo tumani': ['Amudaryo', "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  'Beruniy tumani': ['Beruniy', "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  "Bõzatov tumani": ["Bõzatov", "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  'Çimboy tumani': ['Çimboy', "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  "Ellikqal'a tumani": ["Ellikqal'a", "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  'Kegayli tumani': ['Kegayli', "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  "Mõynoq tumani": ["Mõynoq", "Dõstlik", 'Yangi hayot'],
+  'Nukus tumani': ["Dõstlik", 'Yangi hayot', 'Mehnat', 'Baxt'],
+  "Qonlikõl tumani": ["Qonlikõl", "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  "Qoraõzak tumani": ["Qoraõzak", "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  "Qõnğirot tumani": ["Qõnğirot", "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  'Şumanay tumani': ['Şumanay', "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  "Taxtakõpir tumani": ["Taxtakõpir", "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  "Tõrtkõl tumani": ["Tõrtkõl", "Dõstlik", 'Yangi hayot', 'Mehnat'],
+  "Xõjayli tumani": ["Xõjayli", "Dõstlik", 'Yangi hayot', 'Mehnat'],
 };

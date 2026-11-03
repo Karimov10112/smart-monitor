@@ -37,7 +37,7 @@ export const NutritionAI: React.FC<NutritionAIProps> = ({ user, t, language }) =
         setError(data.message || 'Xato yuz berdi');
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'AI bilan aloqa qilishda xato');
+      setError(err.response?.data?.message || 'AI bilan aloqa qilişda xato');
     } finally {
       setLoading(false);
     }
@@ -45,14 +45,14 @@ export const NutritionAI: React.FC<NutritionAIProps> = ({ user, t, language }) =
 
   const labels = {
     uz: {
-      title: 'AI Ovqatlanish Tavsiyasi',
-      subtitle: 'Sizning sog\'liq ma\'lumotlaringiz asosida shaxsiylashtirilgan',
-      getAdvice: 'Tavsiya olish',
-      refresh: 'Yangilash',
-      noData: 'Tavsiya olish uchun profilingizda bo\'y va vazn ma\'lumotlarini kiriting',
-      goToProfile: 'Profilni to\'ldirish',
+      title: 'AI Ovqatlaniş Tavsiyasi',
+      subtitle: 'Sizning soğliq ma'lumotlaringiz asosida şaxsiylaştirilgan',
+      getAdvice: 'Tavsiya oliş',
+      refresh: 'Yangilaş',
+      noData: 'Tavsiya oliş uçun profilingizda bõy va vazn ma'lumotlarini kiriting',
+      goToProfile: 'Profilni tõldiriş',
       bmi: 'BMI',
-      age: 'Yosh',
+      age: 'Yoş',
       calories: 'Kaloriya',
     },
     ru: {

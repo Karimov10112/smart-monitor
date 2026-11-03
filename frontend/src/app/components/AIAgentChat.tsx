@@ -27,9 +27,9 @@ interface AgentMessage {
 const QUICK_PROMPTS: Record<string, string[]> = {
   uz: [
     '📊 Qand darajamni tahlil qil',
-    '🥗 Bugun nima yeyish kerak?',
+    '🥗 Bugun nima yeyiş kerak?',
     '👤 Profilim haqida ma\'lumot',
-    '💊 Diabet bo\'yicha maslahat',
+    '💊 Diabet bõyiça maslahat',
   ],
   ru: [
     '📊 Анализ моего сахара',
@@ -49,7 +49,7 @@ const TOOL_LABELS: Record<string, string> = {
   get_blood_sugar: '🩸 Qand ma\'lumoti',
   get_user_profile: '👤 Profil',
   get_nutrition_advice: '🥗 Taom tavsiyasi',
-  alert_doctor: '🚨 Shifokor ogohlantirish',
+  alert_doctor: '🚨 Şifokor ogohlantiriş',
 };
 
 // Simple markdown-like renderer
@@ -338,7 +338,7 @@ export default function AIAgentChat() {
                 </Typography>
               </Box>
             </Box>
-            <Tooltip title={lang === 'uz' ? 'Tozalash' : lang === 'ru' ? 'Очистить' : 'Clear'}>
+            <Tooltip title={lang === 'uz' ? 'Tozalaş' : lang === 'ru' ? 'Очистить' : 'Clear'}>
               <IconButton size="small" onClick={clearChat} sx={{ color: alpha('#fff', 0.8), '&:hover': { color: 'white', bgcolor: alpha('#fff', 0.15) } }}>
                 <DeleteOutlineIcon fontSize="small" />
               </IconButton>

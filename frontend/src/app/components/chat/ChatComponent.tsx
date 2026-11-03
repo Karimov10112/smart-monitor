@@ -200,7 +200,7 @@ export function Chat({ initialUserId }: ChatProps = {}) {
         socket.emit('mark-read', { userId: user?._id, fromId: chatUser._id });
       }
     } catch {
-      toast.error('Xabarlarni yuklashda xato');
+      toast.error('Xabarlarni yuklaşda xato');
     } finally {
       setLoadingMessages(false);
     }
@@ -237,7 +237,7 @@ export function Chat({ initialUserId }: ChatProps = {}) {
         scrollToBottom();
       }
     } catch {
-      toast.error('Xabar yuborishda xato');
+      toast.error('Xabar yuborişda xato');
       setSending(false);
     }
   };
@@ -270,7 +270,7 @@ export function Chat({ initialUserId }: ChatProps = {}) {
     const now = new Date();
     const diffDays = Math.floor((now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24));
     if (diffDays === 0) return 'Bugun';
-    if (diffDays === 1) return 'Kecha';
+    if (diffDays === 1) return 'Keça';
     return d.toLocaleDateString('uz', { day: 'numeric', month: 'short' });
   };
 
@@ -296,10 +296,10 @@ export function Chat({ initialUserId }: ChatProps = {}) {
         justifyContent: 'center', py: 10, gap: 2, opacity: 0.5
       }}>
         <ChatBubbleOutlineIcon sx={{ fontSize: 60 }} />
-        <Typography variant="h6" fontWeight={800}>Chat mavjud emas</Typography>
+        <Typography variant="h6" fontWeight={800}>Çat mavjud emas</Typography>
         <Typography variant="body2" color="text.secondary" textAlign="center">
-          Siz hali hech qanday suhbat boshlashingiz mumkin emas.<br />
-          Shifokor sizga biriktirilishi kerak.
+          Siz hali heç qanday suhbat başlaşingiz mumkin emas.<br />
+          Şifokor sizga biriktirilişi kerak.
         </Typography>
       </Box>
     );
@@ -468,8 +468,8 @@ export function Chat({ initialUserId }: ChatProps = {}) {
             ) : messages.length === 0 ? (
               <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flexGrow: 1, opacity: 0.4 }}>
                 <ChatBubbleOutlineIcon sx={{ fontSize: 48, mb: 1 }} />
-                <Typography variant="body2" fontWeight={700}>Hali xabar yo'q</Typography>
-                <Typography variant="caption" color="text.secondary">Birinchi xabarni yuboring!</Typography>
+                <Typography variant="body2" fontWeight={700}>Hali xabar yõq</Typography>
+                <Typography variant="caption" color="text.secondary">Birinçi xabarni yuboring!</Typography>
               </Box>
             ) : (
               <>
@@ -574,7 +574,7 @@ export function Chat({ initialUserId }: ChatProps = {}) {
                 value={text}
                 onChange={handleTyping}
                 onKeyDown={handleKeyPress}
-                placeholder="Xabar yozing... (Enter — yuborish)"
+                placeholder="Xabar yozing... (Enter — yuboriş)"
                 multiline
                 maxRows={4}
                 fullWidth
@@ -616,7 +616,7 @@ export function Chat({ initialUserId }: ChatProps = {}) {
           <ChatBubbleOutlineIcon sx={{ fontSize: 64 }} />
           <Typography variant="h6" fontWeight={800}>Suhbat tanlang</Typography>
           <Typography variant="body2" color="text.secondary">
-            Chap tomondagi ro'yxatdan suhbatni tanlang
+            Çap tomondagi rõyxatdan suhbatni tanlang
           </Typography>
         </Box>
       )}

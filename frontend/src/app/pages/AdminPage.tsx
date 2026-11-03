@@ -208,7 +208,7 @@ export default function AdminPage() {
 
   const handleResetPassword = async () => {
     if (!selectedUserId || !newPassword || newPassword.length < 6) {
-      toast.error('Parol kamida 6 ta belgi bo\'lishi kerak');
+      toast.error('Parol kamida 6 ta belgi bõlişi kerak');
       return;
     }
     try {
@@ -231,7 +231,7 @@ export default function AdminPage() {
     e.preventDefault();
     try {
       await adminAPI.createPatient(patientForm);
-        toast.success(t.patientAdded || "Bemor muvaffaqiyatli qo'shildi");
+        toast.success(t.patientAdded || "Bemor muvaffaqiyatli qõşildi");
       setIsAddPatientModalOpen(false);
       setPatientForm({ email: '', password: '', firstName: '', lastName: '', phone: '', region: '', district: '', height: '', weight: '', diabetesType: '2-toifa', dateOfBirth: '' });
       loadUsers(search, role);
@@ -477,11 +477,11 @@ export default function AdminPage() {
                     <Stack direction={isMobile ? 'column' : 'row'} spacing={2} alignItems={isMobile ? 'flex-start' : 'center'} justifyContent="space-between">
                       <Box>
                         <Typography variant="subtitle1" sx={{ fontWeight: 900, color: 'error.main' }}>
-                          🧹 {language === 'uz' ? "Chala ro'yxatdan o'tganlarni o'chirish" : 'Purge incomplete accounts'}
+                          🧹 {language === 'uz' ? "Çala rõyxatdan õtganlarni õçiriş" : 'Purge incomplete accounts'}
                         </Typography>
                         <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
                           {language === 'uz'
-                            ? "Email tasdiqlanmagan yoki profili to'liq to'ldirilmagan foydalanuvchilar o'chiriladi."
+                            ? "Email tasdiqlanmagan yoki profili tõliq tõldirilmagan foydalanuvçilar õçiriladi."
                             : 'Deletes users who have not verified their email or completed their profile.'}
                         </Typography>
                       </Box>

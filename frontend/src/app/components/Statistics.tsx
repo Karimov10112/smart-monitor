@@ -134,7 +134,7 @@ export function Statistics({ customRecords, customLanguage }: StatisticsProps = 
 
   const handleExportPDF = async () => {
     if (!records || records.length === 0) {
-      toast.error('Eksport uchun ma\'lumot mavjud emas');
+      toast.error('Eksport uçun ma\'lumot mavjud emas');
       return;
     }
     setExportingPDF(true);
@@ -151,7 +151,7 @@ export function Statistics({ customRecords, customLanguage }: StatisticsProps = 
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(14);
       doc.setFont('helvetica', 'bold');
-      doc.text('QAND NAZORATI - QON SHAKARI VA SALOMATLIK HISOBOTI', 14, 15);
+      doc.text('QAND NAZORATI - QON ŞAKARI VA SALOMATLIK HISOBOTI', 14, 15);
 
       // Patient metadata
       doc.setTextColor(30, 41, 59);
@@ -171,16 +171,16 @@ export function Statistics({ customRecords, customLanguage }: StatisticsProps = 
       doc.roundedRect(14, 52, 182, 22, 2, 2, 'F');
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(9);
-      doc.text('O\'rtacha Och Qoringa:', 18, 62);
+      doc.text('Õrtaça Oç Qoringa:', 18, 62);
       doc.text(`${stats?.avgFasting || '—'} mmol/l`, 18, 69);
 
-      doc.text('O\'rtacha Ovqatdan Keyin:', 68, 62);
+      doc.text('Õrtaça Ovqatdan Keyin:', 68, 62);
       doc.text(`${stats?.avgPostMeal || '—'} mmol/l`, 68, 69);
 
       doc.text('Hisoblangan HbA1c:', 120, 62);
       doc.text(`${estimatedHbA1c?.value || '—'}%`, 120, 69);
 
-      doc.text('Jami O\'lchovlar:', 164, 62);
+      doc.text('Jami Õlçovlar:', 164, 62);
       doc.text(`${records.length} ta`, 164, 69);
 
       // Table of Records
@@ -200,7 +200,7 @@ export function Statistics({ customRecords, customLanguage }: StatisticsProps = 
 
       autoTable(doc, {
         startY: 80,
-        head: [['Sana', 'Och qoringa (mmol/l)', 'Ovqatdan keyin (mmol/l)', 'Bosim / Puls', 'XE / Insulin / Izoh']],
+        head: [['Sana', 'Oç qoringa (mmol/l)', 'Ovqatdan keyin (mmol/l)', 'Bosim / Puls', 'XE / Insulin / Izoh']],
         body: tableRows,
         headStyles: { fillColor: [79, 70, 229], fontStyle: 'bold', fontSize: 9 },
         alternateRowStyles: { fillColor: [249, 250, 251] },
@@ -212,7 +212,7 @@ export function Statistics({ customRecords, customLanguage }: StatisticsProps = 
       if (finalY < 260) {
         doc.setFontSize(9);
         doc.setFont('helvetica', 'italic');
-        doc.text('Davolovchi shifokor imzosi: ________________________', 14, Math.min(270, finalY + 20));
+        doc.text('Davolovçi şifokor imzosi: ________________________', 14, Math.min(270, finalY + 20));
       }
 
       // Page numbers footer
@@ -228,7 +228,7 @@ export function Statistics({ customRecords, customLanguage }: StatisticsProps = 
       toast.success('PDF hisobot muvaffaqiyatli yuklab olindi!');
     } catch (err) {
       console.error('PDF error:', err);
-      toast.error('PDF hisobot yaratishda xato yuz berdi');
+      toast.error('PDF hisobot yaratişda xato yuz berdi');
     } finally {
       setExportingPDF(false);
     }

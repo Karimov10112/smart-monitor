@@ -55,7 +55,7 @@ export default function ResetPasswordPage() {
       return;
     }
     if (password.length < 6) {
-      toast.error(language === 'uz' ? 'Parol kamida 6 ta belgi bo\'lishi kerak' : language === 'ru' ? 'Пароль минимум 6 символов' : 'Password must be at least 6 characters');
+      toast.error(language === 'uz' ? 'Parol kamida 6 ta belgi bõlişi kerak' : language === 'ru' ? 'Пароль минимум 6 символов' : 'Password must be at least 6 characters');
       return;
     }
     if (!token) {
@@ -92,7 +92,7 @@ export default function ResetPasswordPage() {
             </Typography>
             <Typography variant="body2" sx={{ color: 'text.secondary', mb: 4 }}>
               {language === 'uz'
-                ? 'Emailga yuborilgan havoladan to\'g\'ri kiring. Havola eskirgan bo\'lishi mumkin.'
+                ? 'Emailga yuborilgan havoladan tõğri kiring. Havola eskirgan bõlişi mumkin.'
                 : language === 'ru'
                 ? 'Перейдите по ссылке из письма. Ссылка могла устареть.'
                 : 'Please use the link from your email. The link may have expired.'}
@@ -104,7 +104,7 @@ export default function ResetPasswordPage() {
               to="/forgot-password"
               sx={{ fontWeight: 800 }}
             >
-              {language === 'uz' ? 'Qaytadan so\'rov yuborish' : language === 'ru' ? 'Отправить снова' : 'Request Again'}
+              {language === 'uz' ? 'Qaytadan sõrov yuboriş' : language === 'ru' ? 'Отправить снова' : 'Request Again'}
             </Button>
             <Link component={RouterLink} to="/login" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5, mt: 2, fontWeight: 700, fontSize: 12, textDecoration: 'none' }}>
               <ArrowBackIcon sx={{ fontSize: 14 }} />
@@ -175,7 +175,7 @@ export default function ResetPasswordPage() {
                 </Button>
 
                 <Link component={RouterLink} to="/forgot-password" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5, fontWeight: 700, fontSize: 12, textDecoration: 'none' }}>
-                  {language === 'uz' ? 'Yangi havola so\'rash' : language === 'ru' ? 'Запросить новую ссылку' : 'Request new link'}
+                  {language === 'uz' ? 'Yangi havola sõraş' : language === 'ru' ? 'Запросить новую ссылку' : 'Request new link'}
                 </Link>
               </Stack>
             </Box>
@@ -186,7 +186,7 @@ export default function ResetPasswordPage() {
               </Box>
               <Typography variant="h6" sx={{ fontWeight: 900, mb: 1 }}>{t.success}</Typography>
               <Typography variant="body2" sx={{ fontWeight: 700, color: 'text.secondary', mb: 4, px: 2 }}>
-                {t.passwordUpdated}. {language === 'uz' ? 'Endi yangi parolingiz bilan tizimga kirishingiz mumkin.' : language === 'ru' ? 'Теперь вы можете войти с новым паролем.' : 'You can now log in with your new password.'}
+                {t.passwordUpdated}. {language === 'uz' ? 'Endi yangi parolingiz bilan tizimga kirişingiz mumkin.' : language === 'ru' ? 'Теперь вы можете войти с новым паролем.' : 'You can now log in with your new password.'}
               </Typography>
               <Button fullWidth variant="contained" onClick={() => navigate('/login')} sx={{ fontWeight: 800 }}>
                  {t.signIn}

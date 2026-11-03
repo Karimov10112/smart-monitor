@@ -111,7 +111,7 @@ export function DailyJournal() {
     }));
     setShowExtraParams(true);
     setIsXeModalOpen(false);
-    toast.success('XE va insulin shaklga kiritildi!');
+    toast.success('XE va insulin şaklga kiritildi!');
   };
 
   // Hypo / Hyper live detection
@@ -157,7 +157,7 @@ export function DailyJournal() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.fastingLevel && !formData.postMealLevel) {
-      toast.error("Iltimos, och qoringa yoki ovqatdan keyingi qand miqdorining kamida birini kiriting!");
+      toast.error("Iltimos, oç qoringa yoki ovqatdan keyingi qand miqdorining kamida birini kiriting!");
       return;
     }
 

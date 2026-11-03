@@ -343,7 +343,7 @@ function App() {
             {language.toUpperCase()}
           </MuiButton>
           <Menu anchorEl={languageAnchorEl} open={Boolean(languageAnchorEl)} onClose={() => handleLanguageClose()} PaperProps={{ sx: { borderRadius: 2, minWidth: 150, mt: 1, boxShadow: '0 4px 20px rgba(0,0,0,0.1)' } }}>
-             <MenuItem onClick={() => handleLanguageClose('uz')} selected={language === 'uz'} sx={{ fontWeight: 700, fontSize: 13 }}>🇺🇿 O'zbekcha</MenuItem>
+             <MenuItem onClick={() => handleLanguageClose('uz')} selected={language === 'uz'} sx={{ fontWeight: 700, fontSize: 13 }}>🇺🇿 Õzbekça</MenuItem>
              <MenuItem onClick={() => handleLanguageClose('ru')} selected={language === 'ru'} sx={{ fontWeight: 700, fontSize: 13 }}>🇷🇺 Русский</MenuItem>
              <MenuItem onClick={() => handleLanguageClose('en')} selected={language === 'en'} sx={{ fontWeight: 700, fontSize: 13 }}>🇺🇸 English</MenuItem>
           </Menu>

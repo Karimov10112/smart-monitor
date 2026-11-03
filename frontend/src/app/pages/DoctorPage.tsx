@@ -128,7 +128,7 @@ export default function DoctorPage() {
 
   const handleExportPDF = async () => {
     if (!selectedPatient || records.length === 0) {
-      toast.error('Eksport uchun ma\'lumot yo\'q');
+      toast.error('Eksport uçun ma\'lumot yõq');
       return;
     }
     try {
@@ -152,7 +152,7 @@ export default function DoctorPage() {
 
       if (doctorNote) {
         doc.setFont('helvetica', 'bold');
-        doc.text('Shifokor izohi:', 14, 68);
+        doc.text('Şifokor izohi:', 14, 68);
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(10);
         const lines = doc.splitTextToSize(doctorNote, 180);
@@ -169,7 +169,7 @@ export default function DoctorPage() {
 
       autoTable(doc, {
         startY: doctorNote ? 90 : 68,
-        head: [['Sana', 'Och qoringa (mmol/l)', 'Ovqatdan keyin (mmol/l)', 'Eslatma']],
+        head: [['Sana', 'Oç qoringa (mmol/l)', 'Ovqatdan keyin (mmol/l)', 'Eslatma']],
         body: tableRows,
         headStyles: { fillColor: [99, 102, 241], fontStyle: 'bold' },
         alternateRowStyles: { fillColor: [248, 248, 255] },
@@ -189,7 +189,7 @@ export default function DoctorPage() {
       toast.success('PDF muvaffaqiyatli yuklab olindi!');
     } catch (err) {
       console.error('PDF error:', err);
-      toast.error('PDF yaratishda xato');
+      toast.error('PDF yaratişda xato');
     }
   };
 
