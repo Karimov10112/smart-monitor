@@ -38,9 +38,8 @@ const corsOriginFn = (origin, callback) => {
   if (origin.endsWith('.vercel.app') || origin === 'https://diabetmed.uz') return callback(null, true);
   // Allow configured origins
   if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
-  // Allow localhost in development
-  if (origin.startsWith('http://localhost') || origin.startsWith('http://192.168.')) return callback(null, true);
-  callback(new Error('Not allowed by CORS'));
+  // Allow integration clients from any origin
+  return callback(null, true);
 };
 
 const io = new Server(server, {
@@ -168,6 +167,10 @@ const doctorRoutes = require('./routes/doctor');
 const reminderRoutes = require('./routes/reminders');
 const chatRoutes = require('./routes/chat');
 const notificationRoutes = require('./routes/notifications');
+const integrationRoutes = require('./routes/integration');
+
+app.use('/api/v1/integration', integrationRoutes);
+app.use('/integration', integrationRoutes);
 
 app.use('/api/auth', authRoutes);
 app.use('/auth', authRoutes);

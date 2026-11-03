@@ -1,6 +1,8 @@
-# 💙 Qand Nazorati — To'liq Loyiha
+# 💙 Qandli Diabet Bemorlari Holatini Monitoring Qilish va Asoratlar Xavfini Baholash Dasturiy Kutubxonasi hamda Integratsiya Interfeyslari
 
-Qandli diabet nazorat tizimi. **Backend + Frontend + Database** to'liq loyiha.
+> **Diplom loyihasi:** Qandli diabet bilan kasallangan bemorlarning holatini monitoring qilish va asoratlar xavfini baholash uchun dasturiy kutubxona va integratsiya interfeyslarini ishlab chiqish.
+
+Ushbu loyiha boshqa dasturchilar va tibbiyot axborot tizimlari (MIS/EHR) uchun diabet asoratlarini baholovchi **ochiq dasturiy kutubxona (SDK)**, **REST/FHIR integratsiya interfeyslari** hamda amaliy **namoyish monitoring veb-tizimini** o'z ichiga oladi.
 
 ---
 
@@ -8,8 +10,11 @@ Qandli diabet nazorat tizimi. **Backend + Frontend + Database** to'liq loyiha.
 
 ```
 diabetes_project/
-├── backend/          # Node.js + Express + MongoDB
-└── frontend/         # React + TypeScript + Tailwind
+├── packages/
+│   └── diabetes-core/    # ⭐️ Dasturiy kutubxona (Mustaqil SDK / Hisoblash yadrosi)
+├── examples/             # ⭐️ Boshqa dasturchilar uchun namunalar (Node.js, Python, cURL)
+├── backend/              # Integratsiya interfeyslari (REST API, FHIR adapter, WebSocket)
+└── frontend/             # Namoyish monitoring tizimi (React + TypeScript + Tailwind)
 ```
 
 ---

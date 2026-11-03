@@ -1,0 +1,29 @@
+{
+  "name": "@karimov_dev/diabets",
+  "version": "1.3.0",
+  "description": "Clinical Diabetes Monitoring, Glycemic Metrics (TIR, eA1c) & Multi-factor Complication Risk Assessment SDK",
+  "main": "src/index.js",
+  "types": "src/index.d.ts",
+  "scripts": {
+    "test": "node test/test.js"
+  },
+  "keywords": [
+    "diabets",
+    "diabetes",
+    "risk-assessment",
+    "hba1c",
+    "glycemic-variability",
+    "tir",
+    "insulin-calculator",
+    "bolus",
+    "fhir",
+    "hl7",
+    "medical-calculator",
+    "health-tech"
+  ],
+  "author": "Karimov Dev",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  }
+}

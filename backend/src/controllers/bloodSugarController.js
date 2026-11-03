@@ -1,3 +1,5 @@
+const path = require('path');
+const { assessFullDiabetesRisk } = require(path.resolve(__dirname, '../../../packages/diabetes-core'));
 const bloodSugarRepository = require('../repositories/BloodSugarRepository');
 const User = require('../models/User');
 const AuditLog = require('../models/AuditLog');
@@ -165,4 +167,17 @@ const getStats = async (req, res) => {
   }
 };
 
-module.exports = { addRecord, getMyRecords, updateRecord, deleteRecord, getStats };
+const getRiskAssessment = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select('firstName lastName dateOfBirth gender height weight diabetesType systolicPressure diastolicPressure');
+    const records = await bloodSugarRepository.find({ user: req.user._id }, { sort: { date: -1 }, limit: 60 });
+
+    const assessment = assessFullDiabetesRisk(user || {}, records || []);
+    res.json({ success: true, data: assessment });
+  } catch (err) {
+    console.error('getRiskAssessment error:', err);
+    res.status(500).json({ success: false, message: 'Asoratlar xavfini hisoblashda xatolik yuz berdi' });
+  }
+};
+
+module.exports = { addRecord, getMyRecords, updateRecord, deleteRecord, getStats, getRiskAssessment };

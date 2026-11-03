@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import api from '../utils/api';
 import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
+import { DeviceSyncCard } from './DeviceSyncCard';
 
 // MUI Components
 import {
@@ -89,6 +90,14 @@ export function DailyJournal() {
   const [xeCarbs100, setXeCarbs100] = useState('50');
   const [xeWeight, setXeWeight] = useState('100');
   const [xeRatio, setXeRatio] = useState('1.0');
+
+  const handleGlucoseFromDevice = (glucoseMmol: number, type: 'fasting' | 'postMeal' = 'fasting') => {
+    if (type === 'fasting') {
+      setFormData(prev => ({ ...prev, fastingLevel: String(glucoseMmol) }));
+    } else {
+      setFormData(prev => ({ ...prev, postMealLevel: String(glucoseMmol) }));
+    }
+  };
 
   const parsedXE = useMemo(() => {
     const c = parseFloat(xeCarbs100) || 0;
@@ -284,6 +293,9 @@ export function DailyJournal() {
 
               <Box component="form" onSubmit={handleSubmit} noValidate>
                 <Stack spacing={3}>
+                  {/* Aria / Bluetooth & USB Device Sync */}
+                  <DeviceSyncCard onGlucoseReceived={handleGlucoseFromDevice} lang={language as any} />
+
                   {/* SOS Hypoglycemia Alert */}
                   {isHypo && (
                     <Alert 
