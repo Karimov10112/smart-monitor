@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Clock, Pill, Syringe, Trash2 } from 'lucide-react';
+import { X, Clock, Pill, Syringe, Trash2, BellRing } from 'lucide-react';
 import { reminderAPI } from '../utils/api';
 import { toast } from 'sonner';
+import { registerWebPush } from '../utils/pushManager';
 
 interface ReminderModalProps {
   isOpen: boolean;
@@ -79,6 +80,27 @@ export const ReminderModal: React.FC<ReminderModalProps> = ({ isOpen, onClose, l
                 className="w-10 h-10 rounded-xl flex items-center justify-center bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all text-slate-600 dark:text-slate-400 shadow-sm border border-slate-200 dark:border-slate-700"
               >
                 <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Background Push Notice & Enable Button */}
+            <div className="mx-6 my-2 p-3 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900 rounded-xl flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <BellRing className="w-5 h-5 text-blue-600 flex-shrink-0 animate-pulse" />
+                <p className="text-xs font-bold text-blue-900 dark:text-blue-200">
+                  {language === 'uz' ? 'Sayt yopiq bõlsa ham telefon/kompyuterga xabar kelsinmi?' : 'Получать уведомления, даже если сайт закрыт?'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={async () => {
+                  const res = await registerWebPush();
+                  if (res.success) toast.success(res.message);
+                  else toast.error(res.message);
+                }}
+                className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-black uppercase tracking-wider transition-all whitespace-nowrap shadow-sm"
+              >
+                {language === 'uz' ? 'Ruxsat beriş' : 'Включить'}
               </button>
             </div>
 

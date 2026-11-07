@@ -4,6 +4,7 @@ import { useAuth } from './contexts/AuthContext';
 import { useApp } from './contexts/AppContext';
 import { translations } from './utils/translations';
 import { registerWebPush } from './utils/pushManager';
+import NotificationBell from './components/NotificationBell';
 
 // MUI Components
 import {
@@ -434,7 +435,10 @@ function App() {
           <Toolbar sx={{ justifyContent: 'space-between', minHeight: { xs: 56, sm: 64 }, px: { xs: 1.5, sm: 2 } }}>
             <IconButton edge="start" color="inherit" onClick={() => setIsSidebarOpen(true)}><MenuIcon /></IconButton>
             <Typography variant="h6" color="primary" sx={{ fontWeight: 900, letterSpacing: isMobile ? -0.5 : -1, fontSize: isMobile ? 18 : 20 }}>{t.appName.toUpperCase()}</Typography>
-            <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main' }}>{user?.firstName?.[0]}</Avatar>
+            <Stack direction="row" spacing={1} alignItems="center">
+              <NotificationBell />
+              <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main' }}>{user?.firstName?.[0]}</Avatar>
+            </Stack>
           </Toolbar>
         </AppBar>
 
