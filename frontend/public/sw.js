@@ -1,29 +1,27 @@
 // Service Worker for Web Push Notifications
-// Bu fayl brauzer yopiq bo'lsa ham fonga quloq solib turadi
-
 self.addEventListener('push', function (event) {
+  let title = 'Qand Nazorati';
+  let body = 'Sizda yangi bildirishnoma mavjud!';
   let data = {};
+
   if (event.data) {
     try {
-      data = event.data.json();
+      const json = event.data.json();
+      title = json.title || title;
+      body = json.body || body;
+      data = json;
     } catch (e) {
-      data = { title: 'Qand Nazorati', body: event.data.text() };
+      body = event.data.text() || body;
     }
   }
 
-  const title = data.title || 'Qand Nazorati';
   const options = {
-    body: data.body || 'Yangi bildirishnoma mavjud',
-    icon: data.icon || '/favicon.png',
-    badge: data.badge || '/favicon.png',
-    tag: data.tag || 'diabetes-alert',
+    body: body,
+    icon: '/favicon.png',
+    badge: '/favicon.png',
+    tag: 'diabetes-alert-' + Date.now(),
     renotify: true,
-    requireInteraction: true, // Foydalanuvchi ko'rmaguncha ekranda turishi uchun
-    vibrate: [200, 100, 200, 100, 200], // Vibratsiya
-    data: {
-      url: data.url || '/',
-      ...data.data,
-    },
+    data: data,
   };
 
   event.waitUntil(
