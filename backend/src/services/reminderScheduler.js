@@ -60,6 +60,19 @@ function initReminderScheduler(io) {
   });
 
   console.log('⏰ Telegram Reminder scheduler initialized (Asia/Tashkent)');
+
+  // 🔄 Self-Ping keep-alive: Server har 5 daqiqada o'zini o'zi uyg'otib turadi (hech qachon uxlamaydi!)
+  const BACKEND_URL = process.env.RENDER_EXTERNAL_URL || 'https://smart-monitor-4fv9.onrender.com';
+  cron.schedule('*/5 * * * *', async () => {
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/health`);
+      const data = await res.json();
+      console.log(`💓 Keep-alive self-ping sent to ${BACKEND_URL}/api/health (status: ${data?.status})`);
+    } catch (err) {
+      // Ignore ping network errors
+    }
+  });
+  console.log(`💓 Keep-alive self-ping initialized for: ${BACKEND_URL}`);
 }
 
 module.exports = {
