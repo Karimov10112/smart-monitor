@@ -35,7 +35,7 @@ function initReminderScheduler(io) {
           continue;
         }
 
-        const title = rem.title || 'Diabet eslatmasi';
+        const title = rem.name ? `${rem.name} (${rem.dose})` : (rem.title || 'Diabet eslatmasi');
         const typeLabels = {
           sugar: "Qon shakarini o'lchash vaqti keldi!",
           insulin: 'Insulin qabul qilish vaqti!',
@@ -44,7 +44,7 @@ function initReminderScheduler(io) {
           doctor: 'Shifokor ko\'rigi vaqti!',
         };
 
-        const body = rem.notes || typeLabels[rem.type] || 'Sog\'ligingizni nazorat qilish vaqti keldi!';
+        const body = rem.notes || typeLabels[rem.type] || `${rem.name} - ${rem.dose}`;
 
         // 1. Web Push orqali brauzer/ekranga yuborish (Sayt yopiq bo'lsa ham keladi!)
         sendPushToUser(rem.user._id, {
