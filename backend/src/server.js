@@ -193,6 +193,10 @@ app.use('/doctor', doctorRoutes);
 app.use('/api/reminders', reminderRoutes);
 app.use('/reminders', reminderRoutes);
 
+const cronRoutes = require('./routes/cron');
+app.use('/api/cron', cronRoutes);
+app.use('/cron', cronRoutes);
+
 app.use('/api/chat', chatRoutes);
 app.use('/chat', chatRoutes);
 
