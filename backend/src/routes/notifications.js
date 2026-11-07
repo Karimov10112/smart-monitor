@@ -65,4 +65,52 @@ router.patch('/read-all', async (req, res) => {
   }
 });
 
+// GET /api/notifications/vapid-key - Get public VAPID key for web push subscription
+router.get('/vapid-key', (req, res) => {
+  const { publicKey } = require('../services/pushService');
+  res.json({ success: true, publicKey });
+});
+
+// POST /api/notifications/subscribe - Subscribe device to Web Push
+router.post('/subscribe', async (req, res) => {
+  try {
+    const { subscription } = req.body;
+    if (!subscription || !subscription.endpoint || !subscription.keys) {
+      return res.status(400).json({ success: false, message: 'Obuna ma\'lumotlari to\'liq emas' });
+    }
+
+    const PushSubscription = require('../models/PushSubscription');
+    await PushSubscription.findOneAndUpdate(
+      { user: req.user._id, endpoint: subscription.endpoint },
+      {
+        user: req.user._id,
+        endpoint: subscription.endpoint,
+        keys: subscription.keys,
+        userAgent: req.headers['user-agent'] || '',
+      },
+      { upsert: true, new: true }
+    );
+
+    res.json({ success: true, message: 'Push xabarnomaga muvaffaqiyatli obuna bo\'lindi' });
+  } catch (err) {
+    console.error('Push subscribe error:', err);
+    res.status(500).json({ success: false, message: 'Obuna bo\'lishda xato' });
+  }
+});
+
+// POST /api/notifications/unsubscribe - Unsubscribe device
+router.post('/unsubscribe', async (req, res) => {
+  try {
+    const { endpoint } = req.body;
+    if (endpoint) {
+      const PushSubscription = require('../models/PushSubscription');
+      await PushSubscription.deleteOne({ user: req.user._id, endpoint });
+    }
+    res.json({ success: true, message: 'Push xabarnomadan chiqarildi' });
+  } catch (err) {
+    console.error('Push unsubscribe error:', err);
+    res.status(500).json({ success: false, message: 'Xatolik' });
+  }
+});
+
 module.exports = router;

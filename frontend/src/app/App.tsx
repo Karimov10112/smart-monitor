@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, Link as RouterLink, useLocation, useNavigate, 
 import { useAuth } from './contexts/AuthContext';
 import { useApp } from './contexts/AppContext';
 import { translations } from './utils/translations';
+import { registerWebPush } from './utils/pushManager';
 
 // MUI Components
 import {
@@ -113,6 +114,9 @@ function App() {
         
         const { data: remData } = await reminderAPI.getAll();
         setReminders(remData.reminders);
+
+        // Web Push bildirishnomalarni avtomatik ro'yxatdan o'tkazish
+        registerWebPush().catch(() => {});
       } catch (err) {}
     };
     if (isAuthenticated) loadData();

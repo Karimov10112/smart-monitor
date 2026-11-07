@@ -7,14 +7,29 @@ import NotificationsIcon from '@mui/icons-material/Notifications';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import DoneAllIcon from '@mui/icons-material/DoneAll';
+import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import { useApp } from '../contexts/AppContext';
 import { format } from 'date-fns';
+import { registerWebPush } from '../utils/pushManager';
+import { toast } from 'sonner';
 
 export default function NotificationBell() {
   const theme = useTheme();
   const { notifications, unreadNotificationsCount, markNotificationRead, markAllNotificationsRead } = useApp();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [pushLoading, setPushLoading] = useState(false);
   const open = Boolean(anchorEl);
+
+  const handleEnablePush = async () => {
+    setPushLoading(true);
+    const res = await registerWebPush();
+    setPushLoading(false);
+    if (res.success) {
+      toast.success(res.message || 'Push xabarnomalar yoqildi!');
+    } else {
+      toast.error(res.message || 'Xatolik yuz berdi');
+    }
+  };
 
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
@@ -111,6 +126,29 @@ export default function NotificationBell() {
 
         {/* Notifications List */}
         <Box sx={{ overflowY: 'auto', maxHeight: 360 }}>
+          {/* Push Notifications Enable Banner */}
+          <Box sx={{ p: 1.5, px: 2, bgcolor: alpha(theme.palette.primary.main, 0.08), borderBottom: `1px solid ${theme.palette.divider}` }}>
+            <Stack direction="row" spacing={1.5} alignItems="center" justifyContent="space-between">
+              <Box>
+                <Typography variant="caption" fontWeight={800} display="block" color="primary.main">
+                  🔔 Internet yoniq holatda xabar olish
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ fontSize: 10 }}>
+                  Sayt yopiq bõlsa ham ekranga push keladi
+                </Typography>
+              </Box>
+              <Button
+                size="small"
+                variant="contained"
+                onClick={handleEnablePush}
+                disabled={pushLoading}
+                startIcon={<NotificationsActiveIcon sx={{ fontSize: 14 }} />}
+                sx={{ fontSize: 11, fontWeight: 700, textTransform: 'none', borderRadius: 1.5, py: 0.5, px: 1.5 }}
+              >
+                {pushLoading ? '...' : 'Yoqiş'}
+              </Button>
+            </Stack>
+          </Box>
           {notifications.length === 0 ? (
             <Box sx={{ p: 4, textAlign: 'center', color: 'text.secondary' }}>
               <CheckCircleOutlineIcon sx={{ fontSize: 40, opacity: 0.3, mb: 1 }} />

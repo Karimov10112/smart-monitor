@@ -262,6 +262,10 @@ const initialize = async () => {
   try {
     await connectDB();
     await createSuperAdmin();
+
+    // Initialize Push Reminder Cron Scheduler
+    const { initReminderScheduler } = require('./services/reminderScheduler');
+    initReminderScheduler(io);
   } catch (err) {
     console.error('Initialization error:', err);
   }

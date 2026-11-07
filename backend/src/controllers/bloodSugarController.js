@@ -86,6 +86,24 @@ const addRecord = async (req, res) => {
             });
           }
 
+          // 2.1. Web Push orqali shifokor qurilmasiga to'g'ridan-to'g'ri yuborish (Sayt yopiq bo'lsa ham keladi!)
+          try {
+            const { sendPushToUser } = require('../services/pushService');
+            sendPushToUser(patient.assignedDoctor, {
+              title,
+              body: message,
+              url: '/?tab=patients',
+              tag: `critical-${newNotif._id}`,
+              data: {
+                notificationId: newNotif._id,
+                patientId: req.user._id,
+                sugarLevel: criticalLevel,
+              },
+            }).catch(e => console.error('Push error for doctor:', e));
+          } catch (pushErr) {
+            console.error('Push require error:', pushErr);
+          }
+
           // 3. Tizim audit logiga yozish
           await AuditLog.create({
             user: req.user._id,
