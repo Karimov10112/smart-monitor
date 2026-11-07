@@ -197,6 +197,21 @@ const cronRoutes = require('./routes/cron');
 app.use('/api/cron', cronRoutes);
 app.use('/cron', cronRoutes);
 
+// Telegram Webhook route (Tezkor va 100% kafolatlangan xabar almashish)
+const { handleTelegramUpdate } = require('./services/telegramService');
+const telegramWebhookHandler = async (req, res) => {
+  try {
+    if (req.body) {
+      await handleTelegramUpdate(req.body);
+    }
+  } catch (err) {
+    console.error('Webhook error:', err);
+  }
+  res.sendStatus(200);
+};
+app.post('/api/telegram/webhook', telegramWebhookHandler);
+app.post('/telegram/webhook', telegramWebhookHandler);
+
 app.use('/api/chat', chatRoutes);
 app.use('/chat', chatRoutes);
 

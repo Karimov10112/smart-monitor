@@ -318,6 +318,7 @@ async function notifyPatientReminder(user, reminder) {
 module.exports = {
   BOT_USERNAME,
   sendTelegramMessage,
+  handleTelegramUpdate,
   startPolling,
   notifyDoctorCriticalSugar,
   notifyPatientReminder,
