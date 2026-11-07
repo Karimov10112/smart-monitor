@@ -17,6 +17,7 @@ const userSchema = new mongoose.Schema(
     avatar: String,
     phone: String,
     telegramUsername: String,
+    telegramChatId: { type: String, sparse: true, index: true }, // Telegram Bot orqali bildirishnomalar uchun
     dateOfBirth: Date,
     gender: { type: String, enum: ['male', 'female', 'other'] },
     region: String,   // viloyat

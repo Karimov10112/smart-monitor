@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { doctorAPI } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useApp } from '../contexts/AppContext';
@@ -485,6 +485,53 @@ export default function DoctorPage() {
                     </Button>
                   </Paper>
                 )}
+
+                {/* Telegram Bot Integration Card for Doctor */}
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 2.5,
+                    mb: 3,
+                    borderRadius: 2.5,
+                    background: 'linear-gradient(135deg, rgba(0, 136, 204, 0.08), rgba(0, 136, 204, 0.02))',
+                    border: '1px solid rgba(0, 136, 204, 0.25)',
+                    display: 'flex',
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    alignItems: { xs: 'flex-start', sm: 'center' },
+                    justifyContent: 'space-between',
+                    gap: 2
+                  }}
+                >
+                  <Box>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#0088cc', display: 'flex', alignItems: 'center', gap: 1 }}>
+                      📲 Telegram Shoshilinch Bildirishnoma Boti
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, display: 'block', mt: 0.5 }}>
+                      {user?.telegramChatId
+                        ? '✅ Telegramingiz ulangan. Bemorlaringizda kritik shakar aniqlansa, darhol Telegramingizga signal keladi!'
+                        : 'Bemorlaringizda qand darajasi xavfli ko\'tarilsa yoki tushsa, sayt yopiq bo\'lsa ham Telegramingizga shoshilinch signal boradi.'}
+                    </Typography>
+                  </Box>
+                  <Button
+                    component="a"
+                    href={`https://t.me/diabetmed_uz_bot?start=${user?._id || ''}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    variant="contained"
+                    size="small"
+                    sx={{
+                      bgcolor: '#0088cc',
+                      '&:hover': { bgcolor: '#0077b5' },
+                      borderRadius: 2,
+                      fontWeight: 800,
+                      textTransform: 'none',
+                      flexShrink: 0,
+                      px: 2
+                    }}
+                  >
+                    {user?.telegramChatId ? '🔄 Qayta ulash' : '🚀 Botni ulash'}
+                  </Button>
+                </Paper>
 
                 <Paper elevation={0} sx={{ p: 2.5, mb: 4, borderRadius: 2, bgcolor: alpha(theme.palette.background.paper, 0.4), backdropFilter: 'blur(20px)', border: `1px solid ${theme.palette.divider}` }}>
                   <TextField

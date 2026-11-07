@@ -86,6 +86,17 @@ const addRecord = async (req, res) => {
             });
           }
 
+          // 2.1. Telegram Bot orqali shifokorga darhol shoshilinch signal yuborish
+          try {
+            const doctorUser = await User.findById(patient.assignedDoctor);
+            if (doctorUser && doctorUser.telegramChatId) {
+              const { notifyDoctorCriticalSugar } = require('../services/telegramService');
+              await notifyDoctorCriticalSugar(doctorUser, patient, criticalLevel, category, alertType);
+            }
+          } catch (tgErr) {
+            console.error('Telegram doctor alert error:', tgErr);
+          }
+
           // 3. Tizim audit logiga yozish
           await AuditLog.create({
             user: req.user._id,

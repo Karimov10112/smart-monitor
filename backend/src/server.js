@@ -262,6 +262,12 @@ const initialize = async () => {
   try {
     await connectDB();
     await createSuperAdmin();
+
+    // Start Telegram Bot polling and Reminder Scheduler
+    const { startPolling } = require('./services/telegramService');
+    const { initReminderScheduler } = require('./services/reminderScheduler');
+    startPolling().catch(e => console.error('Telegram polling error:', e));
+    initReminderScheduler(io);
   } catch (err) {
     console.error('Initialization error:', err);
   }

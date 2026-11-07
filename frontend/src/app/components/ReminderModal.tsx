@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Clock, Pill, Syringe, Trash2 } from 'lucide-react';
+import { X, Clock, Pill, Syringe, Trash2, Send } from 'lucide-react';
 import { reminderAPI } from '../utils/api';
+import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'sonner';
 
 interface ReminderModalProps {
@@ -14,6 +15,7 @@ interface ReminderModalProps {
 }
 
 export const ReminderModal: React.FC<ReminderModalProps> = ({ isOpen, onClose, language, t, reminders, onRefresh }) => {
+  const { user } = useAuth();
   const [form, setForm] = useState({
     type: 'medication',
     name: '',
@@ -80,6 +82,34 @@ export const ReminderModal: React.FC<ReminderModalProps> = ({ isOpen, onClose, l
               >
                 <X className="w-6 h-6" />
               </button>
+            </div>
+
+            {/* Telegram Bot Integration Banner */}
+            <div className="mx-6 my-2 p-3.5 bg-gradient-to-r from-sky-500/10 to-blue-600/10 border border-sky-500/20 rounded-2xl flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-[#0088cc] flex items-center justify-center text-white shadow-md shadow-[#0088cc]/30 flex-shrink-0">
+                  <Send className="w-4 h-4 ml-0.5" />
+                </div>
+                <div>
+                  <p className="text-xs font-black text-slate-900 dark:text-white">
+                    {language === 'uz' ? 'Telegram orqali eslatmalar olish' : 'Напоминания в Telegram'}
+                  </p>
+                  <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                    {user?.telegramChatId
+                      ? (language === 'uz' ? '✅ Telegramingiz ulangan, xabarlar yuboriladi' : '✅ Telegram подключен')
+                      : (language === 'uz' ? 'Sayt yopiq bõlsa ham Telegramingizga xabar boradi' : 'Уведомления придут прямо в Telegram')}
+                  </p>
+                </div>
+              </div>
+              <a
+                href={`https://t.me/diabetmed_uz_bot?start=${user?._id || ''}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3.5 py-2 bg-[#0088cc] hover:bg-[#0077b5] text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all whitespace-nowrap shadow-md shadow-[#0088cc]/25 active:scale-95 flex items-center gap-1.5"
+              >
+                <Send className="w-3.5 h-3.5" />
+                {user?.telegramChatId ? (language === 'uz' ? 'Qayta ulash' : 'Переподключить') : (language === 'uz' ? 'Botni ulash' : 'Подключить')}
+              </a>
             </div>
 
             <div className="flex-1 overflow-y-auto p-6 pt-2 h-full">
