@@ -1,4 +1,5 @@
 const reminderRepository = require('../repositories/ReminderRepository');
+const { notifyReminderCreated } = require('../services/telegramService');
 
 // Get all reminders for a user
 const getReminders = async (req, res) => {
@@ -29,6 +30,17 @@ const addReminder = async (req, res) => {
       repeatDaily,
       notes,
     });
+
+    // Foydalanuvchiga Telegram orqali ham darhol tasdiq yuborish
+    try {
+      const User = require('../models/User');
+      const user = await User.findById(req.user._id);
+      if (user && user.telegramChatId) {
+        notifyReminderCreated(user, reminder).catch(e => console.error('TG notify error:', e));
+      }
+    } catch (e) {
+      console.error('Error sending reminder creation notification:', e);
+    }
 
     res.status(201).json({ success: true, reminder });
   } catch (err) {
