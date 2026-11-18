@@ -32,4 +32,10 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- Medication reminders must fire on time. SCHEDULE_EXACT_ALARM (from the
+         local-notifications plugin) is denied by default on Android 14+, which made
+         reminders arrive hours late. USE_EXACT_ALARM is granted at install for
+         reminder/alarm apps (Android 13+), so no settings toggle is needed. -->
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
 </manifest>
