@@ -336,10 +336,9 @@ const initialize = async () => {
     await connectDB();
     await createSuperAdmin();
 
-    // Start Telegram Bot polling and Reminder Scheduler
-    const { startPolling } = require('./services/telegramService');
+    // Eslatmalar rejalashtiruvchisi (har daqiqa, Asia/Tashkent) va keep-alive.
+    // Telegram xabarlari webhook orqali keladi, polling kerak emas.
     const { initReminderScheduler } = require('./services/reminderScheduler');
-    startPolling().catch(e => console.error('Telegram polling error:', e));
     initReminderScheduler(io);
   } catch (err) {
     console.error('Initialization error:', err);
