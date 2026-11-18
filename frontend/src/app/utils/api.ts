@@ -1,15 +1,8 @@
 import axios from 'axios';
+import { API_ORIGIN } from './platform';
 
-const isLocal = typeof window !== 'undefined' && (
-  window.location.hostname === 'localhost' ||
-  window.location.hostname === '127.0.0.1' ||
-  window.location.hostname.startsWith('192.168.') ||
-  window.location.hostname.startsWith('10.')
-);
-
-const API_BASE = isLocal
-  ? 'http://localhost:5000/api'
-  : `${(import.meta as any).env?.VITE_API_URL || 'https://smart-monitor-1-a037.onrender.com'}/api`;
+// Local dev -> http://localhost:5000, website and Android/iOS app -> production backend
+const API_BASE = `${API_ORIGIN}/api`;
 
 const api = axios.create({
   baseURL: API_BASE,

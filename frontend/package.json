@@ -6,9 +6,18 @@
   "scripts": {
     "dev": "vite --host",
     "build": "vite build",
-    "preview": "vite preview --port 3000 --host"
+    "preview": "vite preview --port 3000 --host",
+    "android:sync": "vite build && cap sync android",
+    "android:apk": "npm run android:sync && cd android && gradlew assembleDebug"
   },
   "dependencies": {
+    "@capacitor/android": "^8.6.2",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/core": "^8.6.2",
+    "@capacitor/filesystem": "^8.1.5",
+    "@capacitor/share": "^8.0.3",
+    "@capacitor/splash-screen": "^8.0.2",
+    "@capacitor/status-bar": "^8.0.4",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@mui/icons-material": "^7.3.9",
@@ -64,6 +73,8 @@
     "vaul": "^1.1.2"
   },
   "devDependencies": {
+    "@capacitor/assets": "^4.0.0",
+    "@capacitor/cli": "^8.6.2",
     "@tailwindcss/vite": "4.1.12",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",

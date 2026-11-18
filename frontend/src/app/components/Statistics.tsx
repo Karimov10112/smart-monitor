@@ -39,6 +39,7 @@ import { SectionCard, StatTile, GlucoseBadge, EmptyState } from './common';
 import { GlucoseTrendChart } from './common/GlucoseTrendChart';
 import { classifyGlucose, glucoseLabel, GLUCOSE_BANDS } from '../utils/glucose';
 import { formatShortDate, formatDate, formatTime } from '../utils/format';
+import { savePdf } from '../utils/platform';
 import type { GlucoseLevel } from '../../theme';
 
 const UI: Record<string, Record<string, string>> = {
@@ -245,7 +246,7 @@ export function Statistics({ customRecords, customLanguage }: StatisticsProps = 
         doc.text(`Qand Nazorati © ${new Date().getFullYear()} | Sahifa ${i}/${pageCount}`, 14, doc.internal.pageSize.height - 8);
       }
 
-      doc.save(`qand_nazorati_hisobot_${new Date().toISOString().split('T')[0]}.pdf`);
+      await savePdf(doc, `qand_nazorati_hisobot_${new Date().toISOString().split('T')[0]}.pdf`);
       toast.success('PDF hisobot muvaffaqiyatli yuklab olindi!');
     } catch (err) {
       console.error('PDF error:', err);

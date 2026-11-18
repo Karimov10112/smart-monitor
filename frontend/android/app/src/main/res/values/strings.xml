@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Qand Nazorati</string>
+    <string name="title_activity_main">Qand Nazorati</string>
+    <string name="package_name">uz.diabetmed.app</string>
+    <string name="custom_url_scheme">uz.diabetmed.app</string>
+</resources>

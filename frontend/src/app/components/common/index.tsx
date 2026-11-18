@@ -365,7 +365,7 @@ export function AuthLayout({ children, title, subtitle, icon, maxWidth = 440 }: 
   const isDark = theme.palette.mode === 'dark';
 
   return (
-    <Box sx={{ minHeight: '100dvh', display: 'flex', bgcolor: 'background.default' }}>
+    <Box sx={{ minHeight: '100dvh', display: 'flex', bgcolor: 'background.default', pt: 'var(--sat)' }}>
       {/* Brand panel (desktop) */}
       <Box
         sx={{

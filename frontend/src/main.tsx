@@ -7,6 +7,7 @@ import App from './app/App';
 import { AuthProvider } from './app/contexts/AuthContext';
 import { AppProvider, useApp } from './app/contexts/AppContext';
 import { getTheme } from './theme';
+import NativeBridge from './app/components/NativeBridge';
 // Single entry so Tailwind compiles the theme tokens (theme.css) together with the utilities
 import './styles/index.css';
 
@@ -16,6 +17,7 @@ const ThemeWrapper = ({ children }: { children: React.ReactNode }) => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
+      <NativeBridge />
       {children}
     </ThemeProvider>
   );

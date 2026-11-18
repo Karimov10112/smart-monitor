@@ -33,6 +33,7 @@ import { SectionCard, StatTile, GlucoseBadge, EmptyState, IconTile } from '../co
 import { GlucoseTrendChart } from '../components/common/GlucoseTrendChart';
 import { classifyGlucose, glucoseLabel, sentenceCase } from '../utils/glucose';
 import { formatShortDate, formatDate, formatTime } from '../utils/format';
+import { savePdf } from '../utils/platform';
 
 // MUI Icons
 import PeopleAltOutlinedIcon from '@mui/icons-material/PeopleAltOutlined';
@@ -182,7 +183,7 @@ export default function DoctorPage() {
         doc.text(`DiabetMed © ${new Date().getFullYear()} | Sahifa ${i}/${pageCount}`, 14, doc.internal.pageSize.height - 10);
       }
 
-      doc.save(`${selectedPatient.firstName}_${selectedPatient.lastName}_hisobot.pdf`);
+      await savePdf(doc, `${selectedPatient.firstName}_${selectedPatient.lastName}_hisobot.pdf`);
       toast.success('PDF muvaffaqiyatli yuklab olindi!');
     } catch (err) {
       console.error('PDF error:', err);

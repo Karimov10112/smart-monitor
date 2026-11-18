@@ -4,6 +4,7 @@ import { bloodSugarAPI, authAPI } from '../utils/api';
 import { useAuth } from './AuthContext';
 import { io } from 'socket.io-client';
 import { toast } from 'sonner';
+import { API_ORIGIN } from '../utils/platform';
 export interface BloodSugarRecord {
   _id?: string;
   id?: string;
@@ -47,16 +48,7 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-const isLocalHost = typeof window !== 'undefined' && (
-  window.location.hostname === 'localhost' ||
-  window.location.hostname === '127.0.0.1' ||
-  window.location.hostname.startsWith('192.168.') ||
-  window.location.hostname.startsWith('10.')
-);
-
-const SOCKET_URL = isLocalHost
-  ? 'http://localhost:5000'
-  : ((import.meta as any).env?.VITE_API_URL || 'https://smart-monitor-1-a037.onrender.com');
+const SOCKET_URL = API_ORIGIN;
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const { isAuthenticated, user, updateUser } = useAuth();

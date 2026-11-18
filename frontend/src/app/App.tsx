@@ -363,7 +363,7 @@ function App() {
         sx={{
           width: isMobile ? 0 : SIDEBAR_WIDTH,
           flexShrink: 0,
-          [`& .MuiDrawer-paper`]: { width: isMobile ? 288 : SIDEBAR_WIDTH, boxSizing: 'border-box', borderRight: `1px solid ${theme.palette.divider}`, boxShadow: isMobile ? undefined : 'none' },
+          [`& .MuiDrawer-paper`]: { width: isMobile ? 288 : SIDEBAR_WIDTH, boxSizing: 'border-box', borderRight: `1px solid ${theme.palette.divider}`, boxShadow: isMobile ? undefined : 'none', paddingTop: 'var(--sat)' },
         }}
       >
         {SidebarContent}
@@ -371,7 +371,7 @@ function App() {
 
       {/* Main Content */}
       <Box component="main" sx={{ flexGrow: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-        <AppBar position="sticky">
+        <AppBar position="sticky" sx={{ pt: 'var(--sat)' }}>
           <Toolbar sx={{ gap: 1.5, minHeight: { xs: 60, sm: 68 }, px: { xs: 1.5, sm: 3, lg: 4 } }}>
             {isMobile && (
               <IconButton edge="start" onClick={() => setIsSidebarOpen(true)} aria-label="Menu">
@@ -436,7 +436,7 @@ function App() {
           sx={{
             position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 1200,
             borderTop: `1px solid ${theme.palette.divider}`,
-            pb: 'env(safe-area-inset-bottom)',
+            pb: 'var(--sab)',
             bgcolor: alpha(theme.palette.background.paper, 0.96),
             backdropFilter: 'blur(10px)',
           }}

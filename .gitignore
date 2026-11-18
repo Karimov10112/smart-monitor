@@ -36,3 +36,7 @@ backend/nslookup_utf8.txt
 
 # Vercel
 .vercel
+
+# Android build outputs
+*.apk
+*.aab
