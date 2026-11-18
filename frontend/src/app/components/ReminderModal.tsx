@@ -154,7 +154,7 @@ export const ReminderModal: React.FC<ReminderModalProps> = ({ isOpen, onClose, l
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 24 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
-            className="relative w-full sm:max-w-3xl bg-card text-card-foreground rounded-t-3xl sm:rounded-3xl shadow-pop border border-border overflow-hidden flex flex-col max-h-[92dvh] sm:max-h-[85vh]"
+            className="relative w-full sm:max-w-3xl bg-card text-card-foreground rounded-t-3xl sm:rounded-3xl shadow-pop border border-border overflow-hidden flex flex-col max-h-[calc(100dvh-var(--sat)-12px)] sm:max-h-[85vh]"
           >
             {/* Header */}
             <div className="px-5 sm:px-6 pt-5 pb-4 flex items-start justify-between gap-4 border-b border-border">

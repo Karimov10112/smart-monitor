@@ -9,6 +9,7 @@ import {
   MenuItem,
   Tooltip,
   ListItemIcon,
+  useMediaQuery,
   alpha,
   useTheme,
   type SxProps,
@@ -281,7 +282,9 @@ const LANGS = [
   { code: 'en', label: 'English', short: 'EN' },
 ] as const;
 
-export function LanguageMenuButton({ variant = 'icon' }: { variant?: 'icon' | 'text' }) {
+const onDarkSx = { borderColor: alpha('#fff', 0.28), bgcolor: alpha('#fff', 0.14), color: '#fff', backdropFilter: 'blur(6px)', '&:hover': { bgcolor: alpha('#fff', 0.22) } };
+
+export function LanguageMenuButton({ variant = 'icon', tone = 'default' }: { variant?: 'icon' | 'text'; tone?: 'default' | 'onDark' }) {
   const { language, setLanguage } = useApp();
   const [anchor, setAnchor] = useState<null | HTMLElement>(null);
   const current = LANGS.find(l => l.code === language) || LANGS[0];
@@ -291,7 +294,7 @@ export function LanguageMenuButton({ variant = 'icon' }: { variant?: 'icon' | 't
         <IconButton
           onClick={e => setAnchor(e.currentTarget)}
           aria-label="Language"
-          sx={{ border: 1, borderColor: 'divider', bgcolor: 'background.paper', gap: 0.5, px: variant === 'text' ? 1.25 : 1, height: 40, minWidth: 40 }}
+          sx={{ border: 1, borderColor: 'divider', bgcolor: 'background.paper', gap: 0.5, px: variant === 'text' ? 1.25 : 1, height: 40, minWidth: 40, ...(tone === 'onDark' ? onDarkSx : {}) }}
         >
           <TranslateRoundedIcon sx={{ fontSize: 18 }} />
           {variant === 'text' && <Typography variant="caption" sx={{ fontWeight: 700 }}>{current.short}</Typography>}
@@ -317,14 +320,14 @@ export function LanguageMenuButton({ variant = 'icon' }: { variant?: 'icon' | 't
   );
 }
 
-export function ThemeToggleButton() {
+export function ThemeToggleButton({ tone = 'default' }: { tone?: 'default' | 'onDark' }) {
   const { isDarkMode, toggleDarkMode } = useApp();
   return (
     <Tooltip title={isDarkMode ? 'Light' : 'Dark'}>
       <IconButton
         onClick={toggleDarkMode}
         aria-label="Toggle theme"
-        sx={{ border: 1, borderColor: 'divider', bgcolor: 'background.paper', width: 40, height: 40 }}
+        sx={{ border: 1, borderColor: 'divider', bgcolor: 'background.paper', width: 40, height: 40, ...(tone === 'onDark' ? onDarkSx : {}) }}
       >
         {isDarkMode ? <LightModeOutlinedIcon sx={{ fontSize: 19 }} /> : <DarkModeOutlinedIcon sx={{ fontSize: 19 }} />}
       </IconButton>
@@ -363,6 +366,67 @@ export function AuthLayout({ children, title, subtitle, icon, maxWidth = 440 }: 
   const copy = AUTH_COPY[language] || AUTH_COPY.uz;
   const appName = (translations[language] || translations.uz).appName;
   const isDark = theme.palette.mode === 'dark';
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const heroGradient = isDark
+    ? 'linear-gradient(165deg, #0B3B4A 0%, #0B1220 100%)'
+    : 'linear-gradient(165deg, #0E7490 0%, #0B4F63 100%)';
+
+  if (isMobile) {
+    return (
+      <Box sx={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: heroGradient }}>
+        {/* Hero */}
+        <Box sx={{ position: 'relative', overflow: 'hidden', color: '#fff', pt: 'calc(var(--sat) + 14px)', px: 2.5, pb: 6 }}>
+          <Box sx={{ position: 'absolute', right: -90, top: -90, width: 240, height: 240, borderRadius: '50%', bgcolor: alpha('#fff', 0.07) }} />
+          <Box sx={{ position: 'absolute', left: -70, bottom: -40, width: 180, height: 180, borderRadius: '50%', bgcolor: alpha('#fff', 0.05) }} />
+
+          <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ position: 'relative' }}>
+            <Stack direction="row" spacing={1.25} alignItems="center" sx={{ minWidth: 0 }}>
+              <Box sx={{ width: 40, height: 40, borderRadius: 3, display: 'grid', placeItems: 'center', bgcolor: alpha('#fff', 0.16), border: `1px solid ${alpha('#fff', 0.22)}` }}>
+                <WaterDropRoundedIcon sx={{ fontSize: 22 }} />
+              </Box>
+              <Box sx={{ minWidth: 0 }}>
+                <Typography sx={{ fontWeight: 700, fontSize: '1.0625rem', lineHeight: 1.2 }} noWrap>{appName}</Typography>
+                <Typography sx={{ fontSize: '0.75rem', opacity: 0.75 }}>diabetmed.uz</Typography>
+              </Box>
+            </Stack>
+            <Stack direction="row" spacing={1}>
+              <LanguageMenuButton variant="text" tone="onDark" />
+              <ThemeToggleButton tone="onDark" />
+            </Stack>
+          </Stack>
+
+          <Box sx={{ position: 'relative', display: 'flex', justifyContent: 'center', mt: 2.5 }}>
+            <AuthIllustration sx={{ maxWidth: 300, '& svg': { maxHeight: '26vh' } }} />
+          </Box>
+        </Box>
+
+        {/* Sheet */}
+        <Box
+          sx={{
+            flex: 1,
+            mt: -3,
+            position: 'relative',
+            bgcolor: 'background.default',
+            borderRadius: '28px 28px 0 0',
+            boxShadow: '0 -10px 30px rgba(0,0,0,0.12)',
+            px: 2.5,
+            pt: 1.5,
+            pb: 'calc(var(--sab) + 28px)',
+          }}
+        >
+          <Box sx={{ width: 40, height: 4, borderRadius: 2, bgcolor: 'divider', mx: 'auto', mb: 3 }} />
+          <Box sx={{ width: '100%', maxWidth, mx: 'auto' }}>
+            <Box sx={{ mb: 3 }}>
+              {icon && <IconTile size={44} sx={{ mb: 1.5 }}>{icon}</IconTile>}
+              <Typography component="h1" sx={{ fontSize: '1.625rem', fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1.25 }}>{title}</Typography>
+              {subtitle && <Typography variant="body2" color="text.secondary" sx={{ mt: 0.75, fontSize: '0.9375rem' }}>{subtitle}</Typography>}
+            </Box>
+            {children}
+          </Box>
+        </Box>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ minHeight: '100dvh', display: 'flex', bgcolor: 'background.default', pt: 'var(--sat)' }}>
@@ -443,8 +507,7 @@ export function AuthLayout({ children, title, subtitle, icon, maxWidth = 440 }: 
         }}
       >
         <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ p: { xs: 2, sm: 3 } }}>
-          <Box sx={{ display: { md: 'none' } }}><BrandMark size={34} showName name={appName} /></Box>
-          <Box sx={{ display: { xs: 'none', md: 'block' } }} />
+          <Box />
           <Stack direction="row" spacing={1}>
             <LanguageMenuButton variant="text" />
             <ThemeToggleButton />
@@ -453,22 +516,6 @@ export function AuthLayout({ children, title, subtitle, icon, maxWidth = 440 }: 
 
         <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', px: { xs: 2, sm: 3 }, pb: 6 }}>
           <Box sx={{ width: '100%', maxWidth }}>
-            <Box
-              sx={{
-                display: { xs: 'flex', md: 'none' },
-                justifyContent: 'center',
-                mb: 3,
-                px: 2,
-                py: 1.5,
-                borderRadius: 5,
-                overflow: 'hidden',
-                background: isDark
-                  ? 'linear-gradient(160deg, #0B3B4A 0%, #0B1220 100%)'
-                  : 'linear-gradient(160deg, #0E7490 0%, #0B4F63 100%)',
-              }}
-            >
-              <AuthIllustration sx={{ maxWidth: 250 }} />
-            </Box>
             <Box sx={{ mb: 3.5 }}>
               {icon && <IconTile size={48} sx={{ mb: 2 }}>{icon}</IconTile>}
               <Typography variant="h4" component="h1">{title}</Typography>

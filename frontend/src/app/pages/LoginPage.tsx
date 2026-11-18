@@ -16,7 +16,6 @@ import {
   Link,
   CircularProgress,
   Stack,
-  Alert,
   IconButton,
 } from '@mui/material';
 import { AuthLayout } from '../components/common';
@@ -77,10 +76,6 @@ export default function LoginPage() {
 
   return (
     <AuthLayout title={c.title} subtitle={c.subtitle}>
-      <Alert severity="info" icon={<LocalHospitalOutlinedIcon fontSize="inherit" />} sx={{ mb: 3 }}>
-        {c.notice}
-      </Alert>
-
       <Box component="form" onSubmit={handleSubmit} noValidate>
         <Stack spacing={2.5}>
           <TextField
@@ -90,7 +85,8 @@ export default function LoginPage() {
             onChange={(e) => setEmail(e.target.value)}
             required
             autoComplete="username"
-            autoFocus
+            // On phones autofocus pops the keyboard over the screen right away
+            autoFocus={typeof window !== 'undefined' && window.innerWidth >= 900}
             error={submitted && !email.trim()}
             helperText={submitted && !email.trim() ? c.required : undefined}
             InputProps={{
@@ -134,13 +130,21 @@ export default function LoginPage() {
             </Link>
           </Box>
 
-          <Button type="submit" variant="contained" size="large" fullWidth disabled={loading}>
+          <Button type="submit" variant="contained" size="large" fullWidth disabled={loading} sx={{ minHeight: 52, borderRadius: 3.5, fontSize: '1rem' }}>
             {loading ? <CircularProgress size={22} color="inherit" /> : t.login}
           </Button>
 
-          <Typography variant="body2" align="center" color="text.secondary">
-            {c.clinic}
-          </Typography>
+          <Stack direction="row" spacing={1.25} alignItems="flex-start" sx={{ p: 1.5, borderRadius: 3, bgcolor: 'surfaceMuted' }}>
+            <LocalHospitalOutlinedIcon sx={{ fontSize: 18, color: 'primary.main', mt: 0.15 }} />
+            <Box>
+              <Typography variant="caption" sx={{ display: 'block', color: 'text.primary', fontWeight: 500, lineHeight: 1.45 }}>
+                {c.notice}
+              </Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', lineHeight: 1.45 }}>
+                {c.clinic}
+              </Typography>
+            </Box>
+          </Stack>
         </Stack>
       </Box>
     </AuthLayout>

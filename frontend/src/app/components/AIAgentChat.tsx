@@ -232,7 +232,7 @@ export default function AIAgentChat({ bottomOffset = 0 }: { bottomOffset?: numbe
         ref={toggleBtnRef}
         sx={{
           position: 'fixed',
-          bottom: { xs: 16 + bottomOffset, sm: 24 + bottomOffset },
+          bottom: { xs: `calc(${16 + bottomOffset}px + var(--sab))`, sm: `calc(${24 + bottomOffset}px + var(--sab))` },
           right: { xs: 16, sm: 24 },
           zIndex: 1300,
         }}
@@ -296,11 +296,11 @@ export default function AIAgentChat({ bottomOffset = 0 }: { bottomOffset?: numbe
           elevation={24}
           sx={{
             position: 'fixed',
-            bottom: { xs: 84 + bottomOffset, sm: 92 + bottomOffset },
+            bottom: { xs: `calc(${84 + bottomOffset}px + var(--sab))`, sm: `calc(${92 + bottomOffset}px + var(--sab))` },
             right: { xs: 16, sm: 24 },
             width: { xs: 'calc(100vw - 32px)', sm: 400 },
             maxWidth: 400,
-            height: { xs: `calc(100dvh - ${110 + bottomOffset}px)`, sm: 580 },
+            height: { xs: `calc(100dvh - ${110 + bottomOffset}px - var(--sat) - var(--sab))`, sm: 580 },
             maxHeight: 600,
             borderRadius: '20px',
             display: 'flex',

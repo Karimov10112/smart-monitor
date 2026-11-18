@@ -408,7 +408,7 @@ function App() {
           </Toolbar>
         </AppBar>
 
-        <Box sx={{ flexGrow: 1, px: { xs: 1.5, sm: 3, lg: 4 }, pt: { xs: 2, sm: 3 }, pb: showBottomNav ? `${BOTTOM_NAV_HEIGHT + 24}px` : 4 }}>
+        <Box sx={{ flexGrow: 1, px: { xs: 1.5, sm: 3, lg: 4 }, pt: { xs: 2, sm: 3 }, pb: showBottomNav ? `calc(${BOTTOM_NAV_HEIGHT + 24}px + var(--sab))` : 4 }}>
           <Box sx={{ maxWidth: 1240, mx: 'auto' }}>
             <Routes>
               <Route path="/" element={
