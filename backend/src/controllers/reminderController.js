@@ -1,5 +1,8 @@
 const reminderRepository = require('../repositories/ReminderRepository');
 const { notifyReminderCreated } = require('../services/telegramService');
+const { initialLastSentDate } = require('../services/reminderScheduler');
+
+const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 // Get all reminders for a user
 const getReminders = async (req, res) => {
@@ -20,6 +23,9 @@ const addReminder = async (req, res) => {
     if (!type || !name || !dose || !time) {
       return res.status(400).json({ success: false, message: 'Barcha majburiy maydonlarni to\'ldiring' });
     }
+    if (!TIME_RE.test(time)) {
+      return res.status(400).json({ success: false, message: 'Vaqt HH:mm formatida bo\'lishi kerak' });
+    }
 
     const reminder = await reminderRepository.create({
       user: req.user._id,
@@ -29,6 +35,8 @@ const addReminder = async (req, res) => {
       time,
       repeatDaily,
       notes,
+      // Vaqti bugun o'tib ketgan bo'lsa, birinchi eslatma ertaga keladi
+      lastSentDate: initialLastSentDate(time),
     });
 
     // Foydalanuvchiga Telegram orqali ham darhol tasdiq yuborish
@@ -54,9 +62,18 @@ const updateReminder = async (req, res) => {
   try {
     const { type, name, dose, time, repeatDaily, notes, isActive } = req.body;
     
+    const update = { type, name, dose, time, repeatDaily, notes, isActive };
+    if (time !== undefined) {
+      if (!TIME_RE.test(time)) {
+        return res.status(400).json({ success: false, message: 'Vaqt HH:mm formatida bo\'lishi kerak' });
+      }
+      // Vaqt o'zgarsa: bugun hali kelmagan bo'lsa bugun yuboriladi, o'tib ketgan bo'lsa ertadan
+      update.lastSentDate = initialLastSentDate(time);
+    }
+
     const reminder = await reminderRepository.updateOne(
       { _id: req.params.id, user: req.user._id },
-      { type, name, dose, time, repeatDaily, notes, isActive }
+      update
     );
 
     if (!reminder) {

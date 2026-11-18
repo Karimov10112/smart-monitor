@@ -27,34 +27,10 @@ router.use(requireCronSecret);
 // GET /api/cron/check-reminders - Render uxlab qolmasligi va eslatmalarni 100% yuborishi uchun
 router.get('/check-reminders', async (req, res) => {
   try {
-    const formatter = new Intl.DateTimeFormat('en-GB', {
-      timeZone: 'Asia/Tashkent',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-    });
-    const currentTime = formatter.format(new Date());
-
-    const reminders = await Reminder.find({
-      isActive: true,
-      time: currentTime,
-    }).populate('user');
-
-    let sentCount = 0;
-    for (const rem of reminders) {
-      if (rem.user && rem.user.telegramChatId) {
-        await notifyPatientReminder(rem.user, rem);
-        sentCount++;
-      }
-    }
-
-    res.json({
-      success: true,
-      time: currentTime,
-      found: reminders.length,
-      sentCount,
-      message: `${sentCount} ta eslatma Telegramga muvaffaqiyatli yuborildi`,
-    });
+    // Ichki rejalashtiruvchi bilan bir xil mantiq: har bir eslatma kuniga bir marta yuboriladi
+    const { processDueReminders } = require('../services/reminderScheduler');
+    const result = await processDueReminders(req.app.get('io'));
+    res.json({ success: true, ...result });
   } catch (err) {
     console.error('Cron endpoint error:', err);
     res.status(500).json({ success: false, error: 'Server xatosi' });

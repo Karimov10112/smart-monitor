@@ -38,6 +38,10 @@ const reminderSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    // Toshkent vaqti bo'yicha oxirgi yuborilgan sana (YYYY-MM-DD) — kuniga bir marta yuborish uchun
+    lastSentDate: {
+      type: String,
+    },
   },
   { timestamps: true }
 );
