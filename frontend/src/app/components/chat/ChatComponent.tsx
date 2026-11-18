@@ -28,6 +28,8 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import DoneAllIcon from '@mui/icons-material/DoneAll';
 import DoneIcon from '@mui/icons-material/Done';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
+import { EmptyState } from '../common';
+import { formatShortDate, formatTime as fmtTime } from '../../utils/format';
 
 interface Message {
   _id: string;
@@ -260,10 +262,7 @@ export function Chat({ initialUserId }: ChatProps = {}) {
     }
   };
 
-  const formatTime = (dateStr: string) => {
-    const d = new Date(dateStr);
-    return d.toLocaleTimeString('uz', { hour: '2-digit', minute: '2-digit' });
-  };
+  const formatTime = (dateStr: string) => fmtTime(dateStr);
 
   const formatDate = (dateStr: string) => {
     const d = new Date(dateStr);
@@ -271,7 +270,7 @@ export function Chat({ initialUserId }: ChatProps = {}) {
     const diffDays = Math.floor((now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24));
     if (diffDays === 0) return 'Bugun';
     if (diffDays === 1) return 'Keça';
-    return d.toLocaleDateString('uz', { day: 'numeric', month: 'short' });
+    return formatShortDate(d, language);
   };
 
   // Suhbat ro'yxati (conversations + availableUsers birlashtirish)
@@ -291,33 +290,31 @@ export function Chat({ initialUserId }: ChatProps = {}) {
   // Foydalanuvchi yo'q bo'lsa
   if (allUsers.length === 0 && !loadingConvs) {
     return (
-      <Box sx={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'center', py: 10, gap: 2, opacity: 0.5
-      }}>
-        <ChatBubbleOutlineIcon sx={{ fontSize: 60 }} />
-        <Typography variant="h6" fontWeight={800}>Çat mavjud emas</Typography>
-        <Typography variant="body2" color="text.secondary" textAlign="center">
-          Siz hali heç qanday suhbat başlaşingiz mumkin emas.<br />
-          Şifokor sizga biriktirilişi kerak.
-        </Typography>
-      </Box>
+      <Paper variant="outlined" sx={{ borderRadius: 4 }}>
+        <EmptyState
+          icon={<ChatBubbleOutlineIcon />}
+          title="Çat mavjud emas"
+          description={<>Siz hali heç qanday suhbat başlaşingiz mumkin emas.<br />Şifokor sizga biriktirilişi kerak.</>}
+        />
+      </Paper>
     );
   }
 
   return (
     <Box sx={{
       display: 'flex',
-      height: { xs: 'calc(100vh - 120px)', lg: 'calc(100vh - 160px)' },
+      height: { xs: 'calc(100dvh - 176px)', sm: 'calc(100dvh - 200px)', lg: 'calc(100dvh - 150px)' },
+      minHeight: 420,
       border: `1px solid ${theme.palette.divider}`,
-      borderRadius: 2,
+      borderRadius: 4,
       overflow: 'hidden',
       bgcolor: 'background.paper',
+      boxShadow: theme.palette.mode === 'dark' ? '0 1px 2px rgba(0,0,0,0.4)' : '0 1px 2px rgba(16,24,40,0.04), 0 1px 3px rgba(16,24,40,0.06)',
     }}>
       {/* Sol panel: Suhbatlar ro'yxati */}
       <Box sx={{
-        width: selectedUser ? { xs: 0, sm: 280 } : { xs: '100%', sm: 280 },
-        minWidth: selectedUser ? { xs: 0, sm: 280 } : undefined,
+        width: selectedUser ? { xs: 0, sm: 300 } : { xs: '100%', sm: 300 },
+        minWidth: selectedUser ? { xs: 0, sm: 300 } : undefined,
         borderRight: `1px solid ${theme.palette.divider}`,
         display: 'flex',
         flexDirection: 'column',
@@ -325,14 +322,17 @@ export function Chat({ initialUserId }: ChatProps = {}) {
         transition: 'all 0.2s',
       }}>
         {/* Header */}
-        <Box sx={{ p: 2.5, borderBottom: `1px solid ${theme.palette.divider}` }}>
-          <Typography variant="subtitle1" fontWeight={900} letterSpacing={-0.5}>
-            💬 Xabarlar
+        <Box sx={{ px: 2.5, py: 2, borderBottom: `1px solid ${theme.palette.divider}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Typography variant="subtitle1" fontWeight={700}>
+            Xabarlar
           </Typography>
+          {!loadingConvs && (
+            <Typography variant="caption" color="text.secondary">{allUsers.length}</Typography>
+          )}
         </Box>
 
         {/* List */}
-        <Box sx={{ flexGrow: 1, overflowY: 'auto' }}>
+        <Box sx={{ flexGrow: 1, overflowY: 'auto', p: 1 }}>
           {loadingConvs ? (
             <Stack spacing={1} sx={{ p: 2 }}>
               {[1, 2, 3].map(i => (
@@ -350,17 +350,19 @@ export function Chat({ initialUserId }: ChatProps = {}) {
               <Box
                 key={chatUser._id}
                 onClick={() => openChat(chatUser)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === 'Enter') openChat(chatUser); }}
                 sx={{
-                  p: 2,
+                  p: 1.25,
+                  mb: 0.5,
+                  borderRadius: 3,
                   cursor: 'pointer',
                   bgcolor: selectedUser?._id === chatUser._id
-                    ? alpha(theme.palette.primary.main, 0.08)
+                    ? alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.16 : 0.08)
                     : 'transparent',
-                  borderLeft: selectedUser?._id === chatUser._id
-                    ? `3px solid ${theme.palette.primary.main}`
-                    : '3px solid transparent',
-                  '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.04) },
-                  transition: 'all 0.15s',
+                  '&:hover': { bgcolor: selectedUser?._id === chatUser._id ? alpha(theme.palette.primary.main, 0.12) : alpha(theme.palette.text.primary, 0.04) },
+                  transition: 'background-color 0.15s',
                 }}
               >
                 <Stack direction="row" spacing={1.5} alignItems="center">
@@ -370,35 +372,29 @@ export function Chat({ initialUserId }: ChatProps = {}) {
                     max={99}
                   >
                     <Avatar sx={{
-                      width: 44, height: 44,
-                      bgcolor: theme.palette.primary.main,
-                      fontWeight: 900, fontSize: 16,
+                      width: 42, height: 42,
+                      bgcolor: alpha(chatUser.role === 'doctor' ? theme.palette.success.main : theme.palette.primary.main, 0.14),
+                      color: chatUser.role === 'doctor' ? 'success.main' : 'primary.main',
+                      fontWeight: 600, fontSize: 15,
                     }}>
                       {chatUser.firstName?.[0]}
                     </Avatar>
                   </Badge>
                   <Box sx={{ flexGrow: 1, minWidth: 0 }}>
                     <Stack direction="row" justifyContent="space-between" alignItems="center">
-                      <Typography variant="subtitle2" fontWeight={800} noWrap>
+                      <Typography variant="subtitle2" fontWeight={chatUser.unreadCount ? 700 : 600} noWrap>
                         {chatUser.firstName} {chatUser.lastName}
                       </Typography>
                       {chatUser.lastMessage && (
-                        <Typography variant="caption" color="text.secondary" sx={{ fontSize: 10 }}>
+                        <Typography variant="caption" color="text.secondary" sx={{ fontSize: 11, flexShrink: 0, ml: 1 }}>
                           {formatTime(chatUser.lastMessage.createdAt)}
                         </Typography>
                       )}
                     </Stack>
                     <Stack direction="row" alignItems="center" spacing={0.5}>
-                      <Chip
-                        label={chatUser.role === 'doctor' ? `👨‍⚕️ ${t.doctorRole || 'Shifokor'}` : `🏥 ${t.patient || 'Bemor'}`}
-                        size="small"
-                        sx={{ height: 16, fontSize: 9, fontWeight: 700, '& .MuiChip-label': { px: 0.5 } }}
-                      />
-                      {chatUser.lastMessage && (
-                        <Typography variant="caption" color="text.secondary" noWrap sx={{ fontSize: 11 }}>
-                          {chatUser.lastMessage.text}
-                        </Typography>
-                      )}
+                      <Typography variant="caption" color="text.secondary" noWrap sx={{ fontSize: 12 }}>
+                        {chatUser.lastMessage ? chatUser.lastMessage.text : (chatUser.role === 'doctor' ? (t.doctorRole || 'Shifokor') : (t.patient || 'Bemor'))}
+                      </Typography>
                     </Stack>
                   </Box>
                 </Stack>
@@ -413,10 +409,10 @@ export function Chat({ initialUserId }: ChatProps = {}) {
         <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           {/* Chat header */}
           <Box sx={{
-            px: 2.5, py: 2,
+            px: { xs: 1.5, sm: 2.5 }, py: 1.5,
             borderBottom: `1px solid ${theme.palette.divider}`,
-            display: 'flex', alignItems: 'center', gap: 2,
-            bgcolor: alpha(theme.palette.primary.main, 0.01)
+            display: 'flex', alignItems: 'center', gap: 1.5,
+            bgcolor: 'background.paper'
           }}>
             <IconButton
               size="small"
@@ -425,11 +421,11 @@ export function Chat({ initialUserId }: ChatProps = {}) {
             >
               <ArrowBackIcon fontSize="small" />
             </IconButton>
-            <Avatar sx={{ bgcolor: theme.palette.primary.main, width: 40, height: 40, fontWeight: 900 }}>
+            <Avatar sx={{ bgcolor: alpha(theme.palette.primary.main, 0.14), color: 'primary.main', width: 40, height: 40, fontWeight: 600 }}>
               {selectedUser.firstName?.[0]}
             </Avatar>
             <Box sx={{ flexGrow: 1 }}>
-              <Typography variant="subtitle2" fontWeight={900}>
+              <Typography variant="subtitle2" fontWeight={700}>
                 {selectedUser.firstName} {selectedUser.lastName}
               </Typography>
               <Stack direction="row" alignItems="center" spacing={0.5}>
@@ -439,7 +435,7 @@ export function Chat({ initialUserId }: ChatProps = {}) {
                   </Typography>
                 ) : (
                   <>
-                    <FiberManualRecordIcon sx={{ fontSize: 8, color: '#10b981' }} />
+                    <FiberManualRecordIcon sx={{ fontSize: 8, color: 'success.main' }} />
                     <Typography variant="caption" color="text.secondary" fontWeight={600}>
                       {selectedUser.role === 'doctor' ? (t.doctorRole || 'Shifokor') : (t.patient || 'Bemor')}
                     </Typography>
@@ -453,9 +449,7 @@ export function Chat({ initialUserId }: ChatProps = {}) {
           <Box sx={{
             flexGrow: 1, overflowY: 'auto', p: 2,
             display: 'flex', flexDirection: 'column', gap: 0.5,
-            bgcolor: theme.palette.mode === 'dark'
-              ? alpha(theme.palette.background.default, 0.5)
-              : alpha(theme.palette.primary.main, 0.01),
+            bgcolor: 'background.default',
           }}>
             {loadingMessages ? (
               <Stack spacing={1} sx={{ py: 2 }}>
@@ -466,10 +460,8 @@ export function Chat({ initialUserId }: ChatProps = {}) {
                 ))}
               </Stack>
             ) : messages.length === 0 ? (
-              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flexGrow: 1, opacity: 0.4 }}>
-                <ChatBubbleOutlineIcon sx={{ fontSize: 48, mb: 1 }} />
-                <Typography variant="body2" fontWeight={700}>Hali xabar yõq</Typography>
-                <Typography variant="caption" color="text.secondary">Birinçi xabarni yuboring!</Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexGrow: 1 }}>
+                <EmptyState compact icon={<ChatBubbleOutlineIcon />} title="Hali xabar yõq" description="Birinçi xabarni yuboring!" />
               </Box>
             ) : (
               <>
@@ -486,7 +478,7 @@ export function Chat({ initialUserId }: ChatProps = {}) {
                           <Chip
                             label={formatDate(msg.createdAt)}
                             size="small"
-                            sx={{ fontSize: 10, fontWeight: 700, height: 20 }}
+                            sx={{ fontSize: 11, fontWeight: 600, height: 22, bgcolor: 'background.paper', border: 1, borderColor: 'divider' }}
                           />
                         </Box>
                       )}
@@ -500,22 +492,20 @@ export function Chat({ initialUserId }: ChatProps = {}) {
                           bgcolor: isMe
                             ? theme.palette.primary.main
                             : theme.palette.background.paper,
-                          color: isMe ? 'white' : 'text.primary',
+                          color: isMe ? theme.palette.primary.contrastText : 'text.primary',
                           borderRadius: isMe
                             ? '16px 16px 4px 16px'
                             : '16px 16px 16px 4px',
-                          px: 2, py: 1,
-                          boxShadow: isMe
-                            ? `0 2px 8px ${alpha(theme.palette.primary.main, 0.3)}`
-                            : '0 1px 4px rgba(0,0,0,0.08)',
+                          px: 1.75, py: 1,
+                          boxShadow: 'none',
                           border: isMe ? 'none' : `1px solid ${theme.palette.divider}`,
                         }}>
-                          <Typography variant="body2" sx={{ fontWeight: 600, lineHeight: 1.5, wordBreak: 'break-word' }}>
+                          <Typography variant="body2" sx={{ lineHeight: 1.5, wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>
                             {msg.text}
                           </Typography>
                           <Stack direction="row" justifyContent="flex-end" alignItems="center" spacing={0.5} sx={{ mt: 0.25 }}>
                             <Typography variant="caption" sx={{
-                              fontSize: 9, opacity: 0.7, fontWeight: 700
+                              fontSize: 10.5, opacity: 0.75, fontWeight: 500
                             }}>
                               {formatTime(msg.createdAt)}
                             </Typography>
@@ -564,7 +554,7 @@ export function Chat({ initialUserId }: ChatProps = {}) {
 
           {/* Xabar kiritish */}
           <Box sx={{
-            p: 2,
+            p: { xs: 1.5, sm: 2 },
             borderTop: `1px solid ${theme.palette.divider}`,
             bgcolor: 'background.paper',
           }}>
@@ -582,7 +572,7 @@ export function Chat({ initialUserId }: ChatProps = {}) {
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     borderRadius: 3,
-                    fontSize: '0.9rem',
+                    fontSize: '0.9375rem',
                   }
                 }}
               />
@@ -591,15 +581,15 @@ export function Chat({ initialUserId }: ChatProps = {}) {
                 disabled={!text.trim() || sending}
                 sx={{
                   bgcolor: theme.palette.primary.main,
-                  color: 'white',
-                  width: 42, height: 42,
+                  color: theme.palette.primary.contrastText,
+                  width: 42, height: 42, borderRadius: 3,
                   '&:hover': { bgcolor: theme.palette.primary.dark },
-                  '&:disabled': { bgcolor: alpha(theme.palette.primary.main, 0.3) },
+                  '&.Mui-disabled': { bgcolor: alpha(theme.palette.primary.main, 0.25), color: theme.palette.primary.contrastText },
                   flexShrink: 0,
                 }}
               >
                 {sending
-                  ? <CircularProgress size={18} sx={{ color: 'white' }} />
+                  ? <CircularProgress size={18} color="inherit" />
                   : <SendIcon fontSize="small" />
                 }
               </IconButton>
@@ -610,14 +600,9 @@ export function Chat({ initialUserId }: ChatProps = {}) {
         /* Chat tanlanmagan holat */
         <Box sx={{
           flexGrow: 1, display: { xs: 'none', sm: 'flex' },
-          flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-          opacity: 0.4, gap: 2
+          alignItems: 'center', justifyContent: 'center', bgcolor: 'background.default',
         }}>
-          <ChatBubbleOutlineIcon sx={{ fontSize: 64 }} />
-          <Typography variant="h6" fontWeight={800}>Suhbat tanlang</Typography>
-          <Typography variant="body2" color="text.secondary">
-            Çap tomondagi rõyxatdan suhbatni tanlang
-          </Typography>
+          <EmptyState icon={<ChatBubbleOutlineIcon />} title="Suhbat tanlang" description="Çap tomondagi rõyxatdan suhbatni tanlang" />
         </Box>
       )}
     </Box>

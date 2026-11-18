@@ -10,40 +10,29 @@ import { toast } from 'sonner';
 import {
   Box,
   Typography,
-  Card,
-  CardContent,
   TextField,
   Button,
   IconButton,
   InputAdornment,
   Stack,
-  Divider,
-  Paper,
-  alpha,
-  useTheme,
   CircularProgress,
   Link,
-  Container
 } from '@mui/material';
+import { AuthLayout } from '../components/common';
 
 // MUI Icons
 import MailOutlineIcon from '@mui/icons-material/MailOutline';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
-import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
+import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
+import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import ActivityIcon from '@mui/icons-material/HistoryEdu'; // Represents monitoring/health
-import DarkModeIcon from '@mui/icons-material/DarkMode';
-import LightModeIcon from '@mui/icons-material/LightMode';
-import LanguageIcon from '@mui/icons-material/Language';
+import MarkEmailReadOutlinedIcon from '@mui/icons-material/MarkEmailReadOutlined';
 
 export default function RegisterPage() {
   const { login } = useAuth();
-  const { language, setLanguage, isDarkMode, toggleDarkMode } = useApp();
-  const theme = useTheme();
+  const { language } = useApp();
   const navigate = useNavigate();
   const t = translations[language];
 
@@ -118,160 +107,120 @@ export default function RegisterPage() {
     }
   };
 
+  const mismatch = confirmPassword.length > 0 && password !== confirmPassword;
+  const tooShort = password.length > 0 && password.length < 6;
+  const hint = {
+    short: language === 'ru' ? 'Минимум 6 символов' : language === 'en' ? 'At least 6 characters' : 'Kamida 6 ta belgi',
+    mismatch: language === 'ru' ? 'Пароли не совпадают' : language === 'en' ? 'Passwords do not match' : 'Parollar mos emas',
+  };
+
   return (
-    <Box sx={{ position: 'relative', minHeight: '100vh', display: 'flex', flexDirection: 'column', bgcolor: 'background.default' }}>
-      {/* Top Controls */}
-      <Box sx={{ position: 'absolute', top: 24, right: 24, display: 'flex', gap: 2, zIndex: 10 }}>
-        <IconButton
-          onClick={() => setLanguage(language === 'uz' ? 'ru' : language === 'ru' ? 'en' : 'uz')}
-          sx={{ bgcolor: alpha(theme.palette.primary.main, 0.1), color: 'primary.main', '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.2) } }}
-        >
-          <LanguageIcon />
-        </IconButton>
-        <IconButton
-          onClick={toggleDarkMode}
-          sx={{ bgcolor: alpha(theme.palette.primary.main, 0.1), color: 'primary.main', '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.2) } }}
-        >
-          {isDarkMode ? <LightModeIcon /> : <DarkModeIcon />}
-        </IconButton>
-      </Box>
+    <AuthLayout
+      title={step === 'form' ? t.signUp : t.enterCode}
+      subtitle={step === 'form' ? t.newAccountSubtitle : <>{t.codeSent}: <Box component="span" sx={{ color: 'text.primary', fontWeight: 600 }}>{email}</Box></>}
+      icon={step === 'otp' ? <MarkEmailReadOutlinedIcon /> : undefined}
+    >
+      {step === 'form' ? (
+        <Box component="form" onSubmit={handleRegister}>
+          <Stack spacing={2.5}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+              <TextField fullWidth label={t.firstName} value={firstName} onChange={e => setFirstName(e.target.value)} required autoComplete="given-name" />
+              <TextField fullWidth label={t.lastName} value={lastName} onChange={e => setLastName(e.target.value)} required autoComplete="family-name" />
+            </Stack>
 
-      <Container maxWidth="xs" sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', py: 4 }}>
-      <Box sx={{ textAlign: 'center', mb: 6 }}>
-        <Box sx={{ width: 64, height: 64, bgcolor: 'primary.main', borderRadius: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'center', mx: 'auto', mb: 2, color: 'white' }}>
-          <ActivityIcon sx={{ fontSize: 32 }} />
+            <TextField
+              fullWidth
+              label={t.email}
+              type="text"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              required
+              autoComplete="email"
+              placeholder="name@gmail.com"
+              InputProps={{ startAdornment: <InputAdornment position="start"><MailOutlineIcon fontSize="small" /></InputAdornment> }}
+            />
+
+            <TextField
+              fullWidth
+              label={t.password}
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              required
+              autoComplete="new-password"
+              error={tooShort}
+              helperText={tooShort ? hint.short : ' '}
+              InputProps={{
+                startAdornment: <InputAdornment position="start"><LockOutlinedIcon fontSize="small" /></InputAdornment>,
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton size="small" edge="end" onClick={() => setShowPassword(!showPassword)} aria-label="toggle password">
+                      {showPassword ? <VisibilityOffOutlinedIcon fontSize="small" /> : <VisibilityOutlinedIcon fontSize="small" />}
+                    </IconButton>
+                  </InputAdornment>
+                )
+              }}
+            />
+
+            <TextField
+              fullWidth
+              label={language === 'uz' ? 'Parolni tasdiqlang' : language === 'ru' ? 'Подтвердите пароль' : 'Confirm password'}
+              type="password"
+              value={confirmPassword}
+              onChange={e => setConfirmPassword(e.target.value)}
+              required
+              autoComplete="new-password"
+              error={mismatch}
+              helperText={mismatch ? hint.mismatch : ' '}
+              sx={{ mt: '8px !important' }}
+            />
+
+            <Button
+              fullWidth
+              type="submit"
+              variant="contained"
+              size="large"
+              disabled={loading}
+              endIcon={!loading && <ArrowForwardIcon fontSize="small" />}
+            >
+              {loading ? <CircularProgress size={22} color="inherit" /> : t.signUp}
+            </Button>
+          </Stack>
+
+          <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 3 }}>
+            {t.haveAccount}{' '}
+            <Link component={RouterLink} to="/login" underline="hover" sx={{ fontWeight: 600 }}>
+              {t.loginNow}
+            </Link>
+          </Typography>
         </Box>
-        <Typography variant="h4" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 2 }}>{t.appName}</Typography>
-        <Typography variant="overline" sx={{ fontWeight: 800, color: 'text.secondary', letterSpacing: 1.5 }}>
-          {t.signUp} • {t.joinCommunity}
-        </Typography>
-      </Box>
+      ) : (
+        <Box component="form" onSubmit={handleVerifyOTP}>
+          <Stack spacing={2.5}>
+            <TextField
+              fullWidth
+              placeholder="000000"
+              value={otp}
+              onChange={e => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              inputProps={{ inputMode: 'numeric', autoComplete: 'one-time-code', style: { textAlign: 'center', fontSize: '1.75rem', letterSpacing: '0.6em', fontWeight: 600, fontVariantNumeric: 'tabular-nums' } }}
+              autoFocus
+            />
 
-      <Card elevation={0} sx={{ border: `1px solid ${theme.palette.divider}` }}>
-        <CardContent sx={{ p: 4 }}>
-          {step === 'form' ? (
-            <Box component="form" onSubmit={handleRegister}>
-              <Typography variant="h6" sx={{ fontWeight: 900, mb: 1, textTransform: 'uppercase' }}>{t.signUp}</Typography>
-              <Typography variant="caption" sx={{ fontWeight: 800, color: 'primary.main', textTransform: 'uppercase', letterSpacing: 1, display: 'block', mb: 4 }}>{t.newAccountSubtitle}</Typography>
-              
-              <Stack spacing={3}>
-                <Stack direction="row" spacing={2}>
-                   <TextField
-                    fullWidth
-                    label={t.firstName}
-                    size="small"
-                    value={firstName}
-                    onChange={e => setFirstName(e.target.value)}
-                    required
-                  />
-                  <TextField
-                    fullWidth
-                    label={t.lastName}
-                    size="small"
-                    value={lastName}
-                    onChange={e => setLastName(e.target.value)}
-                    required
-                  />
-                </Stack>
+            <Button
+              fullWidth
+              type="submit"
+              variant="contained"
+              size="large"
+              disabled={loading || otp.length !== 6}
+              endIcon={!loading && <CheckCircleOutlineIcon fontSize="small" />}
+            >
+              {loading ? <CircularProgress size={22} color="inherit" /> : t.verify}
+            </Button>
 
-                <TextField
-                  fullWidth
-                  label={t.email}
-                  type="text"
-                  size="small"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  required
-                  InputProps={{
-                    startAdornment: <MailOutlineIcon sx={{ mr: 1, fontSize: 18, color: 'text.secondary' }} />
-                  }}
-                />
-
-                <TextField
-                  fullWidth
-                  label={t.password}
-                  type={showPassword ? 'text' : 'password'}
-                  size="small"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  required
-                  InputProps={{
-                    startAdornment: <LockOutlinedIcon sx={{ mr: 1, fontSize: 18, color: 'text.secondary' }} />,
-                    endAdornment: (
-                      <IconButton size="small" onClick={() => setShowPassword(!showPassword)}>
-                        {showPassword ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
-                      </IconButton>
-                    )
-                  }}
-                />
-
-                <TextField
-                  fullWidth
-                  label={language === 'uz' ? 'Tasdiqlang' : 'Confirm'}
-                  type="password"
-                  size="small"
-                  value={confirmPassword}
-                  onChange={e => setConfirmPassword(e.target.value)}
-                  required
-                />
-
-                <Button
-                  fullWidth
-                  type="submit"
-                  variant="contained"
-                  disabled={loading}
-                  endIcon={!loading && <ArrowForwardIcon fontSize="small" />}
-                  sx={{ height: 48, fontWeight: 800, mt: 2 }}
-                >
-                  {loading ? <CircularProgress size={20} color="inherit" /> : t.signUp}
-                </Button>
-              </Stack>
-
-              <Box sx={{ mt: 4, textAlign: 'center' }}>
-                <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary' }}>
-                  {t.haveAccount} {' '}
-                  <Link component={RouterLink} to="/login" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 0.5, textDecoration: 'none' }}>
-                    {t.loginNow}
-                  </Link>
-                </Typography>
-              </Box>
-            </Box>
-          ) : (
-            <Box component="form" onSubmit={handleVerifyOTP}>
-              <Box sx={{ textAlign: 'center', mb: 4 }}>
-                <Typography variant="h6" sx={{ fontWeight: 900, mb: 1 }}>{t.enterCode}</Typography>
-                <Typography variant="caption" sx={{ fontWeight: 800, color: 'text.secondary', display: 'block' }}>{t.codeSent}: <Typography component="span" variant="caption" sx={{ color: 'primary.main', fontWeight: 900 }}>{email}</Typography></Typography>
-              </Box>
-
-              <Stack spacing={4}>
-                <TextField
-                  fullWidth
-                  placeholder="000000"
-                  value={otp}
-                  onChange={e => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  inputProps={{ style: { textAlign: 'center', fontSize: '2rem', letterSpacing: '0.5rem', fontWeight: 900 } }}
-                  variant="outlined"
-                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5, bgcolor: alpha(theme.palette.primary.main, 0.02) } }}
-                />
-
-                <Button
-                  fullWidth
-                  type="submit"
-                  variant="contained"
-                  disabled={loading || otp.length !== 6}
-                  endIcon={!loading && <CheckCircleOutlineIcon fontSize="small" />}
-                  sx={{ height: 48, fontWeight: 800 }}
-                >
-                   {loading ? <CircularProgress size={20} color="inherit" /> : t.verify}
-                </Button>
-
-                <Button fullWidth startIcon={<ArrowBackIcon fontSize="small" />} onClick={() => setStep('form')} sx={{ fontWeight: 800, textTransform: 'uppercase', fontSize: 10 }}>{t.back}</Button>
-              </Stack>
-            </Box>
-          )}
-        </CardContent>
-      </Card>
-      </Container>
-    </Box>
+            <Button fullWidth color="inherit" startIcon={<ArrowBackIcon fontSize="small" />} onClick={() => setStep('form')}>{t.back}</Button>
+          </Stack>
+        </Box>
+      )}
+    </AuthLayout>
   );
 }

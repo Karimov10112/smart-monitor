@@ -3,7 +3,7 @@ import {
   IconButton, Badge, Menu, MenuItem, Typography, Box,
   Stack, Divider, Button, Chip, alpha, useTheme
 } from '@mui/material';
-import NotificationsIcon from '@mui/icons-material/Notifications';
+import NotificationsNoneRoundedIcon from '@mui/icons-material/NotificationsNoneRounded';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import DoneAllIcon from '@mui/icons-material/DoneAll';
@@ -34,11 +34,14 @@ export default function NotificationBell() {
     <>
       <IconButton
         onClick={handleClick}
+        aria-label="Notifications"
         sx={{
-          bgcolor: alpha(theme.palette.divider, 0.4),
+          width: 40,
+          height: 40,
+          border: 1,
+          borderColor: unreadNotificationsCount > 0 ? alpha(theme.palette.error.main, 0.4) : 'divider',
+          bgcolor: 'background.paper',
           position: 'relative',
-          transition: 'all 0.2s',
-          '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.15) },
         }}
       >
         <Badge
@@ -48,18 +51,14 @@ export default function NotificationBell() {
           max={99}
           sx={{
             '& .MuiBadge-badge': {
-              fontWeight: 800,
-              fontSize: '0.75rem',
-              animation: unreadNotificationsCount > 0 ? 'pulse 2s infinite' : 'none',
-              '@keyframes pulse': {
-                '0%': { transform: 'scale(1)' },
-                '50%': { transform: 'scale(1.2)' },
-                '100%': { transform: 'scale(1)' },
-              },
+              fontWeight: 700,
+              fontSize: '0.6875rem',
+              height: 18,
+              minWidth: 18,
             },
           }}
         >
-          <NotificationsIcon fontSize="small" sx={{ color: unreadNotificationsCount > 0 ? 'error.main' : 'inherit' }} />
+          <NotificationsNoneRoundedIcon sx={{ fontSize: 20, color: unreadNotificationsCount > 0 ? 'error.main' : 'text.primary' }} />
         </Badge>
       </IconButton>
 
@@ -74,17 +73,15 @@ export default function NotificationBell() {
             width: 360,
             maxWidth: '90vw',
             maxHeight: 480,
-            borderRadius: 3,
-            boxShadow: '0 12px 36px rgba(0,0,0,0.18)',
             p: 0,
-            mt: 1.5,
+            mt: 1,
           },
         }}
       >
         {/* Header */}
-        <Box sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', bgcolor: alpha(theme.palette.primary.main, 0.05) }}>
+        <Box sx={{ px: 2, py: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
           <Stack direction="row" spacing={1} alignItems="center">
-            <Typography variant="subtitle2" fontWeight={800}>
+            <Typography variant="subtitle2" fontWeight={700}>
               Bildirishnomalar
             </Typography>
             {unreadNotificationsCount > 0 && (
@@ -92,7 +89,7 @@ export default function NotificationBell() {
                 label={`${unreadNotificationsCount} yangi`}
                 color="error"
                 size="small"
-                sx={{ height: 20, fontSize: 11, fontWeight: 700 }}
+                sx={{ height: 20, fontSize: 11 }}
               />
             )}
           </Stack>
@@ -101,7 +98,7 @@ export default function NotificationBell() {
               size="small"
               startIcon={<DoneAllIcon sx={{ fontSize: 14 }} />}
               onClick={markAllNotificationsRead}
-              sx={{ fontSize: 11, fontWeight: 700, textTransform: 'none' }}
+              sx={{ fontSize: 12, minHeight: 28, px: 1 }}
             >
               Hammasini o'qildi qilish
             </Button>
@@ -113,8 +110,8 @@ export default function NotificationBell() {
         <Box sx={{ overflowY: 'auto', maxHeight: 360 }}>
           {notifications.length === 0 ? (
             <Box sx={{ p: 4, textAlign: 'center', color: 'text.secondary' }}>
-              <CheckCircleOutlineIcon sx={{ fontSize: 40, opacity: 0.3, mb: 1 }} />
-              <Typography variant="body2" fontWeight={600}>
+              <CheckCircleOutlineIcon sx={{ fontSize: 36, color: 'success.main', mb: 1 }} />
+              <Typography variant="body2" fontWeight={500}>
                 Yangi bildirishnomalar yo'q
               </Typography>
             </Box>
@@ -127,8 +124,8 @@ export default function NotificationBell() {
                   onClick={() => handleItemClick(notif)}
                   sx={{
                     p: 1.5,
-                    px: 2,
-                    borderBottom: `1px solid ${theme.palette.divider}`,
+                    px: 1.5,
+                    my: 0.25,
                     bgcolor: isUnread ? alpha(theme.palette.error.main, 0.06) : 'transparent',
                     alignItems: 'flex-start',
                     gap: 1.5,
@@ -142,8 +139,8 @@ export default function NotificationBell() {
                     sx={{
                       width: 34,
                       height: 34,
-                      borderRadius: '50%',
-                      bgcolor: alpha(theme.palette.error.main, 0.15),
+                      bgcolor: alpha(theme.palette.error.main, 0.12),
+                      borderRadius: 2.5,
                       color: 'error.main',
                       display: 'flex',
                       alignItems: 'center',
@@ -157,7 +154,7 @@ export default function NotificationBell() {
 
                   <Box sx={{ flexGrow: 1 }}>
                     <Stack direction="row" justifyContent="space-between" alignItems="center">
-                      <Typography variant="caption" fontWeight={900} color={isUnread ? 'error.main' : 'text.primary'}>
+                      <Typography variant="body2" fontWeight={isUnread ? 700 : 600} color={isUnread ? 'error.main' : 'text.primary'}>
                         {notif.title || '🚨 Shoshilinch ogohlantirish'}
                       </Typography>
                       {isUnread && (
@@ -165,7 +162,7 @@ export default function NotificationBell() {
                       )}
                     </Stack>
 
-                    <Typography variant="body2" sx={{ fontSize: 13, mt: 0.5, color: 'text.primary', fontWeight: isUnread ? 600 : 400 }}>
+                    <Typography variant="body2" sx={{ fontSize: 13, mt: 0.25, color: 'text.secondary' }}>
                       {notif.message}
                     </Typography>
 
@@ -176,10 +173,10 @@ export default function NotificationBell() {
                           size="small"
                           color="error"
                           variant="outlined"
-                          sx={{ height: 18, fontSize: 10, fontWeight: 800 }}
+                          sx={{ height: 20, fontSize: 11 }}
                         />
                       )}
-                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: 10 }}>
+                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: 11 }}>
                         {notif.createdAt ? format(new Date(notif.createdAt), 'dd.MM.yyyy HH:mm') : ''}
                       </Typography>
                     </Stack>
