@@ -5,11 +5,9 @@
  */
 export default async function handler(req, res) {
   // Faqat Vercel Cron yoki test so'rovlariga ruxsat
+  // CRON_SECRET har doim talab qilinadi (Vercel Cron uni avtomatik yuboradi)
   const authHeader = req.headers['authorization'];
-  if (
-    process.env.NODE_ENV === 'production' &&
-    authHeader !== `Bearer ${process.env.CRON_SECRET}`
-  ) {
+  if (!process.env.CRON_SECRET || authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
@@ -18,7 +16,10 @@ export default async function handler(req, res) {
   try {
     const response = await fetch(`${BACKEND_URL}/api/cron/check-reminders`, {
       method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${process.env.CRON_SECRET}`,
+      },
       signal: AbortSignal.timeout(25000), // 25 soniya timeout
     });
 
@@ -35,7 +36,7 @@ export default async function handler(req, res) {
     console.error('[Vercel Cron] check-reminders error:', err.message);
     return res.status(500).json({
       success: false,
-      error: err.message,
+      error: "Backend bilan bog'lanishda xato",
     });
   }
 }

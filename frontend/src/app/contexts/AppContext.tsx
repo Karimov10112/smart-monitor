@@ -109,7 +109,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Socket initialization
   const socket = useMemo(() => io(SOCKET_URL, {
     autoConnect: false,
-    withCredentials: true
+    withCredentials: true,
+    // Har bir (qayta) ulanishda eng so'nggi access token yuboriladi
+    auth: (cb: (data: { token: string | null }) => void) => cb({ token: localStorage.getItem('token') }),
   }), []);
 
   // Effect 1: Connection management
@@ -120,14 +122,30 @@ export function AppProvider({ children }: { children: ReactNode }) {
         console.log('Joined room:', user._id);
       };
 
+      // Token muddati o'tgan bo'lsa: REST so'rovi orqali tokenni yangilab, qayta ulanamiz
+      let retryTimer: ReturnType<typeof setTimeout> | undefined;
+      const onConnectError = (err: Error) => {
+        if (err?.message !== 'unauthorized') return;
+        retryTimer = setTimeout(async () => {
+          try {
+            const { authAPI } = await import('../utils/api');
+            await authAPI.getMe(); // 401 bo'lsa interceptor tokenni yangilaydi
+            socket.connect();
+          } catch {}
+        }, 3000);
+      };
+
       socket.on('connect', onConnect);
+      socket.on('connect_error', onConnectError);
       socket.connect();
-      
+
       // Initial join
       if (socket.connected) onConnect();
 
       return () => {
+        if (retryTimer) clearTimeout(retryTimer);
         socket.off('connect', onConnect);
+        socket.off('connect_error', onConnectError);
         socket.disconnect();
       };
     }

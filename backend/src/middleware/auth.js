@@ -17,8 +17,11 @@ const protect = async (req, res, next) => {
       return res.status(403).json({ success: false, message: 'Hisobingiz bloklangan. Admin bilan bog\'laning.' });
     }
 
-    // Update lastSeen
-    await User.findByIdAndUpdate(decoded.id, { lastSeen: new Date() });
+    // lastSeen ni har so'rovda emas, ko'pi bilan 5 daqiqada bir marta yangilaymiz
+    const LAST_SEEN_INTERVAL_MS = 5 * 60 * 1000;
+    if (!user.lastSeen || Date.now() - new Date(user.lastSeen).getTime() > LAST_SEEN_INTERVAL_MS) {
+      User.updateOne({ _id: user._id }, { lastSeen: new Date() }).catch(() => {});
+    }
 
     req.user = user;
     next();

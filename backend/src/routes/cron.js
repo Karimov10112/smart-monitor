@@ -2,7 +2,27 @@ const express = require('express');
 const router = express.Router();
 const Reminder = require('../models/Reminder');
 require('../models/User');
+const crypto = require('crypto');
 const { notifyPatientReminder } = require('../services/telegramService');
+
+// Barcha cron yo'llari faqat CRON_SECRET bilan chaqiriladi:
+//   Authorization: Bearer <CRON_SECRET>
+// CRON_SECRET o'rnatilmagan bo'lsa, yo'llar yopiq (fail closed).
+const requireCronSecret = (req, res, next) => {
+  const secret = process.env.CRON_SECRET;
+  if (!secret) {
+    return res.status(503).json({ success: false, message: 'CRON_SECRET sozlanmagan' });
+  }
+  const header = req.headers.authorization || '';
+  const expected = `Bearer ${secret}`;
+  const a = Buffer.from(header);
+  const b = Buffer.from(expected);
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
+    return res.status(401).json({ success: false, message: 'Unauthorized' });
+  }
+  next();
+};
+router.use(requireCronSecret);
 
 // GET /api/cron/check-reminders - Render uxlab qolmasligi va eslatmalarni 100% yuborishi uchun
 router.get('/check-reminders', async (req, res) => {
@@ -37,7 +57,7 @@ router.get('/check-reminders', async (req, res) => {
     });
   } catch (err) {
     console.error('Cron endpoint error:', err);
-    res.status(500).json({ success: false, error: err.message });
+    res.status(500).json({ success: false, error: 'Server xatosi' });
   }
 });
 
@@ -60,7 +80,7 @@ router.get('/test-telegram/:userId', async (req, res) => {
 
     res.json({ success: sent, message: sent ? 'Telegramga yuborildi' : 'Xatolik' });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    res.status(500).json({ success: false, error: 'Server xatosi' });
   }
 });
 

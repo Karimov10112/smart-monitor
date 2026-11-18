@@ -34,12 +34,13 @@ const ALLOWED_ORIGINS = [
 const corsOriginFn = (origin, callback) => {
   // Allow requests with no origin (Postman, mobile apps, server-to-server)
   if (!origin) return callback(null, true);
-  // Always allow any vercel.app subdomain (frontend deployments)
-  if (origin.endsWith('.vercel.app') || origin === 'https://diabetmed.uz') return callback(null, true);
-  // Allow configured origins
+  // Configured origins
   if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
-  // Allow integration clients from any origin
-  return callback(null, true);
+  // Frontend deployments on Vercel
+  if (/^https:\/\/[a-z0-9-]+\.vercel\.app$/i.test(origin)) return callback(null, true);
+  // Local development: localhost and LAN devices (192.168.x.x, 10.x.x.x)
+  if (/^https?:\/\/(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+)(:\d+)?$/.test(origin)) return callback(null, true);
+  return callback(null, false);
 };
 
 const io = new Server(server, {
@@ -53,35 +54,58 @@ const io = new Server(server, {
 // Global io instance setup optionally here. For now we expose it.
 app.set('io', io);
 
+// Socket autentifikatsiyasi: har bir ulanish JWT access token bilan bo'lishi shart.
+// Foydalanuvchi ID si mijozdan emas, tokendan olinadi.
+const { verifyAccessToken } = require('./utils/jwt');
+const mongoose = require('mongoose');
+io.use(async (socket, next) => {
+  try {
+    const token = socket.handshake.auth && socket.handshake.auth.token;
+    if (!token) return next(new Error('unauthorized'));
+    const decoded = verifyAccessToken(token);
+    await connectDB();
+    const user = await User.findById(decoded.id).select('_id isActive isBanned');
+    if (!user || !user.isActive || user.isBanned) return next(new Error('unauthorized'));
+    socket.userId = user._id.toString();
+    next();
+  } catch (err) {
+    next(new Error('unauthorized'));
+  }
+});
+
 // Socket logic
 io.on('connection', (socket) => {
   console.log('🔌 Yangi socket ulanishi:', socket.id);
 
-  // Foydalanuvchi o'z xonasiga qo'shiladi (userId bo'yicha)
-  socket.on('join-room', (userId) => {
-    socket.join(userId);
-    console.log(`🏠 Foydalanuvchi xonaga qo'shildi: ${userId}`);
+  // Foydalanuvchi faqat o'z xonasiga qo'shiladi (ID tokendan olinadi)
+  socket.join(socket.userId);
+  socket.on('join-room', () => {
+    socket.join(socket.userId);
   });
 
   // Chat xabari yuborish va bazaga saqlash
   socket.on('send-message', async (data) => {
-    // data: { to, text, senderId, senderName }
+    // data: { to, text } — yuboruvchi har doim socket.userId
     try {
+      if (!data || !mongoose.isValidObjectId(data.to) || typeof data.text !== 'string' || !data.text.trim()) {
+        return socket.emit('message-error', { error: 'Noto\'g\'ri xabar' });
+      }
+      const text = data.text.trim().slice(0, 5000);
       const ChatMessage = require('./models/ChatMessage');
       const getRoomId = (id1, id2) => [id1.toString(), id2.toString()].sort().join('_');
-      const room = getRoomId(data.senderId, data.to);
+      const room = getRoomId(socket.userId, data.to);
 
       const message = await ChatMessage.create({
         room,
-        sender: data.senderId,
+        sender: socket.userId,
         receiver: data.to,
-        text: data.text,
+        text,
       });
 
       const populated = await message.populate('sender', 'firstName lastName role avatar');
 
       // Qabul qiluvchiga yuborish
-      io.to(data.to).emit('new-message', { message: populated });
+      io.to(String(data.to)).emit('new-message', { message: populated });
       // Yuboruvchiga ham echo
       socket.emit('message-sent', { message: populated });
     } catch (err) {
@@ -92,20 +116,22 @@ io.on('connection', (socket) => {
 
   // Yozayapti indikatori
   socket.on('typing', (data) => {
-    socket.to(data.to).emit('user-typing', { isTyping: data.isTyping, userId: data.userId });
+    if (!data || !mongoose.isValidObjectId(data.to)) return;
+    socket.to(String(data.to)).emit('user-typing', { isTyping: !!data.isTyping, userId: socket.userId });
   });
 
-  // Xabarlarni o'qilgan deb belgilash
+  // Xabarlarni o'qilgan deb belgilash (faqat o'ziga kelgan xabarlarni)
   socket.on('mark-read', async (data) => {
     try {
+      if (!data || !mongoose.isValidObjectId(data.fromId)) return;
       const ChatMessage = require('./models/ChatMessage');
       const getRoomId = (id1, id2) => [id1.toString(), id2.toString()].sort().join('_');
-      const room = getRoomId(data.userId, data.fromId);
+      const room = getRoomId(socket.userId, data.fromId);
       await ChatMessage.updateMany(
-        { room, receiver: data.userId, isRead: false },
+        { room, receiver: socket.userId, isRead: false },
         { isRead: true, readAt: new Date() }
       );
-      io.to(data.fromId).emit('messages-read', { by: data.userId });
+      io.to(String(data.fromId)).emit('messages-read', { by: socket.userId });
     } catch (err) {
       console.error('mark-read error:', err);
     }
@@ -121,6 +147,10 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
   contentSecurityPolicy: false, // Frontend alohida joylashtirilganligi sababli
 }));
+// Ochiq integratsiya API — har qanday manbadan, lekin cookie/credentials'siz
+const openCors = cors({ origin: '*', credentials: false });
+app.use('/api/v1/integration', openCors);
+app.use('/integration', openCors);
 app.use(cors({
   origin: corsOriginFn,
   credentials: true,
@@ -145,7 +175,7 @@ app.use(async (req, res, next) => {
     next();
   } catch (err) {
     console.error('DB Connection error:', err);
-    res.status(500).json({ success: false, message: 'Database ulanishida xatolik', dbgObj: err.toString() });
+    res.status(500).json({ success: false, message: 'Database ulanishida xatolik' });
   }
 });
 
@@ -200,6 +230,13 @@ app.use('/cron', cronRoutes);
 // Telegram Webhook route (Tezkor va 100% kafolatlangan xabar almashish)
 const { handleTelegramUpdate } = require('./services/telegramService');
 const telegramWebhookHandler = async (req, res) => {
+  // Faqat Telegram'dan kelgan so'rovlar: setWebhook'da berilgan secret_token tekshiriladi
+  const expected = process.env.TELEGRAM_WEBHOOK_SECRET;
+  const got = req.get('X-Telegram-Bot-Api-Secret-Token') || '';
+  if (!expected || got.length !== expected.length ||
+      !require('crypto').timingSafeEqual(Buffer.from(got), Buffer.from(expected))) {
+    return res.sendStatus(401);
+  }
   try {
     if (req.body) {
       await handleTelegramUpdate(req.body);
@@ -224,11 +261,21 @@ app.get('/health', healthCheck);
 // Create super admin on startup
 const createSuperAdmin = async () => {
   try {
-    const adminEmail = process.env.SUPER_ADMIN_EMAIL || 'admin';
-    const adminPassword = process.env.SUPER_ADMIN_PASSWORD || 'admin123';
+    const adminEmail = process.env.SUPER_ADMIN_EMAIL;
+    const adminPassword = process.env.SUPER_ADMIN_PASSWORD;
+
+    // Standart (taxmin qilinadigan) login/parol ishlatilmaydi
+    if (!adminEmail || !adminPassword) {
+      console.warn('⚠️ SUPER_ADMIN_EMAIL / SUPER_ADMIN_PASSWORD o\'rnatilmagan — super admin yaratilmadi');
+      return;
+    }
+    if (adminPassword.length < 12) {
+      console.warn('⚠️ SUPER_ADMIN_PASSWORD kamida 12 belgidan iborat bo\'lishi kerak — super admin yaratilmadi');
+      return;
+    }
 
     let admin = await User.findOne({ email: adminEmail });
-    
+
     if (!admin) {
       admin = new User({
         email: adminEmail,
@@ -243,12 +290,19 @@ const createSuperAdmin = async () => {
       await admin.save();
       console.log('✅ Yangi Super admin yaratildi:', adminEmail);
     } else {
-      // Faqat parol va rolni yangilaymiz, kontakt ma'lumotlarini SAQLAYMIZ
-      admin.password = adminPassword;
-      admin.role = 'superadmin';
-      // phone va telegramUsername ni O'ZGARTIRMAYMIZ — ular saqlanib qolsin
-      await admin.save();
-      console.log('🔄 Super admin yangilandi (kontaktlar saqlanib qoldi):', adminEmail);
+      // Parol har ishga tushishda qayta yozilmaydi (admin panelda o'zgartirilgan parol saqlanadi).
+      // Majburiy tiklash kerak bo'lsa: SUPER_ADMIN_RESET_PASSWORD=true
+      let changed = false;
+      if (admin.role !== 'superadmin') {
+        admin.role = 'superadmin';
+        changed = true;
+      }
+      if (process.env.SUPER_ADMIN_RESET_PASSWORD === 'true') {
+        admin.password = adminPassword;
+        changed = true;
+        console.log('🔄 Super admin paroli env qiymatiga tiklandi:', adminEmail);
+      }
+      if (changed) await admin.save();
     }
   } catch (err) {
     console.error('Super admin yaratishda xato:', err.message);
@@ -271,7 +325,7 @@ app.use((req, res) => res.status(404).json({ success: false, message: 'Endpoint 
 // Error handler
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({ success: false, message: 'Server xatosi', errorDetails: err.message });
+  res.status(500).json({ success: false, message: 'Server xatosi' });
 });
 
 const PORT = process.env.PORT || 5000;

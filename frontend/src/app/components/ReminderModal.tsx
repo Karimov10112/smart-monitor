@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X, Clock, Pill, Syringe, Trash2, Send } from 'lucide-react';
 import { reminderAPI } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
+import { useTelegramLink } from '../utils/useTelegramLink';
 import { toast } from 'sonner';
 
 interface ReminderModalProps {
@@ -16,6 +17,7 @@ interface ReminderModalProps {
 
 export const ReminderModal: React.FC<ReminderModalProps> = ({ isOpen, onClose, language, t, reminders, onRefresh }) => {
   const { user } = useAuth();
+  const telegramLink = useTelegramLink(isOpen);
   const [form, setForm] = useState({
     type: 'medication',
     name: '',
@@ -102,7 +104,7 @@ export const ReminderModal: React.FC<ReminderModalProps> = ({ isOpen, onClose, l
                 </div>
               </div>
               <a
-                href={`https://t.me/diabetmed_uz_bot?start=${user?._id || ''}`}
+                href={telegramLink}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="px-3.5 py-2 bg-[#0088cc] hover:bg-[#0077b5] text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all whitespace-nowrap shadow-md shadow-[#0088cc]/25 active:scale-95 flex items-center gap-1.5"

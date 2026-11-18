@@ -1,18 +1,64 @@
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
+const mongoose = require('mongoose');
 
-const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '9274539353:AAENcYinulD1dnfFjLrRR19W3mracruSUdY';
+// Bot token faqat muhit o'zgaruvchisidan olinadi (kodda saqlanmaydi)
+const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const BOT_USERNAME = process.env.TELEGRAM_BOT_USERNAME || 'diabetmed_uz_bot';
-const TELEGRAM_API = `https://api.telegram.org/bot${BOT_TOKEN}`;
+const TELEGRAM_API = BOT_TOKEN ? `https://api.telegram.org/bot${BOT_TOKEN}` : null;
+if (!BOT_TOKEN) console.warn("⚠️ TELEGRAM_BOT_TOKEN o'rnatilmagan — Telegram xabarlari yuborilmaydi");
 
-// Sessiyalarni xotirada saqlash: chatId -> { step: 'awaiting_login' | 'awaiting_password', userId: '' }
+// Sessiyalarni xotirada saqlash: chatId -> { step: 'awaiting_login' | 'awaiting_password', email: '' }
 const userSessions = new Map();
+
+// Bot orqali parolni taxmin qilishga qarshi: chatId -> { count, lockedUntil }
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOCK_MS = 15 * 60 * 1000;
+const loginAttempts = new Map();
+
+function isLocked(chatId) {
+  const a = loginAttempts.get(chatId);
+  return !!(a && a.lockedUntil && a.lockedUntil > Date.now());
+}
+function registerFailedAttempt(chatId) {
+  const a = loginAttempts.get(chatId) || { count: 0, lockedUntil: 0 };
+  a.count += 1;
+  if (a.count >= MAX_LOGIN_ATTEMPTS) {
+    a.count = 0;
+    a.lockedUntil = Date.now() + LOCK_MS;
+  }
+  loginAttempts.set(chatId, a);
+}
+
+/**
+ * Saytdagi "Botni ulash" havolasi uchun imzolangan token: <userId>_<hmac>
+ * Faqat userId bilan boshqa birovning profilini ulab olishning oldi olinadi.
+ */
+function linkSecret() {
+  return process.env.TELEGRAM_LINK_SECRET || process.env.JWT_SECRET;
+}
+function createTelegramLinkToken(userId) {
+  const id = String(userId);
+  const sig = crypto.createHmac('sha256', linkSecret()).update(`tg-link:${id}`).digest('hex').slice(0, 24);
+  return `${id}_${sig}`;
+}
+function verifyTelegramLinkToken(token) {
+  if (!token || !linkSecret()) return null;
+  const [id, sig] = String(token).split('_');
+  if (!id || !sig || !mongoose.isValidObjectId(id)) return null;
+  const expected = createTelegramLinkToken(id).split('_')[1];
+  const a = Buffer.from(sig);
+  const b = Buffer.from(expected);
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
+  return id;
+}
 
 /**
  * Send a message to a specific Telegram chat_id
  */
 async function sendTelegramMessage(chatId, text, options = {}) {
-  if (!chatId || !text) return false;
+  if (!chatId || !text || !TELEGRAM_API) return false;
   try {
     const payload = {
       chat_id: chatId,
@@ -71,7 +117,13 @@ async function handleTelegramUpdate(update) {
     // Buyruqlar: /start yoki /login
     if (text.startsWith('/start') || text === '/login' || text === '/kirish') {
       const parts = text.split(' ');
-      const directUserId = parts[1]; // /start 66fa... (sayt orqali havoladan kelganda)
+      // /start <userId>_<imzo> (sayt orqali havoladan kelganda). Imzo tekshiriladi.
+      const directUserId = verifyTelegramLinkToken(parts[1]);
+
+      if (parts[1] && !directUserId) {
+        await sendTelegramMessage(chatId, `❌ Havola yaroqsiz. Saytdagi "Botni ulash" tugmasini qayta bosing yoki /login yuboring.`);
+        return;
+      }
 
       if (directUserId) {
         const user = await User.findById(directUserId);
@@ -123,19 +175,22 @@ async function handleTelegramUpdate(update) {
 
     // Login va parol jarayoni
     const session = userSessions.get(chatId);
+    if (text === '/cancel' || text === '/bekor') {
+      userSessions.delete(chatId);
+      await sendTelegramMessage(chatId, `Bekor qilindi. Qayta boshlash: /login`);
+      return;
+    }
+
+    if (session && isLocked(chatId)) {
+      userSessions.delete(chatId);
+      await sendTelegramMessage(chatId, `⛔ Juda ko'p noto'g'ri urinish. 15 daqiqadan keyin qayta urinib ko'ring.`);
+      return;
+    }
+
     if (session && session.step === 'awaiting_login') {
+      // Email mavjudligi oshkor qilinmaydi — har doim parol so'raladi
       const emailInput = text.toLowerCase().trim();
-      const userFound = await User.findOne({ email: emailInput });
-
-      if (!userFound) {
-        await sendTelegramMessage(
-          chatId,
-          `❌ <b>Bunday login topilmadi!</b>\n\nSaytda ro'yxatdan o'tgan emailingizni qayta kiriting (bekor qilish: /cancel):`
-        );
-        return;
-      }
-
-      userSessions.set(chatId, { step: 'awaiting_password', userId: userFound._id.toString() });
+      userSessions.set(chatId, { step: 'awaiting_password', email: emailInput });
       await sendTelegramMessage(
         chatId,
         `🔑 <b>Login qabul qilindi.</b>\n\nEndi saytdagi <b>parolingizni</b> kiriting:`
@@ -144,21 +199,18 @@ async function handleTelegramUpdate(update) {
     }
 
     if (session && session.step === 'awaiting_password') {
-      const userToAuth = await User.findById(session.userId);
-      if (!userToAuth) {
-        userSessions.delete(chatId);
-        await sendTelegramMessage(chatId, `Xatolik yuz berdi. Qaytadan /login bosing.`);
-        return;
-      }
-
-      const isMatch = await bcrypt.compare(text, userToAuth.password);
-      if (!isMatch) {
+      const userToAuth = await User.findOne({ email: session.email });
+      const isMatch = !!(userToAuth && userToAuth.password && await bcrypt.compare(text, userToAuth.password));
+      if (!isMatch || !userToAuth.isActive || userToAuth.isBanned) {
+        registerFailedAttempt(chatId);
+        userSessions.set(chatId, { step: 'awaiting_login' });
         await sendTelegramMessage(
           chatId,
-          `❌ <b>Parol noto'g'ri!</b>\n\nQaytadan kiriting (bekor qilish: /cancel):`
+          `❌ <b>Login yoki parol noto'g'ri!</b>\n\nEmailingizni qayta kiriting (bekor qilish: /cancel):`
         );
         return;
       }
+      loginAttempts.delete(chatId);
 
       // Bog'lash
       userToAuth.telegramChatId = chatId;
@@ -177,12 +229,6 @@ async function handleTelegramUpdate(update) {
           ? `🩺 Bemorlaringizning qon shakari kritik baland yoki xavfli past bo'lganda darhol sizga xabar yetkaziladi!`
           : `💊 Belgilangan vaqtlarda dori va insulin eslatmalari aynan shu yerga yuboriladi!`)
       );
-      return;
-    }
-
-    if (text === '/cancel' || text === '/bekor') {
-      userSessions.delete(chatId);
-      await sendTelegramMessage(chatId, `Bekor qilindi. Qayta boshlash: /login`);
       return;
     }
 
@@ -271,6 +317,7 @@ async function notifyReminderCreated(user, reminder) {
 
 module.exports = {
   BOT_USERNAME,
+  createTelegramLinkToken,
   sendTelegramMessage,
   handleTelegramUpdate,
   notifyDoctorCriticalSugar,

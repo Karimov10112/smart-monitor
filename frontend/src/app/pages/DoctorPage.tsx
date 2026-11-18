@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { doctorAPI } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
+import { useTelegramLink } from '../utils/useTelegramLink';
 import { useApp } from '../contexts/AppContext';
 import { useNavigate } from 'react-router-dom';
 import { translations } from '../utils/translations';
@@ -60,6 +61,7 @@ type TabType = 'patients' | 'patient-detail' | 'chat';
 
 export default function DoctorPage() {
   const { user, logout, isAdmin } = useAuth();
+  const telegramLink = useTelegramLink();
   const { language } = useApp();
   const theme = useTheme();
   const t = translations[language];
@@ -514,7 +516,7 @@ export default function DoctorPage() {
                   </Box>
                   <Button
                     component="a"
-                    href={`https://t.me/diabetmed_uz_bot?start=${user?._id || ''}`}
+                    href={telegramLink}
                     target="_blank"
                     rel="noopener noreferrer"
                     variant="contained"

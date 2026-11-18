@@ -34,4 +34,11 @@ router.put('/update-profile', protect, updateProfile);
 router.put('/update-password', protect, updatePassword);
 router.post('/verify-new-email', protect, verifyNewEmail);
 
+// Telegram botni ulash uchun imzolangan havola (faqat o'z profili uchun)
+router.get('/telegram-link', protect, (req, res) => {
+  const { createTelegramLinkToken, BOT_USERNAME } = require('../services/telegramService');
+  const token = createTelegramLinkToken(req.user._id);
+  res.json({ success: true, url: `https://t.me/${BOT_USERNAME}?start=${token}` });
+});
+
 module.exports = router;

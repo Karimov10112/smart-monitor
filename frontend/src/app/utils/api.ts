@@ -61,6 +61,7 @@ export const authAPI = {
   login: (data: any) => api.post('/auth/login', data),
   emailLogin: (data: any) => api.post('/auth/email-login', data),
   updatePassword: (passwordData: any) => api.put('/auth/update-password', passwordData),
+  getTelegramLink: () => api.get('/auth/telegram-link'),
 };
 
 export const bloodSugarAPI = {
