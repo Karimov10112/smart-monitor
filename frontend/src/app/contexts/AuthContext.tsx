@@ -12,6 +12,7 @@ export interface User {
   avatar?: string;
   phone?: string;
   telegramUsername?: string;
+  telegramChatId?: string;
   dateOfBirth?: string;
   region?: string;
   district?: string;

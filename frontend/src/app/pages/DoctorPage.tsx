@@ -5,10 +5,8 @@ import { useTelegramLink } from '../utils/useTelegramLink';
 import { useApp } from '../contexts/AppContext';
 import { useNavigate } from 'react-router-dom';
 import { translations } from '../utils/translations';
-import { toast, Toaster } from 'sonner';
-import { format } from 'date-fns';
-import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
-import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
+import { motion, AnimatePresence } from 'motion/react';
 import { Chat } from '../components/chat/ChatComponent';
 
 // MUI Components
@@ -17,44 +15,43 @@ import {
   Typography,
   Grid,
   Card,
-  CardContent,
   Button,
   TextField,
-  Paper,
   IconButton,
   Avatar,
   Stack,
-  Divider,
   alpha,
   useTheme,
-  CircularProgress,
-  List,
-  ListItem,
-  ListItemButton,
-  useMediaQuery,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableRow,
-  Chip
+  Chip,
+  Tabs,
+  Tab,
+  InputAdornment,
+  Skeleton,
+  Tooltip,
 } from '@mui/material';
+import { SectionCard, StatTile, GlucoseBadge, EmptyState, IconTile } from '../components/common';
+import { GlucoseTrendChart } from '../components/common/GlucoseTrendChart';
+import { classifyGlucose, glucoseLabel, sentenceCase } from '../utils/glucose';
+import { formatShortDate, formatDate, formatTime } from '../utils/format';
 
 // MUI Icons
-import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
+import PeopleAltOutlinedIcon from '@mui/icons-material/PeopleAltOutlined';
 import SearchIcon from '@mui/icons-material/Search';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import TimelineIcon from '@mui/icons-material/Timeline';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
-import BiotechIcon from '@mui/icons-material/Biotech';
+import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import SaveIcon from '@mui/icons-material/Save';
-import MenuIcon from '@mui/icons-material/Menu';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
-import NotificationsIcon from '@mui/icons-material/Notifications';
-import ChatIcon from '@mui/icons-material/Chat';
-import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
+import ChatBubbleOutlineRoundedIcon from '@mui/icons-material/ChatBubbleOutlineRounded';
+import PictureAsPdfOutlinedIcon from '@mui/icons-material/PictureAsPdfOutlined';
+import ContentCopyRoundedIcon from '@mui/icons-material/ContentCopyRounded';
+import TelegramIcon from '@mui/icons-material/Telegram';
+import BadgeOutlinedIcon from '@mui/icons-material/BadgeOutlined';
+import WaterDropOutlinedIcon from '@mui/icons-material/WaterDropOutlined';
+import ListAltRoundedIcon from '@mui/icons-material/ListAltRounded';
+import TrackChangesRoundedIcon from '@mui/icons-material/TrackChangesRounded';
+import EditNoteRoundedIcon from '@mui/icons-material/EditNoteRounded';
+import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 import NotificationBell from '../components/NotificationBell';
 
 type TabType = 'patients' | 'patient-detail' | 'chat';
@@ -66,7 +63,6 @@ export default function DoctorPage() {
   const theme = useTheme();
   const t = translations[language];
   const navigate = useNavigate();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const [currentTab, setCurrentTab] = useState<TabType>('patients');
   const [patients, setPatients] = useState<any[]>([]);
@@ -75,7 +71,6 @@ export default function DoctorPage() {
   const [search, setSearch] = useState('');
   const [doctorNote, setDoctorNote] = useState('');
   const [loading, setLoading] = useState(true);
-  const [isMini, setIsMini] = useState(false);
   const [doctorCode, setDoctorCode] = useState<string>('');
 
   useEffect(() => {
@@ -173,8 +168,8 @@ export default function DoctorPage() {
         startY: doctorNote ? 90 : 68,
         head: [['Sana', 'Oç qoringa (mmol/l)', 'Ovqatdan keyin (mmol/l)', 'Eslatma']],
         body: tableRows,
-        headStyles: { fillColor: [99, 102, 241], fontStyle: 'bold' },
-        alternateRowStyles: { fillColor: [248, 248, 255] },
+        headStyles: { fillColor: [14, 116, 144], fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: [244, 247, 250] },
         styles: { fontSize: 9, cellPadding: 3 },
       });
 
@@ -195,593 +190,345 @@ export default function DoctorPage() {
     }
   };
 
-  const fastingRecords = records
-    .filter(r => (r.fastingLevel != null) || (r.category === 'fasting' && r.level != null))
-    .map(r => ({
-      date: format(new Date(r.date), 'dd/MM'),
-      level: r.category === 'fasting' ? r.level : r.fastingLevel,
-    }));
+  const DIABETES_LABELS: Record<string, Record<string, string>> = {
+    type1: { uz: '1-tip diabet', ru: 'Диабет 1 типа', en: 'Type 1' },
+    type2: { uz: '2-tip diabet', ru: 'Диабет 2 типа', en: 'Type 2' },
+    prediabetes: { uz: 'Prediabet', ru: 'Предиабет', en: 'Prediabetes' },
+    gestational: { uz: 'Homiladorlik diabeti', ru: 'Гестационный', en: 'Gestational' },
+    none: { uz: 'Monitoring', ru: 'Мониторинг', en: 'Monitoring' },
+  };
+  const diabetesLabel = (v?: string) => (v && DIABETES_LABELS[v]?.[language]) || v || '—';
 
-  const postMealRecords = records
-    .filter(r => (r.postMealLevel != null) || (r.category === 'post-meal' && r.level != null))
-    .map(r => ({
-      date: format(new Date(r.date), 'dd/MM'),
-      level: r.category === 'post-meal' ? r.level : r.postMealLevel,
-    }));
+  const UI: Record<string, Record<string, string>> = {
+    uz: { telegramTitle: 'Telegram şoşilinç bildiriş boti', telegramOn: 'Telegram ulangan. Bemorlarda kritik qand aniqlansa, darhol signal keladi.', telegramOff: "Bemorlarda qand xavfli kõtarilsa yoki tuşsa, sayt yopiq bõlsa ham Telegramga signal boradi.", reconnect: 'Qayta ulaş', connect: 'Botni ulaş', copy: 'Nusxalaş', tir: "Me'yorda vaqt", last: 'Sõnggi õlçov', trend: 'Glyukoza dinamikasi', age: 'Yoşi', gender: 'Jinsi', region: 'Hudud', pdf: 'PDF hisobot', noRecords: 'Yozuvlar topilmadi', searchEmpty: 'Qidiruv bõyiça bemor topilmadi' },
+    ru: { telegramTitle: 'Telegram-бот экстренных уведомлений', telegramOn: 'Telegram подключён. При критическом сахаре у пациента сигнал придёт сразу.', telegramOff: 'Если сахар пациента опасно изменится, сигнал придёт в Telegram, даже если сайт закрыт.', reconnect: 'Переподключить', connect: 'Подключить бота', copy: 'Копировать', tir: 'В целевом диапазоне', last: 'Последнее измерение', trend: 'Динамика глюкозы', age: 'Возраст', gender: 'Пол', region: 'Регион', pdf: 'PDF отчёт', noRecords: 'Записей нет', searchEmpty: 'Пациенты не найдены' },
+    en: { telegramTitle: 'Telegram emergency alerts bot', telegramOn: 'Telegram connected. You get an alert as soon as a patient has a critical reading.', telegramOff: 'Get a Telegram alert when a patient’s glucose is dangerously high or low, even when the site is closed.', reconnect: 'Reconnect', connect: 'Connect bot', copy: 'Copy', tir: 'Time in range', last: 'Last reading', trend: 'Glucose trend', age: 'Age', gender: 'Gender', region: 'Region', pdf: 'PDF report', noRecords: 'No records', searchEmpty: 'No patients match your search' },
+  };
+  const ui = UI[language] || UI.uz;
 
-  if (loading && patients.length === 0) return (
-    <Box sx={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', bgcolor: 'background.default' }}>
-      <CircularProgress />
-    </Box>
-  );
+  // ---- Patient detail derived data (display only) ----
+  const chartData = records.map(r => ({
+    date: formatShortDate(r.date, language),
+    fasting: (r.category === 'fasting' ? r.level : r.fastingLevel) ?? null,
+    postMeal: (r.category === 'post-meal' ? r.level : r.postMealLevel) ?? null,
+  }));
+  const allValues: number[] = chartData.flatMap(d => [d.fasting, d.postMeal]).filter((v): v is number => v != null && v > 0);
+  const tirPct = allValues.length ? Math.round(allValues.filter(v => v >= 3.9 && v <= 10).length / allValues.length * 100) : null;
+  const avgSugar = records.length > 0
+    ? (records.reduce((acc, curr) => acc + (curr.fastingLevel || curr.level || 0), 0) / records.length)
+    : null;
+  const lastRecord = records.length ? records[records.length - 1] : null;
+  const lastValue = lastRecord ? (lastRecord.postMealLevel || lastRecord.fastingLevel || lastRecord.level) : null;
 
-  const sidebarWidth = 280;
-  const miniWidth = 88;
+  const tabValue = currentTab === 'chat' ? 'chat' : 'patients';
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
-      {/* Sidebar - FIXED */}
-      <Box
-        component="nav"
-        sx={{
-          width: { md: isMini ? miniWidth : sidebarWidth },
-          transition: theme.transitions.create('width', { duration: 300 }),
-          display: { xs: 'none', md: 'block' }
-        }}
-      >
-        <Paper
-          elevation={0}
-          sx={{
-            width: isMini ? miniWidth : sidebarWidth,
-            height: '100vh',
-            position: 'sticky',
-            top: 0,
-            borderRight: `1px solid ${theme.palette.divider}`,
-            bgcolor: alpha(theme.palette.background.paper, 0.8),
-            backdropFilter: 'blur(20px)',
-            display: 'flex',
-            flexDirection: 'column',
-            transition: theme.transitions.create('width', { duration: 300 }),
-            zIndex: theme.zIndex.drawer + 2,
-          }}
+    <Box>
+      {/* Page header */}
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="space-between" alignItems={{ xs: 'stretch', sm: 'center' }} sx={{ mb: 3 }}>
+        <Tabs
+          value={tabValue}
+          onChange={(_, v) => { if (v === 'chat') setCurrentTab('chat'); else { setCurrentTab('patients'); setSelectedPatient(null); } }}
+          sx={{ bgcolor: 'background.paper', border: 1, borderColor: 'divider', borderRadius: 3, px: 0.5, minHeight: 44, '& .MuiTab-root': { minHeight: 44 } }}
         >
-          <Box sx={{ p: 3, display: 'flex', alignItems: 'center', justifyContent: isMini ? 'center' : 'space-between' }}>
-            {!isMini && (
-              <Stack direction="row" spacing={1.5} alignItems="center">
-                <Box sx={{ p: 1, bgcolor: 'secondary.main', borderRadius: 1.5, display: 'flex', color: 'white' }}>
-                  <BiotechIcon />
-                </Box>
-                <Typography variant="overline" sx={{ fontWeight: 900, color: 'primary.main', letterSpacing: 2 }}>{t.doctorRole.toUpperCase()}</Typography>
-              </Stack>
-            )}
-            <IconButton onClick={() => setIsMini(!isMini)} size="small" sx={{ bgcolor: alpha(theme.palette.secondary.main, 0.05) }}>
-              {isMini ? <MenuIcon /> : <ChevronLeftIcon />}
-            </IconButton>
-          </Box>
-          <Divider sx={{ mx: 2, mb: 2, opacity: 0.5 }} />
-          <List sx={{ px: 2, flexGrow: 1 }}>
-            <ListItem disablePadding sx={{ mb: 1 }}>
-              <ListItemButton
-                onClick={() => { setCurrentTab('patients'); setSelectedPatient(null); }}
-                selected={currentTab === 'patients' || currentTab === 'patient-detail'}
-                sx={{
-                  borderRadius: 8,
-                  py: 1.5,
-                  boxShadow: theme.palette.mode === 'dark' ? '4px 4px 10px rgba(0,0,0,0.4)' : '4px 4px 12px rgba(0,0,0,0.05), -4px -4px 12px rgba(255,255,255,0.8)',
-                  px: isMini ? 1.5 : 2,
-                  justifyContent: isMini ? 'center' : 'flex-start',
-                  color: (currentTab === 'patients' || currentTab === 'patient-detail') ? 'secondary.main' : 'text.secondary',
-                  bgcolor: (currentTab === 'patients' || currentTab === 'patient-detail') ? alpha(theme.palette.secondary.main, 0.1) : theme.palette.background.paper,
-                }}
-              >
-                <Box sx={{ minWidth: isMini ? 0 : 40 }}><PeopleAltIcon /></Box>
-                {!isMini && <Typography sx={{ fontWeight: 800, fontSize: 13, textTransform: 'uppercase' }}>{t.patients}</Typography>}
-              </ListItemButton>
-            </ListItem>
-
-            <ListItem disablePadding sx={{ mb: 1 }}>
-              <ListItemButton
-                onClick={() => setCurrentTab('chat')}
-                selected={currentTab === 'chat'}
-                sx={{
-                  borderRadius: 8,
-                  py: 1.5,
-                  boxShadow: theme.palette.mode === 'dark' ? '4px 4px 10px rgba(0,0,0,0.4)' : '4px 4px 12px rgba(0,0,0,0.05), -4px -4px 12px rgba(255,255,255,0.8)',
-                  px: isMini ? 1.5 : 2,
-                  justifyContent: isMini ? 'center' : 'flex-start',
-                  color: currentTab === 'chat' ? 'secondary.main' : 'text.secondary',
-                  bgcolor: currentTab === 'chat' ? alpha(theme.palette.secondary.main, 0.1) : theme.palette.background.paper,
-                }}
-              >
-                <Box sx={{ minWidth: isMini ? 0 : 40 }}><ChatIcon /></Box>
-                {!isMini && <Typography sx={{ fontWeight: 800, fontSize: 13, textTransform: 'uppercase' }}>Chat</Typography>}
-              </ListItemButton>
-            </ListItem>
-
-            {isAdmin && (
-              <ListItem disablePadding sx={{ mt: 2 }}>
-                <ListItemButton
-                  onClick={() => navigate('/admin')}
-                  sx={{ borderRadius: 8, py: 1.5, bgcolor: theme.palette.background.paper, boxShadow: theme.palette.mode === 'dark' ? '4px 4px 10px rgba(0,0,0,0.4)' : '4px 4px 12px rgba(0,0,0,0.05), -4px -4px 12px rgba(255,255,255,0.8)', px: isMini ? 1.5 : 2, justifyContent: isMini ? 'center' : 'flex-start' }}
-                >
-                  <Box sx={{ minWidth: isMini ? 0 : 40, color: 'text.secondary' }}><AdminPanelSettingsIcon /></Box>
-                  {!isMini && <Typography sx={{ fontWeight: 700, fontSize: 13, color: 'text.secondary' }}>Admin Panel</Typography>}
-                </ListItemButton>
-              </ListItem>
-            )}
-          </List>
-          {/* Back to Home Button */}
-          <Box sx={{ px: 2, pb: 3, mt: 'auto' }}>
-            <Divider sx={{ mb: 2, opacity: 0.5 }} />
-            <ListItem disablePadding>
-              <ListItemButton
-                onClick={() => navigate('/')}
-                sx={{
-                  borderRadius: 8,
-                  py: 1.5,
-                  boxShadow: theme.palette.mode === 'dark' ? '4px 4px 10px rgba(0,0,0,0.4)' : '4px 4px 12px rgba(0,0,0,0.05), -4px -4px 12px rgba(255,255,255,0.8)',
-                  bgcolor: theme.palette.background.paper,
-                  px: isMini ? 1.5 : 2,
-                  justifyContent: isMini ? 'center' : 'flex-start',
-                  color: 'text.secondary',
-                  '&:hover': { color: 'secondary.main', bgcolor: alpha(theme.palette.secondary.main, 0.06) },
-                }}
-              >
-                <Box sx={{ minWidth: isMini ? 0 : 40, display: 'flex' }}>
-                  <ArrowBackIcon fontSize="small" />
-                </Box>
-                {!isMini && <Typography sx={{ fontWeight: 700, fontSize: 13 }}>{t.mainPage}</Typography>}
-              </ListItemButton>
-            </ListItem>
-          </Box>
-        </Paper>
-      </Box>
-
-      {/* Main Content - NO OVERLAP */}
-      <Box
-        component="main"
-        sx={{
-          flexGrow: 1,
-          p: { xs: 2, md: 5 },
-          overflow: 'auto',
-          minWidth: 0,
-        }}
-      >
-        {/* MOBILE NAVIGATION BAR (Hidden on Desktop) */}
-        <Box 
-          sx={{ 
-            display: { xs: 'flex', md: 'none' }, 
-            overflowX: 'auto', 
-            mb: 3, pb: 1, mx: -2, px: 2, 
-            '&::-webkit-scrollbar': { display: 'none' },
-            gap: 1
-          }}
-        >
-           <Button
-               onClick={() => { setCurrentTab('patients'); setSelectedPatient(null); }}
-               variant={currentTab === 'patients' || currentTab === 'patient-detail' ? 'contained' : 'outlined'}
-               startIcon={<PeopleAltIcon />}
-               sx={{ 
-                 borderRadius: 8, 
-                 flexShrink: 0, 
-                 textTransform: 'none',
-                 boxShadow: currentTab === 'patients' || currentTab === 'patient-detail' ? '0 4px 12px rgba(0,0,0,0.1)' : 'none',
-                 bgcolor: currentTab === 'patients' || currentTab === 'patient-detail' ? 'secondary.main' : alpha(theme.palette.background.paper, 0.5),
-                 color: currentTab === 'patients' || currentTab === 'patient-detail' ? '#fff' : 'text.secondary',
-                 fontWeight: 800,
-                 px: 2,
-                 border: '1px solid',
-                 borderColor: currentTab === 'patients' || currentTab === 'patient-detail' ? 'transparent' : 'divider'
-               }}
-           >
-               {t.patients}
-           </Button>
-           <Button
-               onClick={() => setCurrentTab('chat')}
-               variant={currentTab === 'chat' ? 'contained' : 'outlined'}
-               startIcon={<ChatIcon />}
-               sx={{ 
-                 borderRadius: 8, flexShrink: 0, textTransform: 'none',
-                 boxShadow: currentTab === 'chat' ? '0 4px 12px rgba(0,0,0,0.1)' : 'none',
-                 bgcolor: currentTab === 'chat' ? 'secondary.main' : alpha(theme.palette.background.paper, 0.5),
-                 color: currentTab === 'chat' ? '#fff' : 'text.secondary',
-                 fontWeight: 800, px: 2,
-                 border: '1px solid', borderColor: currentTab === 'chat' ? 'transparent' : 'divider'
-               }}
-           >
-               Chat
-           </Button>
-
-           {isAdmin && (
-             <Button
-                 onClick={() => navigate('/admin')}
-                 variant="contained"
-                 startIcon={<AdminPanelSettingsIcon />}
-                 sx={{ 
-                   borderRadius: 8, flexShrink: 0, textTransform: 'none', 
-                   bgcolor: alpha(theme.palette.background.paper, 0.5),
-                   color: 'text.secondary', fontWeight: 800, px: 2,
-                   border: '1px solid', borderColor: 'divider', boxShadow: 'none'
-                 }}
-             >
-                 Admin Panel
-             </Button>
-           )}
-
-           <Button
-               onClick={() => navigate('/')}
-               variant="contained"
-               startIcon={<ArrowBackIcon />}
-               sx={{ 
-                 borderRadius: 8, flexShrink: 0, textTransform: 'none', 
-                 bgcolor: alpha(theme.palette.background.paper, 0.5),
-                 color: 'text.secondary', fontWeight: 800, px: 2,
-                 border: '1px solid', borderColor: 'divider', boxShadow: 'none'
-               }}
-           >
-               {t.mainPage}
-           </Button>
-        </Box>
-
-        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 4 }}>
-          <Box>
-            <Typography variant="h5" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 2 }}>
-              {currentTab === 'patient-detail' ? t.userDetail : currentTab === 'chat' ? 'Chat' : t.myPatients}
-            </Typography>
-            <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', display: 'block' }}>
-              Doctor / {currentTab === 'patient-detail' ? 'Detail' : currentTab === 'chat' ? 'Xabarlar' : 'Patients'}
-            </Typography>
-          </Box>
-          <Stack direction="row" spacing={2} alignItems="center">
-            <NotificationBell />
-            <Avatar src={user?.avatar} sx={{ width: 44, height: 44, borderRadius: 2, bgcolor: 'secondary.main', fontWeight: 900 }}>{user?.firstName?.[0]}</Avatar>
-          </Stack>
+          <Tab value="patients" icon={<PeopleAltOutlinedIcon fontSize="small" />} iconPosition="start" label={`${t.myPatients}${patients.length ? ` · ${patients.length}` : ''}`} />
+          <Tab value="chat" icon={<ChatBubbleOutlineRoundedIcon fontSize="small" />} iconPosition="start" label={t.chat || 'Chat'} />
+        </Tabs>
+        <Stack direction="row" spacing={1} alignItems="center" justifyContent="flex-end">
+          <NotificationBell />
         </Stack>
+      </Stack>
 
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentTab === 'patient-detail' ? `patient-${selectedPatient?._id}` : currentTab}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
-          >
-            {/* ===== PATIENT LIST ===== */}
-            {currentTab === 'patients' && (
-              <Box>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={currentTab === 'patient-detail' ? `patient-${selectedPatient?._id}` : currentTab}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.18 }}
+        >
+          {/* ===== PATIENT LIST ===== */}
+          {currentTab === 'patients' && (
+            <Stack spacing={3}>
+              <Grid container spacing={2}>
                 {/* Doctor Code Card */}
                 {doctorCode && (
-                  <Paper
-                    elevation={0}
-                    sx={{
-                      p: 2.5,
-                      mb: 3,
-                      borderRadius: 2.5,
-                      background: 'linear-gradient(135deg, rgba(79, 70, 229, 0.08), rgba(99, 102, 241, 0.03))',
-                      border: `1px solid ${alpha('#4f46e5', 0.2)}`,
-                      display: 'flex',
-                      flexDirection: { xs: 'column', sm: 'row' },
-                      alignItems: { xs: 'flex-start', sm: 'center' },
-                      justifyContent: 'space-between',
-                      gap: 2
-                    }}
-                  >
-                    <Box>
-                      <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'primary.main', display: 'flex', alignItems: 'center', gap: 1 }}>
-                        🏷️ {t.myDoctorCodeTitle}: <Chip label={doctorCode} color="primary" sx={{ fontWeight: 900, fontSize: '1rem', letterSpacing: 1 }} />
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
-                        {t.myDoctorCodeDesc}
-                      </Typography>
-                    </Box>
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      onClick={() => {
-                        navigator.clipboard.writeText(doctorCode);
-                        toast.success(t.copiedToClipboard);
-                      }}
-                      sx={{ borderRadius: 2, fontWeight: 700, textTransform: 'none', flexShrink: 0 }}
-                    >
-                      📋 {t.copiedToClipboard.replace('!', '')} (Nusxalash)
-                    </Button>
-                  </Paper>
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <Card sx={{ p: 2.5, height: '100%' }}>
+                      <Stack direction="row" spacing={2} alignItems="flex-start">
+                        <IconTile><BadgeOutlinedIcon /></IconTile>
+                        <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                          <Typography variant="subtitle2">{t.myDoctorCodeTitle}</Typography>
+                          <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>{t.myDoctorCodeDesc}</Typography>
+                          <Stack direction="row" spacing={1} alignItems="center">
+                            <Box sx={{ px: 1.5, py: 0.75, borderRadius: 2, bgcolor: alpha(theme.palette.primary.main, 0.1), color: 'primary.main', fontWeight: 700, letterSpacing: '0.06em', fontVariantNumeric: 'tabular-nums' }}>
+                              {doctorCode}
+                            </Box>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              startIcon={<ContentCopyRoundedIcon sx={{ fontSize: '16px !important' }} />}
+                              onClick={() => {
+                                navigator.clipboard.writeText(doctorCode);
+                                toast.success(t.copiedToClipboard);
+                              }}
+                            >
+                              {ui.copy}
+                            </Button>
+                          </Stack>
+                        </Box>
+                      </Stack>
+                    </Card>
+                  </Grid>
                 )}
 
                 {/* Telegram Bot Integration Card for Doctor */}
-                <Paper
-                  elevation={0}
-                  sx={{
-                    p: 2.5,
-                    mb: 3,
-                    borderRadius: 2.5,
-                    background: 'linear-gradient(135deg, rgba(0, 136, 204, 0.08), rgba(0, 136, 204, 0.02))',
-                    border: '1px solid rgba(0, 136, 204, 0.25)',
-                    display: 'flex',
-                    flexDirection: { xs: 'column', sm: 'row' },
-                    alignItems: { xs: 'flex-start', sm: 'center' },
-                    justifyContent: 'space-between',
-                    gap: 2
-                  }}
-                >
-                  <Box>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#0088cc', display: 'flex', alignItems: 'center', gap: 1 }}>
-                      📲 Telegram Shoshilinch Bildirishnoma Boti
-                    </Typography>
-                    <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, display: 'block', mt: 0.5 }}>
-                      {user?.telegramChatId
-                        ? '✅ Telegramingiz ulangan. Bemorlaringizda kritik shakar aniqlansa, darhol Telegramingizga signal keladi!'
-                        : 'Bemorlaringizda qand darajasi xavfli ko\'tarilsa yoki tushsa, sayt yopiq bo\'lsa ham Telegramingizga shoshilinch signal boradi.'}
-                    </Typography>
-                  </Box>
-                  <Button
-                    component="a"
-                    href={telegramLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    variant="contained"
-                    size="small"
-                    sx={{
-                      bgcolor: '#0088cc',
-                      '&:hover': { bgcolor: '#0077b5' },
-                      borderRadius: 2,
-                      fontWeight: 800,
-                      textTransform: 'none',
-                      flexShrink: 0,
-                      px: 2
-                    }}
-                  >
-                    {user?.telegramChatId ? '🔄 Qayta ulash' : '🚀 Botni ulash'}
-                  </Button>
-                </Paper>
+                <Grid size={{ xs: 12, md: doctorCode ? 6 : 12 }}>
+                  <Card sx={{ p: 2.5, height: '100%', borderColor: alpha('#229ED9', 0.3) }}>
+                    <Stack direction="row" spacing={2} alignItems="flex-start">
+                      <IconTile color="#229ED9"><TelegramIcon /></IconTile>
+                      <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                        <Stack direction="row" spacing={0.75} alignItems="center">
+                          <Typography variant="subtitle2">{ui.telegramTitle}</Typography>
+                          {user?.telegramChatId && <CheckCircleRoundedIcon sx={{ fontSize: 16, color: 'success.main' }} />}
+                        </Stack>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+                          {user?.telegramChatId ? ui.telegramOn : ui.telegramOff}
+                        </Typography>
+                        <Button
+                          component="a"
+                          href={telegramLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          variant="contained"
+                          size="small"
+                          startIcon={<TelegramIcon />}
+                          sx={{ bgcolor: '#229ED9', color: '#fff', '&:hover': { bgcolor: '#1d8cc1' } }}
+                        >
+                          {user?.telegramChatId ? ui.reconnect : ui.connect}
+                        </Button>
+                      </Box>
+                    </Stack>
+                  </Card>
+                </Grid>
+              </Grid>
 
-                <Paper elevation={0} sx={{ p: 2.5, mb: 4, borderRadius: 2, bgcolor: alpha(theme.palette.background.paper, 0.4), backdropFilter: 'blur(20px)', border: `1px solid ${theme.palette.divider}` }}>
-                  <TextField
-                    placeholder={t.search}
-                    fullWidth
-                    size="small"
-                    value={search}
-                    onChange={e => setSearch(e.target.value)}
-                    InputProps={{ startAdornment: <SearchIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} /> }}
-                    sx={{ '& .MuiOutlinedInput-root': { bgcolor: alpha(theme.palette.background.default, 0.5) } }}
-                  />
-                </Paper>
+              <TextField
+                placeholder={t.search}
+                fullWidth
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> }}
+                sx={{ maxWidth: 480 }}
+              />
 
-                <Grid container spacing={3}>
+              {loading && patients.length === 0 ? (
+                <Grid container spacing={2}>
+                  {[0, 1, 2].map(i => (
+                    <Grid size={{ xs: 12, sm: 6, md: 4 }} key={i}>
+                      <Card sx={{ p: 2.5 }}>
+                        <Stack direction="row" spacing={2} alignItems="center">
+                          <Skeleton variant="circular" width={48} height={48} />
+                          <Box sx={{ flexGrow: 1 }}>
+                            <Skeleton width="70%" />
+                            <Skeleton width="40%" />
+                          </Box>
+                        </Stack>
+                      </Card>
+                    </Grid>
+                  ))}
+                </Grid>
+              ) : patients.length === 0 ? (
+                <Card>
+                  <EmptyState icon={<PeopleAltOutlinedIcon />} title={search ? ui.searchEmpty : t.noPatients} />
+                </Card>
+              ) : (
+                <Grid container spacing={2}>
                   {patients.map((p, idx) => (
                     <Grid size={{ xs: 12, sm: 6, md: 4 }} key={p._id}>
-                      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }}>
+                      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(idx, 8) * 0.03 }} style={{ height: '100%' }}>
                         <Card
-                          elevation={0}
+                          role="button"
+                          tabIndex={0}
                           onClick={() => openPatient(p)}
+                          onKeyDown={(e) => { if (e.key === 'Enter') openPatient(p); }}
                           sx={{
+                            p: 2.5,
+                            height: '100%',
                             cursor: 'pointer',
-                            borderRadius: 2,
-                            bgcolor: alpha(theme.palette.background.paper, 0.6),
-                            backdropFilter: 'blur(10px)',
-                            border: `1px solid ${theme.palette.divider}`,
-                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                            '&:hover': {
-                              transform: 'translateY(-5px)',
-                              boxShadow: `0 12px 24px -10px ${alpha(theme.palette.secondary.main, 0.2)}`,
-                              border: `1px solid ${alpha(theme.palette.secondary.main, 0.3)}`,
-                            }
+                            transition: 'border-color .15s, box-shadow .15s',
+                            '&:hover, &:focus-visible': {
+                              borderColor: alpha(theme.palette.primary.main, 0.5),
+                              boxShadow: `0 6px 20px ${alpha(theme.palette.primary.main, 0.12)}`,
+                              outline: 'none',
+                            },
                           }}
                         >
-                          <CardContent sx={{ p: 3 }}>
-                            <Stack direction="row" spacing={2.5} alignItems="center" sx={{ mb: 3 }}>
-                              <Avatar sx={{ borderRadius: 1.5, width: 56, height: 56, bgcolor: alpha(theme.palette.secondary.main, 0.1), color: 'secondary.main', fontWeight: 900, fontSize: 20 }}>{p.firstName?.[0]}</Avatar>
-                              <Box>
-                                <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>{p.firstName} {p.lastName}</Typography>
-                                <Chip label={p.diabetesType || 'Unknown'} size="small" sx={{ height: 20, fontSize: 10, fontWeight: 900, bgcolor: alpha(theme.palette.secondary.main, 0.1), color: 'secondary.main', border: 'none', mt: 0.5 }} />
-                              </Box>
-                            </Stack>
-                            <Divider sx={{ my: 2, opacity: 0.5 }} />
-                            <Stack direction="row" justifyContent="space-between" alignItems="center">
-                              <Box display="flex" alignItems="center" gap={1}>
-                                <LocationOnIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
-                                <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary' }}>{p.region || '—'}</Typography>
-                              </Box>
-                              <IconButton size="small" sx={{ bgcolor: alpha(theme.palette.secondary.main, 0.05) }}><ChevronRightIcon /></IconButton>
-                            </Stack>
-                          </CardContent>
+                          <Stack direction="row" spacing={1.75} alignItems="center">
+                            <Avatar sx={{ width: 48, height: 48, bgcolor: alpha(theme.palette.primary.main, 0.12), color: 'primary.main', fontSize: 17 }}>
+                              {p.firstName?.[0]}{p.lastName?.[0]}
+                            </Avatar>
+                            <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                              <Typography variant="subtitle2" noWrap>{p.firstName} {p.lastName}</Typography>
+                              <Chip label={diabetesLabel(p.diabetesType)} size="small" sx={{ mt: 0.5, height: 22, bgcolor: alpha(theme.palette.secondary.main, 0.1), color: 'secondary.main' }} />
+                            </Box>
+                            <ChevronRightIcon sx={{ color: 'text.disabled' }} />
+                          </Stack>
+                          <Stack direction="row" spacing={0.75} alignItems="center" sx={{ mt: 2, pt: 1.5, borderTop: 1, borderColor: 'divider' }}>
+                            <LocationOnOutlinedIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
+                            <Typography variant="caption" color="text.secondary" noWrap>{[p.region, p.district].filter(Boolean).join(', ') || '—'}</Typography>
+                          </Stack>
                         </Card>
                       </motion.div>
                     </Grid>
                   ))}
                 </Grid>
+              )}
+            </Stack>
+          )}
 
-                {patients.length === 0 && (
-                  <Box sx={{ py: 15, textAlign: 'center', opacity: 0.2 }}>
-                    <PeopleAltIcon sx={{ fontSize: 80, mb: 2 }} />
-                    <Typography variant="h6" sx={{ fontWeight: 800 }}>{t.noPatients}</Typography>
-                  </Box>
-                )}
-              </Box>
-            )}
+          {/* ===== CHAT TAB ===== */}
+          {currentTab === 'chat' && (
+            <Chat />
+          )}
 
-            {/* ===== CHAT TAB ===== */}
-            {currentTab === 'chat' && (
-              <Chat />
-            )}
+          {/* ===== PATIENT DETAIL ===== */}
+          {currentTab === 'patient-detail' && selectedPatient && (
+            <Stack spacing={3}>
+              <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1}>
+                <Button startIcon={<ArrowBackIcon />} color="inherit" onClick={() => setCurrentTab('patients')}>{sentenceCase(t.patientList)}</Button>
+                <Button
+                  startIcon={<PictureAsPdfOutlinedIcon />}
+                  variant="outlined"
+                  onClick={handleExportPDF}
+                  disabled={records.length === 0}
+                >
+                  {ui.pdf}
+                </Button>
+              </Stack>
 
-            {/* ===== PATIENT DETAIL ===== */}
-            {currentTab === 'patient-detail' && selectedPatient && (
-              <Box>
-                <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 4 }}>
-                  <Button startIcon={<ArrowBackIcon />} onClick={() => setCurrentTab('patients')} sx={{ fontWeight: 900, borderRadius: 2, px: 3 }}>{t.patientList}</Button>
-                  <Button
-                    startIcon={<PictureAsPdfIcon />}
-                    variant="contained"
-                    onClick={handleExportPDF}
-                    disabled={records.length === 0}
-                    sx={{ fontWeight: 800, borderRadius: 2, px: 3, bgcolor: '#ef4444', '&:hover': { bgcolor: '#dc2626' }, boxShadow: 'none' }}
-                  >
-                    PDF Yuklab olish
-                  </Button>
+              {/* Patient Header Card */}
+              <Card sx={{ p: { xs: 2.5, sm: 3 } }}>
+                <Stack direction={{ xs: 'column', md: 'row' }} spacing={3} alignItems={{ xs: 'flex-start', md: 'center' }}>
+                  <Stack direction="row" spacing={2} alignItems="center" sx={{ flexGrow: 1, minWidth: 0 }}>
+                    <Avatar sx={{ width: 64, height: 64, bgcolor: alpha(theme.palette.primary.main, 0.12), color: 'primary.main', fontSize: 22 }}>
+                      {selectedPatient.firstName?.[0]}{selectedPatient.lastName?.[0]}
+                    </Avatar>
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography variant="h5" noWrap>{selectedPatient.firstName} {selectedPatient.lastName}</Typography>
+                      <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5, flexWrap: 'wrap', rowGap: 0.5 }}>
+                        <Chip label={diabetesLabel(selectedPatient.diabetesType)} size="small" sx={{ bgcolor: alpha(theme.palette.secondary.main, 0.1), color: 'secondary.main' }} />
+                        {lastValue != null && <GlucoseBadge value={lastValue} />}
+                      </Stack>
+                    </Box>
+                  </Stack>
+                  <Stack direction="row" spacing={0} divider={<Box sx={{ width: '1px', bgcolor: 'divider', mx: 2.5 }} />}>
+                    <Box>
+                      <Typography variant="caption" color="text.secondary">{ui.gender}</Typography>
+                      <Typography variant="subtitle2">{t[selectedPatient.gender] || selectedPatient.gender || '—'}</Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="caption" color="text.secondary">{ui.age}</Typography>
+                      <Typography variant="subtitle2">{selectedPatient.age || '—'}</Typography>
+                    </Box>
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography variant="caption" color="text.secondary">{ui.region}</Typography>
+                      <Typography variant="subtitle2" noWrap>{selectedPatient.region || '—'}</Typography>
+                    </Box>
+                  </Stack>
                 </Stack>
+              </Card>
 
-                <Grid container spacing={4}>
-                  <Grid size={{ xs: 12, lg: 8 }}>
-                    {/* Patient Header Card */}
-                    <Card elevation={0} sx={{ mb: 4, borderRadius: 2, bgcolor: alpha(theme.palette.background.paper, 0.6), backdropFilter: 'blur(20px)', border: `2px solid ${alpha(theme.palette.secondary.main, 0.1)}`, p: 4 }}>
-                      <Stack direction={isMobile ? 'column' : 'row'} spacing={4} alignItems="center">
-                        <Avatar sx={{ width: 88, height: 88, borderRadius: 2, bgcolor: 'secondary.main', fontWeight: 900, fontSize: 32, boxShadow: `0 8px 16px ${alpha(theme.palette.secondary.main, 0.2)}` }}>{selectedPatient.firstName?.[0]}</Avatar>
-                        <Box sx={{ flexGrow: 1, textAlign: isMobile ? 'center' : 'left' }}>
-                          <Typography variant="h4" sx={{ fontWeight: 900, mb: 1 }}>{selectedPatient.firstName} {selectedPatient.lastName}</Typography>
-                          <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'secondary.main', textTransform: 'uppercase', letterSpacing: 1.5 }}>{selectedPatient.diabetesType}</Typography>
-                        </Box>
-                        <Stack direction="row" spacing={3}>
-                          <Box textAlign="center" px={2}>
-                            <Typography variant="caption" display="block" sx={{ fontWeight: 900, color: 'text.secondary' }}>GENDER</Typography>
-                            <Typography variant="body1" sx={{ fontWeight: 900 }}>{t[selectedPatient.gender] || selectedPatient.gender}</Typography>
-                          </Box>
-                          <Divider orientation="vertical" flexItem />
-                          <Box textAlign="center" px={2}>
-                            <Typography variant="caption" display="block" sx={{ fontWeight: 900, color: 'text.secondary' }}>AGE</Typography>
-                            <Typography variant="body1" sx={{ fontWeight: 900 }}>{selectedPatient.age || '—'}</Typography>
-                          </Box>
-                        </Stack>
-                      </Stack>
-                    </Card>
-
-                    {/* Fasting Chart */}
-                    <Card elevation={0} sx={{ mb: 4, borderRadius: 2, border: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.background.paper, 0.4), backdropFilter: 'blur(10px)' }}>
-                      <Box sx={{ p: 2.5, px: 4, borderBottom: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.primary.main, 0.05) }}>
-                        <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 2, color: 'primary.main' }}>Och Qoringa (Fasting)</Typography>
-                      </Box>
-                      <CardContent sx={{ p: 4 }}>
-                        <Box sx={{ height: 260 }}>
-                          {fastingRecords.length > 0 ? (
-                            <ResponsiveContainer width="100%" height="100%">
-                              <AreaChart data={fastingRecords}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme.palette.divider} />
-                                <XAxis dataKey="date" tick={{ fontSize: 10, fontWeight: 700 }} />
-                                <YAxis tick={{ fontSize: 10, fontWeight: 700 }} />
-                                <Tooltip />
-                                <Area type="monotone" dataKey="level" stroke={theme.palette.primary.main} fill={theme.palette.primary.main} fillOpacity={0.1} strokeWidth={3} />
-                              </AreaChart>
-                            </ResponsiveContainer>
-                          ) : (
-                            <Box sx={{ py: 4, textAlign: 'center', opacity: 0.4 }}>
-                              <TimelineIcon sx={{ fontSize: 40, mb: 1 }} />
-                              <Typography variant="caption" display="block">Yozuvlar topilmadi</Typography>
-                            </Box>
-                          )}
-                        </Box>
-                      </CardContent>
-                    </Card>
-
-                    {/* Post-Meal Chart */}
-                    <Card elevation={0} sx={{ mb: 4, borderRadius: 2, border: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.background.paper, 0.4), backdropFilter: 'blur(10px)' }}>
-                      <Box sx={{ p: 2.5, px: 4, borderBottom: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.secondary.main, 0.05) }}>
-                        <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 2, color: 'secondary.main' }}>To'q Qoringa (Post-meal)</Typography>
-                      </Box>
-                      <CardContent sx={{ p: 4 }}>
-                        <Box sx={{ height: 260 }}>
-                          {postMealRecords.length > 0 ? (
-                            <ResponsiveContainer width="100%" height="100%">
-                              <AreaChart data={postMealRecords}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme.palette.divider} />
-                                <XAxis dataKey="date" tick={{ fontSize: 10, fontWeight: 700 }} />
-                                <YAxis tick={{ fontSize: 10, fontWeight: 700 }} />
-                                <Tooltip />
-                                <Area type="monotone" dataKey="level" stroke={theme.palette.secondary.main} fill={theme.palette.secondary.main} fillOpacity={0.1} strokeWidth={3} />
-                              </AreaChart>
-                            </ResponsiveContainer>
-                          ) : (
-                            <Box sx={{ py: 4, textAlign: 'center', opacity: 0.4 }}>
-                              <TimelineIcon sx={{ fontSize: 40, mb: 1 }} />
-                              <Typography variant="caption" display="block">Yozuvlar topilmadi</Typography>
-                            </Box>
-                          )}
-                        </Box>
-                      </CardContent>
-                    </Card>
-
-                    {/* Medical Notes */}
-                    <Card elevation={0} sx={{ borderRadius: 2, border: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.background.paper, 0.4), backdropFilter: 'blur(10px)' }}>
-                      <Box sx={{ p: 2.5, px: 4, borderBottom: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.primary.main, 0.02) }}>
-                        <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 2 }}>{t.medicalConclusion || 'Tibbiy Xulosa'}</Typography>
-                      </Box>
-                      <CardContent sx={{ p: 4 }}>
-                        <TextField
-                          fullWidth
-                          multiline
-                          rows={6}
-                          placeholder={`${t.writeNote || 'Xulosa yozing'}...`}
-                          value={doctorNote}
-                          onChange={e => setDoctorNote(e.target.value)}
-                          sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2, bgcolor: alpha(theme.palette.background.default, 0.4) } }}
-                        />
-                        <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
-                          <Button variant="contained" color="secondary" startIcon={<SaveIcon />} onClick={handleSaveNote} sx={{ fontWeight: 900, borderRadius: 2, px: 5, py: 1.2, boxShadow: `0 8px 16px ${alpha(theme.palette.secondary.main, 0.2)}` }}>{t.save || 'Saqlash'}</Button>
-                        </Box>
-                      </CardContent>
-                    </Card>
-                  </Grid>
-
-                  {/* Stats Sidebar */}
-                  <Grid size={{ xs: 12, lg: 4 }}>
-                    <Card elevation={0} sx={{ mb: 4, borderRadius: 2, bgcolor: alpha(theme.palette.secondary.main, 0.08), border: `1px solid ${alpha(theme.palette.secondary.main, 0.15)}`, p: 4 }}>
-                      <Stack spacing={4}>
-                        <Box>
-                          <Typography variant="caption" sx={{ fontWeight: 900, color: 'secondary.main', textTransform: 'uppercase', letterSpacing: 1.5, display: 'block', mb: 1 }}>{t.totalRecords || 'Jami Yozuvlar'}</Typography>
-                          <Typography variant="h2" sx={{ fontWeight: 900 }}>{records.length}</Typography>
-                        </Box>
-                        <Divider />
-                        <Box>
-                          <Typography variant="caption" sx={{ fontWeight: 900, color: 'secondary.main', textTransform: 'uppercase', letterSpacing: 1.5, display: 'block', mb: 1 }}>{t.avgSugar || "O'rtacha Qand"}</Typography>
-                          <Typography variant="h3" sx={{ fontWeight: 900 }}>
-                            {records.length > 0
-                              ? (records.reduce((acc, curr) => acc + (curr.fastingLevel || curr.level || 0), 0) / records.length).toFixed(1)
-                              : '—'}
-                            <Typography component="span" variant="h6" sx={{ ml: 1, color: 'text.secondary' }}>mmol/l</Typography>
-                          </Typography>
-                        </Box>
-                      </Stack>
-                    </Card>
-
-                    <Card elevation={0} sx={{ borderRadius: 2, border: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.background.paper, 0.4), backdropFilter: 'blur(10px)' }}>
-                      <Box sx={{ p: 2.5, px: 4, borderBottom: `1px solid ${theme.palette.divider}` }}>
-                        <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5 }}>{t.recentActivity || 'Oxirgi Yozuvlar'}</Typography>
-                      </Box>
-                      <TableContainer>
-                        <Table size="medium">
-                          <TableBody>
-                            {records.slice(-5).reverse().map((r) => (
-                              <TableRow key={r._id} sx={{ '&:last-child td': { border: 0 } }}>
-                                <TableCell sx={{ py: 2.5 }}>
-                                  <Typography variant="body2" sx={{ fontWeight: 800 }}>{format(new Date(r.date), 'dd MMMM')}</Typography>
-                                  <Typography variant="caption" color="text.secondary">{format(new Date(r.date), 'HH:mm')}</Typography>
-                                </TableCell>
-                                <TableCell align="right" sx={{ py: 2.5 }}>
-                                  <Typography variant="subtitle2" sx={{ fontWeight: 900, color: (r.fastingLevel || r.level) > 7 ? 'error.main' : 'success.main' }}>
-                                    {r.fastingLevel || r.level || 0}
-                                    <Typography component="span" variant="caption" sx={{ fontSize: 9, ml: 0.5 }}>mmol/l</Typography>
-                                  </Typography>
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                            {records.length === 0 && (
-                              <TableRow>
-                                <TableCell colSpan={2} align="center" sx={{ py: 4, opacity: 0.4 }}>
-                                  <Typography variant="caption">Yozuvlar mavjud emas</Typography>
-                                </TableCell>
-                              </TableRow>
-                            )}
-                          </TableBody>
-                        </Table>
-                      </TableContainer>
-                    </Card>
-                  </Grid>
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 6, md: 3 }}>
+                  <StatTile label={t.totalRecords || 'Jami yozuvlar'} value={records.length} icon={<ListAltRoundedIcon />} color="info" />
                 </Grid>
-              </Box>
-            )}
-          </motion.div>
-        </AnimatePresence>
-      </Box>
-      <Toaster position="top-right" richColors />
+                <Grid size={{ xs: 6, md: 3 }}>
+                  <StatTile
+                    label={t.avgSugar || "O'rtacha qand"}
+                    value={avgSugar != null ? avgSugar.toFixed(1) : '—'}
+                    unit={avgSugar != null ? t.mmol : undefined}
+                    icon={<WaterDropOutlinedIcon />}
+                    valueColor={avgSugar != null && classifyGlucose(avgSugar) ? theme.palette.glucose[classifyGlucose(avgSugar)!] : undefined}
+                  />
+                </Grid>
+                <Grid size={{ xs: 6, md: 3 }}>
+                  <StatTile
+                    label={ui.tir}
+                    value={tirPct != null ? `${tirPct}%` : '—'}
+                    icon={<TrackChangesRoundedIcon />}
+                    color="success"
+                    valueColor={tirPct == null ? undefined : tirPct >= 70 ? theme.palette.glucose.inRange : tirPct >= 50 ? theme.palette.glucose.high : theme.palette.glucose.low}
+                  />
+                </Grid>
+                <Grid size={{ xs: 6, md: 3 }}>
+                  <StatTile
+                    label={ui.last}
+                    value={lastValue != null ? Number(lastValue).toFixed(1) : '—'}
+                    unit={lastValue != null ? t.mmol : undefined}
+                    icon={<TimelineIcon />}
+                    color="secondary"
+                    hint={lastRecord ? <Typography variant="caption" color="text.secondary">{formatShortDate(lastRecord.date, language)}{lastValue != null && classifyGlucose(lastValue) ? ` · ${glucoseLabel(classifyGlucose(lastValue)!, language)}` : ''}</Typography> : undefined}
+                  />
+                </Grid>
+              </Grid>
+
+              <SectionCard title={ui.trend} icon={<TimelineIcon />}>
+                {chartData.length > 0 ? (
+                  <GlucoseTrendChart data={chartData} fastingLabel={t.fasting} postMealLabel={t.postMeal} />
+                ) : (
+                  <EmptyState compact icon={<TimelineIcon />} title={ui.noRecords} />
+                )}
+              </SectionCard>
+
+              <Grid container spacing={3}>
+                {/* Medical Notes */}
+                <Grid size={{ xs: 12, lg: 7 }}>
+                  <SectionCard title={t.medicalConclusion || 'Tibbiy xulosa'} icon={<EditNoteRoundedIcon />} iconColor="secondary" sx={{ height: '100%' }}>
+                    <TextField
+                      fullWidth
+                      multiline
+                      minRows={6}
+                      placeholder={`${t.writeNote || 'Xulosa yozing'}...`}
+                      value={doctorNote}
+                      onChange={e => setDoctorNote(e.target.value)}
+                    />
+                    <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
+                      <Button variant="contained" startIcon={<SaveOutlinedIcon />} onClick={handleSaveNote}>
+                        {t.save || 'Saqlash'}
+                      </Button>
+                    </Box>
+                  </SectionCard>
+                </Grid>
+
+                {/* Recent records */}
+                <Grid size={{ xs: 12, lg: 5 }}>
+                  <SectionCard title={sentenceCase(t.recentActivity || 'Oxirgi yozuvlar')} icon={<ListAltRoundedIcon />} noPadding sx={{ height: '100%' }}>
+                    {records.length === 0 ? (
+                      <EmptyState compact title={ui.noRecords} />
+                    ) : (
+                      <Box>
+                        {records.slice(-6).reverse().map((r) => (
+                          <Stack key={r._id} direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 2.5, py: 1.5, borderBottom: 1, borderColor: 'divider', '&:last-of-type': { borderBottom: 0 } }}>
+                            <Box>
+                              <Typography variant="body2" sx={{ fontWeight: 500, fontVariantNumeric: 'tabular-nums' }}>{formatDate(r.date)}</Typography>
+                              <Typography variant="caption" color="text.secondary">{formatTime(r.createdAt || r.date)}</Typography>
+                            </Box>
+                            <Stack direction="row" spacing={0.75}>
+                              <Tooltip title={t.fasting}><span><GlucoseBadge value={r.fastingLevel || r.level} showLabel={false} /></span></Tooltip>
+                              {r.postMealLevel != null && <Tooltip title={t.postMeal}><span><GlucoseBadge value={r.postMealLevel} showLabel={false} /></span></Tooltip>}
+                            </Stack>
+                          </Stack>
+                        ))}
+                      </Box>
+                    )}
+                  </SectionCard>
+                </Grid>
+              </Grid>
+            </Stack>
+          )}
+        </motion.div>
+      </AnimatePresence>
     </Box>
   );
 }

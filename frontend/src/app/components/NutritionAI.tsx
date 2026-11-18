@@ -46,10 +46,10 @@ export const NutritionAI: React.FC<NutritionAIProps> = ({ user, t, language }) =
   const labels = {
     uz: {
       title: 'AI Ovqatlaniş Tavsiyasi',
-      subtitle: 'Sizning soğliq ma'lumotlaringiz asosida şaxsiylaştirilgan',
+      subtitle: "Sizning soğliq ma'lumotlaringiz asosida şaxsiylaştirilgan",
       getAdvice: 'Tavsiya oliş',
       refresh: 'Yangilaş',
-      noData: 'Tavsiya oliş uçun profilingizda bõy va vazn ma'lumotlarini kiriting',
+      noData: "Tavsiya oliş uçun profilingizda bõy va vazn ma'lumotlarini kiriting",
       goToProfile: 'Profilni tõldiriş',
       bmi: 'BMI',
       age: 'Yoş',

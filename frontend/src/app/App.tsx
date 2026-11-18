@@ -3,6 +3,8 @@ import { Routes, Route, Navigate, Link as RouterLink, useLocation, useNavigate, 
 import { useAuth } from './contexts/AuthContext';
 import { useApp } from './contexts/AppContext';
 import { translations } from './utils/translations';
+import { sentenceCase } from './utils/glucose';
+import { formatLongToday } from './utils/format';
 
 // MUI Components
 import {
@@ -13,19 +15,10 @@ import {
   Typography,
   IconButton,
   List,
-  ListItem,
   ListItemButton,
   ListItemIcon,
   ListItemText,
   Avatar,
-  Badge,
-  Divider,
-  Button as MuiButton,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  TextField,
-  Paper,
   Stack,
   useTheme,
   alpha,
@@ -33,30 +26,26 @@ import {
   CircularProgress,
   Link,
   Menu,
-  MenuItem
+  MenuItem,
+  Divider,
+  Paper,
+  BottomNavigation,
+  BottomNavigationAction,
 } from '@mui/material';
 
 // MUI Icons
-import MenuIcon from '@mui/icons-material/Menu';
-import CloseIcon from '@mui/icons-material/Close';
-import LogoutIcon from '@mui/icons-material/Logout';
-import PersonIcon from '@mui/icons-material/Person';
-import LanguageIcon from '@mui/icons-material/Language';
-import StorageIcon from '@mui/icons-material/Storage';
-import AssignmentIcon from '@mui/icons-material/Assignment';
-import BarChartIcon from '@mui/icons-material/BarChart';
-import SettingsIcon from '@mui/icons-material/Settings';
-import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
-import MedicalServicesIcon from '@mui/icons-material/MedicalServices';
-import NotificationsIcon from '@mui/icons-material/Notifications';
-import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import CallIcon from '@mui/icons-material/Call';
+import MenuRoundedIcon from '@mui/icons-material/MenuRounded';
+import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
+import EditNoteRoundedIcon from '@mui/icons-material/EditNoteRounded';
+import InsightsRoundedIcon from '@mui/icons-material/InsightsRounded';
+import ChatBubbleOutlineRoundedIcon from '@mui/icons-material/ChatBubbleOutlineRounded';
+import AdminPanelSettingsOutlinedIcon from '@mui/icons-material/AdminPanelSettingsOutlined';
+import MedicalServicesOutlinedIcon from '@mui/icons-material/MedicalServicesOutlined';
+import ManageAccountsOutlinedIcon from '@mui/icons-material/ManageAccountsOutlined';
+import AlarmRoundedIcon from '@mui/icons-material/AlarmRounded';
+import CallOutlinedIcon from '@mui/icons-material/CallOutlined';
 import TelegramIcon from '@mui/icons-material/Telegram';
-import DarkModeIcon from '@mui/icons-material/DarkMode';
-import LightModeIcon from '@mui/icons-material/LightMode';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
-import ChatIcon from '@mui/icons-material/Chat';
+import UnfoldMoreRoundedIcon from '@mui/icons-material/UnfoldMoreRounded';
 
 // Components
 import { DailyJournal } from './components/DailyJournal';
@@ -65,7 +54,8 @@ import AIAgentChat from './components/AIAgentChat';
 
 import { Statistics } from './components/Statistics';
 import { ReminderModal } from './components/ReminderModal';
-import { reminderAPI, adminAPI, authAPI } from './utils/api';
+import { reminderAPI, adminAPI } from './utils/api';
+import { BrandMark, LanguageMenuButton, ThemeToggleButton } from './components/common';
 
 // Pages
 import LoginPage from './pages/LoginPage';
@@ -78,11 +68,12 @@ import DoctorPage from './pages/DoctorPage';
 
 import { Toaster, toast } from 'sonner';
 
-const SIDEBAR_WIDTH = 300;
+const SIDEBAR_WIDTH = 268;
+const BOTTOM_NAV_HEIGHT = 64;
 
 function App() {
-  const { user, isAuthenticated, logout, loading, updateUser, isAdmin } = useAuth();
-  const { language, setLanguage, socket, isDarkMode, toggleDarkMode } = useApp();
+  const { user, isAuthenticated, logout, loading, isAdmin } = useAuth();
+  const { language, isDarkMode } = useApp();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('lg'));
   const t = translations[language] || translations['uz'];
@@ -94,8 +85,7 @@ function App() {
   const [isReminderModalOpen, setIsReminderModalOpen] = useState(false);
   const [reminders, setReminders] = useState<any[]>([]);
   const [adminContacts, setAdminContacts] = useState({ phone: '', telegramUsername: '' });
-  const [languageAnchorEl, setLanguageAnchorEl] = useState<null | HTMLElement>(null);
-  const [themeAnchorEl, setThemeAnchorEl] = useState<null | HTMLElement>(null);
+  const [userMenuAnchor, setUserMenuAnchor] = useState<null | HTMLElement>(null);
   const triggeredReminders = React.useRef<Set<string>>(new Set());
   const location = useLocation();
   const [searchParams] = useSearchParams();
@@ -110,7 +100,7 @@ function App() {
       try {
         const { data: contactsData } = await adminAPI.getContacts();
         setAdminContacts(contactsData.contacts);
-        
+
         const { data: remData } = await reminderAPI.getAll();
         setReminders(remData.reminders);
       } catch (err) {}
@@ -142,7 +132,7 @@ function App() {
         const triggerKey = `${r._id}_${currentTime}`;
         if (r.isActive && r.time === currentTime && !triggeredReminders.current.has(triggerKey)) {
           triggeredReminders.current.add(triggerKey);
-          
+
           const sound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
           sound.play().catch(() => { });
 
@@ -170,36 +160,20 @@ function App() {
     setIsReminderModalOpen(true);
   };
 
-  const handleLanguageClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setLanguageAnchorEl(event.currentTarget);
-  };
-  const handleLanguageClose = (lang?: string) => {
-    if (lang) setLanguage(lang as any);
-    setLanguageAnchorEl(null);
-  };
-
-  const handleThemeClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setThemeAnchorEl(event.currentTarget);
-  };
-  const handleThemeClose = (mode?: 'light' | 'dark') => {
-    if (mode) {
-      if (mode === 'light' && isDarkMode) toggleDarkMode();
-      if (mode === 'dark' && !isDarkMode) toggleDarkMode();
-    }
-    setThemeAnchorEl(null);
-  };
+  const toaster = <Toaster position="top-right" richColors closeButton theme={isDarkMode ? 'dark' : 'light'} toastOptions={{ style: { fontFamily: 'inherit', borderRadius: 12 } }} />;
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', height: '100vh', width: '100%', alignItems: 'center', justifyContent: 'center', bgcolor: 'background.default' }}>
-        <CircularProgress size={40} thickness={4} />
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, height: '100dvh', width: '100%', alignItems: 'center', justifyContent: 'center', bgcolor: 'background.default' }}>
+        <BrandMark size={48} />
+        <CircularProgress size={22} thickness={5} />
       </Box>
     );
   }
 
   if (!isAuthenticated) {
     return (
-      <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', overflow: 'hidden' }}>
+      <Box sx={{ minHeight: '100dvh', bgcolor: 'background.default' }}>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
@@ -207,257 +181,285 @@ function App() {
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
-        <Toaster position="top-right" richColors />
+        {toaster}
       </Box>
     );
   }
 
   const activeTab = searchParams.get('tab') || 'journal';
+  const roleLabel = isAdmin ? t.administrator : (user?.role === 'doctor' ? t.doctorRole : t.userRole);
+  const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(' ') || user?.email || '';
+  const initials = `${user?.firstName?.[0] || ''}${user?.lastName?.[0] || ''}`.toUpperCase() || 'U';
+
+  const patientNav = [
+    { id: 'journal', label: t.dailyJournal || 'Journal', icon: <EditNoteRoundedIcon />, path: '/?tab=journal' },
+    { id: 'statistics', label: t.statistics || 'Stats', icon: <InsightsRoundedIcon />, path: '/?tab=statistics' },
+    { id: 'chat', label: t.chat || 'Chat', icon: <ChatBubbleOutlineRoundedIcon />, path: '/?tab=chat' },
+  ];
+
+  const pageTitle = (() => {
+    if (location.pathname === '/admin') return t.adminPanel;
+    if (location.pathname === '/doctor') return t.doctorPanel;
+    if (location.pathname === '/complete-profile') return user?.isProfileComplete ? t.editProfile : t.profileTitle;
+    return patientNav.find(n => n.id === activeTab)?.label || t.dailyJournal;
+  })();
+
+  const todayLabel = formatLongToday(language);
+
+  const menuFromTop = userMenuAnchor ? userMenuAnchor.getBoundingClientRect().top < 200 : false;
+
+  const showBottomNav = isMobile && !!user?.isProfileComplete && location.pathname === '/';
+
+  const NavSectionLabel = ({ children }: { children: React.ReactNode }) => (
+    <Typography variant="overline" sx={{ px: 1.5, pt: 2, pb: 0.75, display: 'block', color: 'text.disabled' }}>
+      {children}
+    </Typography>
+  );
+
+  const navItemSx = { mb: 0.5, py: 1, px: 1.5, color: 'text.primary' };
+  const navTextProps = { primaryTypographyProps: { fontWeight: 550, fontSize: '0.875rem' } };
 
   const SidebarContent = (
-    <Box sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 4 }}>
-        <Avatar 
-          sx={{ 
-            width: 50, height: 50, 
-            bgcolor: 'primary.main',
-            boxShadow: '0 4px 12px rgba(99, 102, 241, 0.2)',
-            borderRadius: 2
-          }}
-        >
-          {user?.firstName?.[0]}
-        </Avatar>
-        <Box>
-          <Typography variant="subtitle1" sx={{ fontWeight: 800, color: 'text.primary', lineHeight: 1.2 }}>
-            {user?.firstName}
-          </Typography>
-          <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
-            {isAdmin ? t.administrator : (user?.role === 'doctor' ? t.doctorRole : t.userRole)}
-          </Typography>
-        </Box>
-      </Stack>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: 'background.paper' }}>
+      <Box sx={{ px: 2.5, py: 2.25 }}>
+        <BrandMark size={36} showName name={t.appName} subtitle="diabetmed.uz" />
+      </Box>
+      <Divider />
 
-      <List sx={{ flexGrow: 1 }}>
-        {(user?.isProfileComplete || isAdmin) && [
-          { id: 'journal', label: t.dailyJournal || 'Journal', icon: <AssignmentIcon fontSize="small" />, path: '/?tab=journal' },
-          { id: 'statistics', label: t.statistics || 'Stats', icon: <BarChartIcon fontSize="small" />, path: '/?tab=statistics' },
-          { id: 'chat', label: t.chat || 'Chat', icon: <ChatIcon fontSize="small" />, path: '/?tab=chat' },
-        ].map((item) => (
-          <ListItem key={item.id} disablePadding sx={{ mb: 0.5 }}>
-            <ListItemButton
-              component={RouterLink}
-              to={item.path}
-              selected={!isReminderModalOpen && location.pathname === '/' && activeTab === item.id}
-              onClick={() => { setIsSidebarOpen(false); setIsReminderModalOpen(false); }}
-              sx={{
-                borderRadius: 8,
-                mb: 1,
-                py: 1.5,
-                bgcolor: theme.palette.background.paper,
-                boxShadow: theme.palette.mode === 'dark' ? '4px 4px 10px rgba(0,0,0,0.4)' : '4px 4px 12px rgba(0,0,0,0.05), -4px -4px 12px rgba(255,255,255,0.8)',
-                '&.Mui-selected': { bgcolor: alpha(theme.palette.primary.main, 0.1), color: 'primary.main', '& .MuiListItemIcon-root': { color: 'primary.main' } },
-              }}
-            >
-              <ListItemIcon sx={{ minWidth: 40 }}>{item.icon}</ListItemIcon>
-              <ListItemText primary={item.label} primaryTypographyProps={{ fontWeight: 700, fontSize: '0.875rem' }} />
-            </ListItemButton>
-          </ListItem>
-        ))}
-
-        {user?.isProfileComplete && isAdmin && (
-          <ListItem disablePadding sx={{ mb: 0.5 }}>
-            <ListItemButton 
-              component={RouterLink} 
-              to="/admin" 
-              selected={!isReminderModalOpen && location.pathname === '/admin'}
-              onClick={() => { setIsSidebarOpen(false); setIsReminderModalOpen(false); }} 
-              sx={{ 
-                borderRadius: 8, 
-                mb: 1,
-                py: 1.5,
-                bgcolor: theme.palette.background.paper,
-                boxShadow: theme.palette.mode === 'dark' ? '4px 4px 10px rgba(0,0,0,0.4)' : '4px 4px 12px rgba(0,0,0,0.05), -4px -4px 12px rgba(255,255,255,0.8)',
-                '&.Mui-selected': { bgcolor: alpha(theme.palette.primary.main, 0.1), color: 'primary.main', '& .MuiListItemIcon-root': { color: 'primary.main' } },
-              }}
-            >
-              <ListItemIcon sx={{ minWidth: 40 }}><AdminPanelSettingsIcon fontSize="small" /></ListItemIcon>
-              <ListItemText primary={t.adminPanel} primaryTypographyProps={{ fontWeight: 700, fontSize: '0.875rem' }} />
-            </ListItemButton>
-          </ListItem>
+      <Box sx={{ flexGrow: 1, overflowY: 'auto', px: 1.5, pb: 2 }}>
+        {(user?.isProfileComplete || isAdmin) && (
+          <>
+            <NavSectionLabel>{language === 'ru' ? 'Мониторинг' : language === 'en' ? 'Monitoring' : 'Monitoring'}</NavSectionLabel>
+            <List disablePadding>
+              {patientNav.map((item) => (
+                <ListItemButton
+                  key={item.id}
+                  component={RouterLink}
+                  to={item.path}
+                  selected={!isReminderModalOpen && location.pathname === '/' && activeTab === item.id}
+                  onClick={() => { setIsSidebarOpen(false); setIsReminderModalOpen(false); }}
+                  sx={navItemSx}
+                >
+                  <ListItemIcon>{item.icon}</ListItemIcon>
+                  <ListItemText primary={item.label} {...navTextProps} />
+                </ListItemButton>
+              ))}
+              {user?.isProfileComplete && (
+                <ListItemButton onClick={openReminders} selected={isReminderModalOpen} sx={navItemSx}>
+                  <ListItemIcon><AlarmRoundedIcon /></ListItemIcon>
+                  <ListItemText primary={getT('reminders')} {...navTextProps} />
+                  {reminders.length > 0 && (
+                    <Box sx={{ px: 0.9, py: 0.1, borderRadius: 1.5, fontSize: 11, fontWeight: 700, bgcolor: alpha(theme.palette.primary.main, 0.12), color: 'primary.main' }}>
+                      {reminders.length}
+                    </Box>
+                  )}
+                </ListItemButton>
+              )}
+            </List>
+          </>
         )}
 
-        {(user?.role === 'doctor' || isAdmin) && (
-          <ListItem disablePadding sx={{ mb: 0.5 }}>
-            <ListItemButton 
-              component={RouterLink} 
-              to="/doctor" 
-              selected={!isReminderModalOpen && location.pathname === '/doctor'}
-              onClick={() => { setIsSidebarOpen(false); setIsReminderModalOpen(false); }} 
-              sx={{ 
-                borderRadius: 8, 
-                mb: 1,
-                py: 1.5,
-                bgcolor: theme.palette.background.paper,
-                boxShadow: theme.palette.mode === 'dark' ? '4px 4px 10px rgba(0,0,0,0.4)' : '4px 4px 12px rgba(0,0,0,0.05), -4px -4px 12px rgba(255,255,255,0.8)',
-                '&.Mui-selected': { bgcolor: alpha(theme.palette.primary.main, 0.1), color: 'primary.main', '& .MuiListItemIcon-root': { color: 'primary.main' } },
-              }}
-            >
-              <ListItemIcon sx={{ minWidth: 40 }}><MedicalServicesIcon fontSize="small" /></ListItemIcon>
-              <ListItemText primary={t.doctorPanel || 'Doctor Panel'} primaryTypographyProps={{ fontWeight: 700, fontSize: '0.875rem' }} />
-            </ListItemButton>
-          </ListItem>
+        {((user?.isProfileComplete && isAdmin) || user?.role === 'doctor' || isAdmin) && (
+          <>
+            <NavSectionLabel>{language === 'ru' ? 'Управление' : language === 'en' ? 'Management' : 'Boşqaruv'}</NavSectionLabel>
+            <List disablePadding>
+              {(user?.role === 'doctor' || isAdmin) && (
+                <ListItemButton
+                  component={RouterLink}
+                  to="/doctor"
+                  selected={!isReminderModalOpen && location.pathname === '/doctor'}
+                  onClick={() => { setIsSidebarOpen(false); setIsReminderModalOpen(false); }}
+                  sx={navItemSx}
+                >
+                  <ListItemIcon><MedicalServicesOutlinedIcon /></ListItemIcon>
+                  <ListItemText primary={t.doctorPanel || 'Doctor Panel'} {...navTextProps} />
+                </ListItemButton>
+              )}
+              {user?.isProfileComplete && isAdmin && (
+                <ListItemButton
+                  component={RouterLink}
+                  to="/admin"
+                  selected={!isReminderModalOpen && location.pathname === '/admin'}
+                  onClick={() => { setIsSidebarOpen(false); setIsReminderModalOpen(false); }}
+                  sx={navItemSx}
+                >
+                  <ListItemIcon><AdminPanelSettingsOutlinedIcon /></ListItemIcon>
+                  <ListItemText primary={t.adminPanel} {...navTextProps} />
+                </ListItemButton>
+              )}
+            </List>
+          </>
         )}
-
-        {user?.isProfileComplete && (
-          <ListItem disablePadding sx={{ mt: 0.5 }}>
-            <ListItemButton 
-              onClick={openReminders} 
-              selected={isReminderModalOpen}
-              sx={{ 
-                borderRadius: 8, 
-                mb: 1,
-                py: 1.5,
-                bgcolor: theme.palette.background.paper,
-                boxShadow: theme.palette.mode === 'dark' ? '4px 4px 10px rgba(0,0,0,0.4)' : '4px 4px 12px rgba(0,0,0,0.05), -4px -4px 12px rgba(255,255,255,0.8)',
-                '&.Mui-selected': { bgcolor: alpha(theme.palette.primary.main, 0.1), color: 'primary.main', '& .MuiListItemIcon-root': { color: 'primary.main' } },
-              }}
-            >
-              <ListItemIcon sx={{ minWidth: 40 }}><AccessTimeIcon fontSize="small" /></ListItemIcon>
-              <ListItemText primary={getT('reminders')} primaryTypographyProps={{ fontWeight: 700, fontSize: '0.875rem' }} />
-            </ListItemButton>
-          </ListItem>
-        )}
-      </List>
+      </Box>
 
       {/* Footer Area */}
-      <Box sx={{ mt: 'auto', pt: 3 }}>
-        <Stack spacing={1}>
-          <MuiButton fullWidth startIcon={<ManageAccountsIcon />} onClick={() => navigate('/complete-profile')} sx={{ borderRadius: 8, justifyContent: 'start', py: 1.5, px: 3, mb: 1, color: 'text.secondary', fontWeight: 800, bgcolor: theme.palette.background.paper, boxShadow: theme.palette.mode === 'dark' ? '4px 4px 10px rgba(0,0,0,0.4)' : '4px 4px 12px rgba(0,0,0,0.05), -4px -4px 12px rgba(255,255,255,0.8)' }}>{t.editProfile}</MuiButton>
-          
-          <MuiButton 
-            fullWidth 
-            startIcon={<LanguageIcon />} 
-            onClick={handleLanguageClick}
-            sx={{ borderRadius: 8, justifyContent: 'start', py: 1.5, px: 3, mb: 1, color: 'text.secondary', fontWeight: 800, bgcolor: theme.palette.background.paper, boxShadow: theme.palette.mode === 'dark' ? '4px 4px 10px rgba(0,0,0,0.4)' : '4px 4px 12px rgba(0,0,0,0.05), -4px -4px 12px rgba(255,255,255,0.8)' }}
-          >
-            {language.toUpperCase()}
-          </MuiButton>
-          <Menu anchorEl={languageAnchorEl} open={Boolean(languageAnchorEl)} onClose={() => handleLanguageClose()} PaperProps={{ sx: { borderRadius: 2, minWidth: 150, mt: 1, boxShadow: '0 4px 20px rgba(0,0,0,0.1)' } }}>
-             <MenuItem onClick={() => handleLanguageClose('uz')} selected={language === 'uz'} sx={{ fontWeight: 700, fontSize: 13 }}>🇺🇿 Õzbekça</MenuItem>
-             <MenuItem onClick={() => handleLanguageClose('ru')} selected={language === 'ru'} sx={{ fontWeight: 700, fontSize: 13 }}>🇷🇺 Русский</MenuItem>
-             <MenuItem onClick={() => handleLanguageClose('en')} selected={language === 'en'} sx={{ fontWeight: 700, fontSize: 13 }}>🇺🇸 English</MenuItem>
-          </Menu>
+      <Box sx={{ p: 1.5, borderTop: 1, borderColor: 'divider' }}>
+        {(adminContacts.phone || adminContacts.telegramUsername) && (
+          <Box sx={{ p: 1.5, mb: 1.5, borderRadius: 3, bgcolor: 'surfaceMuted' }}>
+            <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', display: 'block', mb: 1 }}>
+              {sentenceCase(t.support)}
+            </Typography>
+            <Stack spacing={0.75}>
+              {adminContacts.phone && (
+                <Link href={`tel:${adminContacts.phone}`} underline="none" sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.primary', '&:hover': { color: 'primary.main' } }}>
+                  <CallOutlinedIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
+                  <Typography variant="body2" sx={{ fontWeight: 500 }}>{adminContacts.phone}</Typography>
+                </Link>
+              )}
+              {adminContacts.telegramUsername && (
+                <Link
+                  href={adminContacts.telegramUsername.startsWith('http') ? adminContacts.telegramUsername : `https://t.me/${adminContacts.telegramUsername.replace('@', '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  underline="none"
+                  sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.primary', '&:hover': { color: 'primary.main' } }}
+                >
+                  <TelegramIcon sx={{ fontSize: 16, color: '#229ED9' }} />
+                  <Typography variant="body2" sx={{ fontWeight: 500 }}>{adminContacts.telegramUsername.startsWith('@') ? adminContacts.telegramUsername : 'Telegram'}</Typography>
+                </Link>
+              )}
+            </Stack>
+          </Box>
+        )}
 
-          <MuiButton 
-            fullWidth 
-            startIcon={isDarkMode ? <LightModeIcon /> : <DarkModeIcon />} 
-            onClick={handleThemeClick}
-            sx={{ borderRadius: 8, justifyContent: 'start', py: 1.5, px: 3, mb: 1, color: 'text.secondary', fontWeight: 800, bgcolor: theme.palette.background.paper, boxShadow: theme.palette.mode === 'dark' ? '4px 4px 10px rgba(0,0,0,0.4)' : '4px 4px 12px rgba(0,0,0,0.05), -4px -4px 12px rgba(255,255,255,0.8)' }}
-          >
-            {isDarkMode ? t.darkMode : t.lightMode}
-          </MuiButton>
-          <Menu 
-            anchorEl={themeAnchorEl} 
-            open={Boolean(themeAnchorEl)} 
-            onClose={() => handleThemeClose()} 
-            PaperProps={{ sx: { borderRadius: 2, minWidth: 150, mt: 1, boxShadow: '0 4px 20px rgba(0,0,0,0.1)' } }}
-          >
-             <MenuItem onClick={() => handleThemeClose('light')} selected={!isDarkMode} sx={{ fontWeight: 700, fontSize: 13 }}>☀️ {t.lightMode}</MenuItem>
-             <MenuItem onClick={() => handleThemeClose('dark')} selected={isDarkMode} sx={{ fontWeight: 700, fontSize: 13 }}>🌙 {t.darkMode}</MenuItem>
-          </Menu>
-          
-          {(adminContacts.phone || adminContacts.telegramUsername) && (
-            <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1.5, bgcolor: alpha(theme.palette.primary.main, 0.02), borderStyle: 'dashed' }}>
-               <Typography variant="caption" sx={{ fontWeight: 900, color: 'primary.main', display: 'block', mb: 1, textTransform: 'uppercase', fontSize: 8 }}>{t.support}</Typography>
-               <Stack spacing={1}>
-                  {adminContacts.phone && (
-                    <Link href={`tel:${adminContacts.phone}`} sx={{ display: 'flex', alignItems: 'center', gap: 1, textDecoration: 'none', color: 'text.primary', '&:hover': { color: 'primary.main' } }}>
-                       <CallIcon sx={{ fontSize: 14 }} />
-                       <Typography variant="caption" sx={{ fontWeight: 700 }}>{adminContacts.phone}</Typography>
-                    </Link>
-                  )}
-                  {adminContacts.telegramUsername && (
-                      <Link 
-                        href={adminContacts.telegramUsername.startsWith('http') ? adminContacts.telegramUsername : `https://t.me/${adminContacts.telegramUsername.replace('@', '')}`} 
-                        target="_blank"
-                        sx={{ display: 'flex', alignItems: 'center', gap: 1, textDecoration: 'none', color: 'text.primary', '&:hover': { color: 'primary.main' } }}
-                      >
-                         <TelegramIcon sx={{ fontSize: 14 }} />
-                         <Typography variant="caption" sx={{ fontWeight: 700 }}>{adminContacts.telegramUsername.startsWith('@') ? adminContacts.telegramUsername : 'Telegram'}</Typography>
-                      </Link>
-                  )}
-               </Stack>
-            </Paper>
-          )}
-
-          <MuiButton fullWidth color="error" startIcon={<LogoutIcon />} onClick={logout} sx={{ borderRadius: 8, justifyContent: 'start', py: 1.5, px: 3, mt: 1, fontWeight: 800, bgcolor: theme.palette.background.paper, boxShadow: theme.palette.mode === 'dark' ? '4px 4px 10px rgba(0,0,0,0.4)' : '4px 4px 12px rgba(0,0,0,0.05), -4px -4px 12px rgba(255,255,255,0.8)' }}>{t.logoutUser}</MuiButton>
-        </Stack>
+        <ListItemButton onClick={(e) => setUserMenuAnchor(e.currentTarget)} sx={{ py: 1, px: 1.25, gap: 1.25 }}>
+          <Avatar sx={{ width: 36, height: 36, fontSize: 14, bgcolor: alpha(theme.palette.primary.main, 0.14), color: 'primary.main' }}>{initials}</Avatar>
+          <Box sx={{ minWidth: 0, flexGrow: 1 }}>
+            <Typography variant="subtitle2" noWrap sx={{ lineHeight: 1.3 }}>{fullName}</Typography>
+            <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block' }}>{roleLabel}</Typography>
+          </Box>
+          <UnfoldMoreRoundedIcon fontSize="small" sx={{ color: 'text.secondary' }} />
+        </ListItemButton>
+        <Menu
+          anchorEl={userMenuAnchor}
+          open={Boolean(userMenuAnchor)}
+          onClose={() => setUserMenuAnchor(null)}
+          anchorOrigin={menuFromTop ? { vertical: 'bottom', horizontal: 'right' } : { vertical: 'top', horizontal: 'center' }}
+          transformOrigin={menuFromTop ? { vertical: 'top', horizontal: 'right' } : { vertical: 'bottom', horizontal: 'center' }}
+          slotProps={{ paper: { sx: { width: 236, my: 1 } } }}
+        >
+          <MenuItem onClick={() => { setUserMenuAnchor(null); setIsSidebarOpen(false); navigate('/complete-profile'); }}>
+            <ListItemIcon><ManageAccountsOutlinedIcon fontSize="small" /></ListItemIcon>
+            {t.editProfile}
+          </MenuItem>
+          <Divider sx={{ my: 0.5 }} />
+          <MenuItem onClick={() => { setUserMenuAnchor(null); logout(); }} sx={{ color: 'error.main' }}>
+            <ListItemIcon><LogoutRoundedIcon fontSize="small" color="error" /></ListItemIcon>
+            {t.logoutUser}
+          </MenuItem>
+        </Menu>
       </Box>
     </Box>
   );
 
-
-
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
-      {/* Sidebar / Drawer (Flat Style) */}
+    <Box sx={{ display: 'flex', minHeight: '100dvh', bgcolor: 'background.default' }}>
+      {/* Sidebar / Drawer */}
       <Drawer
         variant={isMobile ? 'temporary' : 'permanent'}
         open={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
+        ModalProps={{ keepMounted: true }}
         sx={{
-          width: isMobile ? 280 : SIDEBAR_WIDTH,
+          width: isMobile ? 0 : SIDEBAR_WIDTH,
           flexShrink: 0,
-          [`& .MuiDrawer-paper`]: { width: isMobile ? 280 : SIDEBAR_WIDTH, boxSizing: 'border-box', borderRight: `1px solid ${theme.palette.divider}`, boxShadow: 'none' },
+          [`& .MuiDrawer-paper`]: { width: isMobile ? 288 : SIDEBAR_WIDTH, boxSizing: 'border-box', borderRight: `1px solid ${theme.palette.divider}`, boxShadow: isMobile ? undefined : 'none' },
         }}
       >
         {SidebarContent}
       </Drawer>
 
       {/* Main Content */}
-      <Box component="main" sx={{ flexGrow: 1, p: { xs: 1.5, lg: 4 }, width: { lg: `calc(100% - ${SIDEBAR_WIDTH}px)` }, overflowX: 'hidden' }}>
-        <AppBar 
-          position="sticky" 
-          color="inherit" 
-          elevation={0} 
-          sx={{ 
-            bgcolor: 'background.default', 
-            borderBottom: `1px solid ${theme.palette.divider}`,
-            mb: isMobile ? 2 : 4,
-            display: { lg: 'none' } 
-          }}
-        >
-          <Toolbar sx={{ justifyContent: 'space-between', minHeight: { xs: 56, sm: 64 }, px: { xs: 1.5, sm: 2 } }}>
-            <IconButton edge="start" color="inherit" onClick={() => setIsSidebarOpen(true)}><MenuIcon /></IconButton>
-            <Typography variant="h6" color="primary" sx={{ fontWeight: 900, letterSpacing: isMobile ? -0.5 : -1, fontSize: isMobile ? 18 : 20 }}>{t.appName.toUpperCase()}</Typography>
-            <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main' }}>{user?.firstName?.[0]}</Avatar>
+      <Box component="main" sx={{ flexGrow: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+        <AppBar position="sticky">
+          <Toolbar sx={{ gap: 1.5, minHeight: { xs: 60, sm: 68 }, px: { xs: 1.5, sm: 3, lg: 4 } }}>
+            {isMobile && (
+              <IconButton edge="start" onClick={() => setIsSidebarOpen(true)} aria-label="Menu">
+                <MenuRoundedIcon />
+              </IconButton>
+            )}
+            <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+              <Typography variant="h6" component="div" noWrap sx={{ fontWeight: 700, fontSize: { xs: '1rem', sm: '1.125rem' } }}>
+                {pageTitle}
+              </Typography>
+              <Typography variant="caption" color="text.secondary" noWrap sx={{ display: { xs: 'none', sm: 'block' }, '&::first-letter': { textTransform: 'uppercase' } }}>
+                {todayLabel}
+              </Typography>
+            </Box>
+            <Stack direction="row" spacing={1} alignItems="center">
+              <LanguageMenuButton variant={isMobile ? 'icon' : 'text'} />
+              <ThemeToggleButton />
+              {!isMobile && (
+                <Avatar
+                  onClick={(e) => setUserMenuAnchor(e.currentTarget)}
+                  sx={{ width: 40, height: 40, fontSize: 14, cursor: 'pointer', bgcolor: alpha(theme.palette.primary.main, 0.14), color: 'primary.main' }}
+                >
+                  {initials}
+                </Avatar>
+              )}
+            </Stack>
           </Toolbar>
         </AppBar>
 
-        <Box sx={{ maxWidth: 1200, mx: 'auto' }}>
-          <Routes>
-            <Route path="/" element={
-              user?.isProfileComplete ? (
-                activeTab === 'journal' ? <DailyJournal /> :
-                activeTab === 'statistics' ? <Statistics /> :
-                activeTab === 'chat' ? <Chat /> :
-                  <DailyJournal />
-              ) : <Navigate to="/complete-profile" replace />
-            } />
-            <Route path="/complete-profile" element={<CompleteProfilePage />} />
-            <Route path="/admin" element={isAdmin ? <AdminPage /> : (user?.isProfileComplete ? <Navigate to="/" replace /> : <Navigate to="/complete-profile" replace />)} />
-            <Route path="/doctor" element={user?.role === 'doctor' || isAdmin ? <DoctorPage /> : (user?.isProfileComplete ? <Navigate to="/" replace /> : <Navigate to="/complete-profile" replace />)} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+        <Box sx={{ flexGrow: 1, px: { xs: 1.5, sm: 3, lg: 4 }, pt: { xs: 2, sm: 3 }, pb: showBottomNav ? `${BOTTOM_NAV_HEIGHT + 24}px` : 4 }}>
+          <Box sx={{ maxWidth: 1240, mx: 'auto' }}>
+            <Routes>
+              <Route path="/" element={
+                user?.isProfileComplete ? (
+                  activeTab === 'journal' ? <DailyJournal /> :
+                  activeTab === 'statistics' ? <Statistics /> :
+                  activeTab === 'chat' ? <Chat /> :
+                    <DailyJournal />
+                ) : <Navigate to="/complete-profile" replace />
+              } />
+              <Route path="/complete-profile" element={<CompleteProfilePage />} />
+              <Route path="/admin" element={isAdmin ? <AdminPage /> : (user?.isProfileComplete ? <Navigate to="/" replace /> : <Navigate to="/complete-profile" replace />)} />
+              <Route path="/doctor" element={user?.role === 'doctor' || isAdmin ? <DoctorPage /> : (user?.isProfileComplete ? <Navigate to="/" replace /> : <Navigate to="/complete-profile" replace />)} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Box>
         </Box>
 
         {/* Footer */}
-        <Box sx={{ p: 4, textAlign: 'center', opacity: 0.5, borderTop: `1px solid ${theme.palette.divider}` }}>
-           <Typography variant="overline" sx={{ fontWeight: 800, color: 'text.secondary', letterSpacing: 2, fontSize: 10 }}>
-              © {new Date().getFullYear()} {t.appName.toUpperCase()}. {t.professionalVersion}.
-           </Typography>
-        </Box>
+        {!showBottomNav && (
+          <Box sx={{ py: 3, px: 3, textAlign: 'center', borderTop: `1px solid ${theme.palette.divider}` }}>
+            <Typography variant="caption" color="text.secondary">
+              © {new Date().getFullYear()} {t.appName} · diabetmed.uz
+            </Typography>
+          </Box>
+        )}
       </Box>
+
+      {/* Mobile bottom navigation */}
+      {showBottomNav && (
+        <Paper
+          sx={{
+            position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 1200,
+            borderTop: `1px solid ${theme.palette.divider}`,
+            pb: 'env(safe-area-inset-bottom)',
+            bgcolor: alpha(theme.palette.background.paper, 0.96),
+            backdropFilter: 'blur(10px)',
+          }}
+        >
+          <BottomNavigation
+            showLabels
+            value={isReminderModalOpen ? 'reminders' : activeTab}
+            sx={{ height: BOTTOM_NAV_HEIGHT, bgcolor: 'transparent', '& .MuiBottomNavigationAction-label': { fontSize: '0.6875rem', fontWeight: 600, mt: 0.25, '&.Mui-selected': { fontSize: '0.6875rem' } } }}
+          >
+            {patientNav.map(item => (
+              <BottomNavigationAction
+                key={item.id}
+                value={item.id}
+                label={item.label}
+                icon={item.icon}
+                component={RouterLink}
+                to={item.path}
+              />
+            ))}
+            <BottomNavigationAction value="reminders" label={getT('reminders')} icon={<AlarmRoundedIcon />} onClick={openReminders} />
+          </BottomNavigation>
+        </Paper>
+      )}
 
       <ReminderModal
         isOpen={isReminderModalOpen}
@@ -469,9 +471,9 @@ function App() {
       />
 
       {/* AI Agent Floating Chat */}
-      <AIAgentChat />
+      <AIAgentChat bottomOffset={showBottomNav ? BOTTOM_NAV_HEIGHT : 0} />
 
-      <Toaster position="top-right" richColors />
+      {toaster}
     </Box>
   );
 }

@@ -4,10 +4,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { useApp } from '../contexts/AppContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { translations } from '../utils/translations';
-import { toast, Toaster } from 'sonner';
-import { format } from 'date-fns';
-import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
-import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
+import { motion, AnimatePresence } from 'motion/react';
 import { Statistics } from '../components/Statistics';
 
 // MUI Components
@@ -16,7 +14,6 @@ import {
   Typography,
   Grid,
   Card,
-  CardContent,
   Button,
   TextField,
   Table,
@@ -25,10 +22,8 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
   IconButton,
   Avatar,
-  Badge,
   Tabs,
   Tab,
   Dialog,
@@ -40,33 +35,33 @@ import {
   Select,
   MenuItem,
   Stack,
-  Divider,
   Chip,
   alpha,
   useTheme,
   CircularProgress,
-  List,
-  ListItem,
-  ListItemButton,
-  useMediaQuery,
+  InputAdornment,
+  Skeleton,
+  Tooltip,
 } from '@mui/material';
+import { SectionCard, StatTile, EmptyState, IconTile } from '../components/common';
+import { formatDate, formatTime } from '../utils/format';
 
 // MUI Icons
-import DashboardIcon from '@mui/icons-material/Dashboard';
-import PeopleIcon from '@mui/icons-material/People';
-
+import SpaceDashboardOutlinedIcon from '@mui/icons-material/SpaceDashboardOutlined';
+import PeopleAltOutlinedIcon from '@mui/icons-material/PeopleAltOutlined';
 import SearchIcon from '@mui/icons-material/Search';
-import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
-import AddIcon from '@mui/icons-material/Add';
-import CloseIcon from '@mui/icons-material/Close';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import PersonAddAlt1OutlinedIcon from '@mui/icons-material/PersonAddAlt1Outlined';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import TimelineIcon from '@mui/icons-material/Timeline';
 import HistoryIcon from '@mui/icons-material/History';
-import MenuIcon from '@mui/icons-material/Menu';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
-import NotificationsIcon from '@mui/icons-material/Notifications';
+import RefreshRoundedIcon from '@mui/icons-material/RefreshRounded';
+import CleaningServicesOutlinedIcon from '@mui/icons-material/CleaningServicesOutlined';
+import BlockRoundedIcon from '@mui/icons-material/BlockRounded';
+import CheckCircleOutlineRoundedIcon from '@mui/icons-material/CheckCircleOutlineRounded';
+import ManageAccountsOutlinedIcon from '@mui/icons-material/ManageAccountsOutlined';
+import EditNoteRoundedIcon from '@mui/icons-material/EditNoteRounded';
 import NotificationBell from '../components/NotificationBell';
 
 type TabType = 'dashboard' | 'users' | 'audit';
@@ -77,14 +72,12 @@ export default function AdminPage() {
   const [searchParams] = useSearchParams();
   const theme = useTheme();
   const navigate = useNavigate();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const t = translations[language];
 
   const [currentTab, setCurrentTab] = useState<TabType>(searchParams.get('tab') as TabType || 'dashboard');
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [isMini, setIsMini] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [isResettingPassword, setIsResettingPassword] = useState(false);
 
@@ -240,511 +233,379 @@ export default function AdminPage() {
     }
   };
 
-  if (loading) return (
-    <Box sx={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', bgcolor: 'background.default' }}>
-      <CircularProgress />
-    </Box>
-  );
-
   const menuItems = [
-    { id: 'dashboard', label: t.dashboard, icon: <DashboardIcon /> },
-    { id: 'users', label: t.users, icon: <PeopleIcon /> },
-    { id: 'audit', label: t.auditLogs, icon: <HistoryIcon />, hidden: user?.role !== 'superadmin' },
+    { id: 'dashboard', label: t.dashboard, icon: <SpaceDashboardOutlinedIcon fontSize="small" /> },
+    { id: 'users', label: t.users, icon: <PeopleAltOutlinedIcon fontSize="small" /> },
+    { id: 'audit', label: t.auditLogs, icon: <HistoryIcon fontSize="small" />, hidden: user?.role !== 'superadmin' },
   ];
 
-  const sidebarWidth = 280;
-  const miniWidth = 88;
-
-  const fastingRecords = selectedUserRecords
-    .filter(r => (r.fastingLevel != null) || (r.category === 'fasting' && r.level != null))
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-    .map(r => ({
-      date: format(new Date(r.date), 'dd/MM'),
-      level: r.category === 'fasting' ? r.level : r.fastingLevel
-    }));
-
-  const postMealRecords = selectedUserRecords
-    .filter(r => (r.postMealLevel != null) || (r.category === 'post-meal' && r.level != null))
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-    .map(r => ({
-      date: format(new Date(r.date), 'dd/MM'),
-      level: r.category === 'post-meal' ? r.level : r.postMealLevel
-    }));
+  const roleColor = (r: string) => (r === 'superadmin' || r === 'admin') ? 'secondary' : r === 'doctor' ? 'success' : 'primary';
+  const roleLabel = (r: string) => r === 'doctor' ? (t.doctor || 'Doctor') : r === 'user' ? (t.user || 'User') : r === 'superadmin' ? 'Superadmin' : (t.admin || 'Admin');
+  const fieldLabelSx = { fontWeight: 500, color: 'text.secondary', display: 'block', mb: 0.5 } as const;
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
-      {/* Sidebar - FIXED */}
-      <Box
-        component="nav"
-        sx={{
-          width: { md: isMini ? miniWidth : sidebarWidth },
-          transition: theme.transitions.create('width', { duration: 300 }),
-          display: { xs: 'none', md: 'block' }
-        }}
-      >
-          <Paper
-          elevation={0}
-          sx={{
-            width: isMini ? miniWidth : sidebarWidth,
-            height: '100vh',
-            position: 'sticky',
-            top: 0,
-            borderRight: `1px solid ${theme.palette.divider}`,
-            bgcolor: alpha(theme.palette.background.paper, 0.8),
-            backdropFilter: 'blur(20px)',
-            display: 'flex',
-            flexDirection: 'column',
-            transition: theme.transitions.create('width', { duration: 300 }),
-            zIndex: theme.zIndex.drawer + 2,
+    <Box>
+      {/* Page header */}
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="space-between" alignItems={{ xs: 'stretch', sm: 'center' }} sx={{ mb: 3 }}>
+        <Tabs
+          value={currentTab}
+          variant="scrollable"
+          scrollButtons={false}
+          onChange={(_, v) => {
+            setCurrentTab(v as TabType);
+            setSelectedUserId(null);
+            if (v === 'audit') loadAuditLogs();
           }}
+          sx={{ bgcolor: 'background.paper', border: 1, borderColor: 'divider', borderRadius: 3, px: 0.5, minHeight: 44, '& .MuiTab-root': { minHeight: 44 } }}
         >
-          <Box sx={{ p: 3, display: 'flex', alignItems: 'center', justifyContent: isMini ? 'center' : 'space-between' }}>
-            {!isMini && (
-              <Stack direction="row" spacing={1.5} alignItems="center">
-                <Box sx={{ p: 1, bgcolor: 'primary.main', borderRadius: 1.5, display: 'flex', color: 'white' }}>
-                  <AdminPanelSettingsIcon />
-                </Box>
-                <Typography variant="h6" sx={{ fontWeight: 900, fontSize: 16 }}>{t.admin.toUpperCase()}</Typography>
-              </Stack>
-            )}
-            <IconButton onClick={() => setIsMini(!isMini)} size="small" sx={{ bgcolor: alpha(theme.palette.primary.main, 0.05) }}>
-              {isMini ? <MenuIcon /> : <ChevronLeftIcon />}
-            </IconButton>
-          </Box>
-          <Divider sx={{ mx: 2, mb: 2, opacity: 0.5 }} />
-          <List sx={{ px: 2, flexGrow: 1 }}>
-            {menuItems.filter(m => !m.hidden).map((item) => (
-              <ListItem key={item.id} disablePadding sx={{ mb: 1 }}>
-                <ListItemButton
-                  onClick={() => {
-                    setCurrentTab(item.id as TabType);
-                    setSelectedUserId(null);
-                    if (item.id === 'audit') loadAuditLogs();
-                  }}
-                  selected={currentTab === item.id && !selectedUserId}
-                  sx={{
-                    borderRadius: 8,
-                    mb: 1,
-                    py: 1.5,
-                    boxShadow: theme.palette.mode === 'dark' ? '4px 4px 10px rgba(0,0,0,0.4)' : '4px 4px 12px rgba(0,0,0,0.05), -4px -4px 12px rgba(255,255,255,0.8)',
-                    px: isMini ? 1.5 : 2,
-                    justifyContent: isMini ? 'center' : 'flex-start',
-                    color: (currentTab === item.id && !selectedUserId) ? 'primary.main' : 'text.secondary',
-                    bgcolor: (currentTab === item.id && !selectedUserId) ? alpha(theme.palette.primary.main, 0.1) : theme.palette.background.paper,
-                  }}
-                >
-                  <Box sx={{ minWidth: isMini ? 0 : 40 }}>{item.icon}</Box>
-                  {!isMini && <Typography sx={{ fontWeight: (currentTab === item.id && !selectedUserId) ? 800 : 700, fontSize: 13 }}>{item.label}</Typography>}
-                </ListItemButton>
-              </ListItem>
-            ))}
-          </List>
-          {/* Back to Home Button */}
-          <Box sx={{ px: 2, pb: 3, mt: 'auto' }}>
-            <Divider sx={{ mb: 2, opacity: 0.5 }} />
-            <ListItem disablePadding>
-              <ListItemButton
-                onClick={() => navigate('/')}
-                sx={{
-                  borderRadius: 8,
-                  py: 1.5,
-                  boxShadow: theme.palette.mode === 'dark' ? '4px 4px 10px rgba(0,0,0,0.4)' : '4px 4px 12px rgba(0,0,0,0.05), -4px -4px 12px rgba(255,255,255,0.8)',
-                  bgcolor: theme.palette.background.paper,
-                  px: isMini ? 1.5 : 2,
-                  justifyContent: isMini ? 'center' : 'flex-start',
-                  color: 'text.secondary',
-                  '&:hover': { color: 'primary.main', bgcolor: alpha(theme.palette.primary.main, 0.06) },
-                }}
-              >
-                <Box sx={{ minWidth: isMini ? 0 : 40, display: 'flex' }}>
-                  <ArrowBackIcon fontSize="small" />
-                </Box>
-                {!isMini && <Typography sx={{ fontWeight: 700, fontSize: 13 }}>{t.mainPage}</Typography>}
-              </ListItemButton>
-            </ListItem>
-          </Box>
-        </Paper>
-      </Box>
-
-      {/* Main Content Area - FIXED OVERLAP */}
-      <Box 
-        component="main" 
-        sx={{ 
-          flexGrow: 1, 
-          p: { xs: 2, md: 5 }, 
-          overflow: 'auto',
-          minWidth: 0,
-        }}
-      >
-        {/* MOBILE NAVIGATION BAR (Hidden on Desktop) */}
-        <Box 
-          sx={{ 
-            display: { xs: 'flex', md: 'none' }, 
-            overflowX: 'auto', 
-            mb: 3, pb: 1, mx: -2, px: 2, 
-            '&::-webkit-scrollbar': { display: 'none' },
-            gap: 1
-          }}
-        >
-           {menuItems.filter(m => !m.hidden).map((item) => (
-             <Button
-               key={item.id}
-               onClick={() => {
-                 setCurrentTab(item.id as TabType);
-                 setSelectedUserId(null);
-                 if (item.id === 'audit') loadAuditLogs();
-               }}
-               variant={currentTab === item.id && !selectedUserId ? 'contained' : 'outlined'}
-               startIcon={item.icon}
-               sx={{ 
-                 borderRadius: 8, 
-                 flexShrink: 0, 
-                 textTransform: 'none',
-                 boxShadow: currentTab === item.id && !selectedUserId ? '0 4px 12px rgba(0,0,0,0.1)' : 'none',
-                 bgcolor: currentTab === item.id && !selectedUserId ? 'primary.main' : alpha(theme.palette.background.paper, 0.5),
-                 color: currentTab === item.id && !selectedUserId ? '#fff' : 'text.secondary',
-                 fontWeight: 800,
-                 px: 2,
-                 border: '1px solid',
-                 borderColor: currentTab === item.id && !selectedUserId ? 'transparent' : 'divider',
-                 '&:hover': { bgcolor: currentTab === item.id && !selectedUserId ? 'primary.dark' : 'background.paper' }
-               }}
-             >
-               {item.label}
-             </Button>
-           ))}
-           <Button
-               onClick={() => navigate('/')}
-               variant="contained"
-               startIcon={<ArrowBackIcon />}
-               sx={{ 
-                 borderRadius: 8, flexShrink: 0, textTransform: 'none', 
-                 bgcolor: alpha(theme.palette.background.paper, 0.5),
-                 color: 'text.secondary', fontWeight: 800, px: 2,
-                 border: '1px solid', borderColor: 'divider', boxShadow: 'none'
-               }}
-           >
-               {t.mainPage}
-           </Button>
-        </Box>
-
-        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 4 }}>
-          <Box>
-             <Typography variant="h5" sx={{ fontWeight: 900 }}>
-               {selectedUserId ? t.userDetail : t[currentTab] || currentTab}
-             </Typography>
-             <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary' }}>{t.admin} / {t[currentTab] || currentTab}</Typography>
-          </Box>
-          <Stack direction="row" spacing={2} alignItems="center">
-            <NotificationBell />
-            <Avatar src={user?.avatar} sx={{ width: 44, height: 44, borderRadius: 2, bgcolor: 'primary.main', fontWeight: 900 }}>{user?.firstName?.[0]}</Avatar>
-          </Stack>
+          {menuItems.filter(m => !m.hidden).map(item => (
+            <Tab key={item.id} value={item.id} icon={item.icon} iconPosition="start" label={item.label} />
+          ))}
+        </Tabs>
+        <Stack direction="row" spacing={1} alignItems="center" justifyContent="flex-end">
+          <NotificationBell />
         </Stack>
+      </Stack>
 
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={selectedUserId ? `user-${selectedUserId}` : currentTab}
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -15 }}
-            transition={{ duration: 0.3 }}
-          >
-            {currentTab === 'dashboard' && !selectedUserId && (
-              <>
-                <Grid container spacing={3}>
-                {[
-                  { icon: PeopleIcon, label: t.totalUsers, val: stats?.totalUsers ?? 0, color: theme.palette.primary.main },
-                  { icon: TimelineIcon, label: t.activeToday, val: stats?.activeToday ?? 0, color: theme.palette.success.main },
-                ].map((s, idx) => (
-                  <Grid size={{ xs: 12, sm: 6 }} key={idx}>
-                    <Card elevation={0} sx={{ p: 3.5, borderRadius: 2, bgcolor: alpha(theme.palette.background.paper, 0.6), backdropFilter: 'blur(10px)', border: `1px solid ${theme.palette.divider}` }}>
-                      <Stack direction="column" spacing={2}>
-                        <Avatar sx={{ bgcolor: alpha(s.color, 0.12), color: s.color, borderRadius: 1.5, width: 52, height: 52 }}><s.icon /></Avatar>
-                        <Box>
-                          <Typography variant="h3" sx={{ fontWeight: 900, lineHeight: 1 }}>{s.val}</Typography>
-                          <Typography variant="body2" sx={{ fontWeight: 800, color: 'text.secondary', mt: 0.5, whiteSpace: 'normal', wordBreak: 'break-word' }}>{s.label}</Typography>
-                        </Box>
-                      </Stack>
-                    </Card>
-                  </Grid>
-                ))}
+      {loading ? (
+        <Grid container spacing={2}>
+          {[0, 1].map(i => (
+            <Grid size={{ xs: 12, sm: 6 }} key={i}>
+              <Card sx={{ p: 2.5 }}><Skeleton width="40%" /><Skeleton height={48} width="30%" /></Card>
+            </Grid>
+          ))}
+        </Grid>
+      ) : (
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={selectedUserId ? `user-${selectedUserId}` : currentTab}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.18 }}
+        >
+          {currentTab === 'dashboard' && !selectedUserId && (
+            <Stack spacing={3}>
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <StatTile icon={<PeopleAltOutlinedIcon />} label={t.totalUsers} value={stats?.totalUsers ?? 0} />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <StatTile icon={<TimelineIcon />} color="success" label={t.activeToday} value={stats?.activeToday ?? 0} />
+                </Grid>
               </Grid>
 
               {/* Purge incomplete users button */}
               {user?.role === 'superadmin' && (
-                <Box sx={{ mt: 4 }}>
-                  <Card elevation={0} sx={{ p: 3, borderRadius: 2, bgcolor: alpha(theme.palette.error.main, 0.04), border: `1px solid ${alpha(theme.palette.error.main, 0.15)}` }}>
-                    <Stack direction={isMobile ? 'column' : 'row'} spacing={2} alignItems={isMobile ? 'flex-start' : 'center'} justifyContent="space-between">
+                <Card sx={{ p: 2.5, borderColor: alpha(theme.palette.error.main, 0.3) }}>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ xs: 'flex-start', sm: 'center' }} justifyContent="space-between">
+                    <Stack direction="row" spacing={2} alignItems="flex-start">
+                      <IconTile color="error"><CleaningServicesOutlinedIcon /></IconTile>
                       <Box>
-                        <Typography variant="subtitle1" sx={{ fontWeight: 900, color: 'error.main' }}>
-                          🧹 {language === 'uz' ? "Çala rõyxatdan õtganlarni õçiriş" : 'Purge incomplete accounts'}
+                        <Typography variant="subtitle2">
+                          {language === 'uz' ? "Çala rõyxatdan õtganlarni õçiriş" : 'Purge incomplete accounts'}
                         </Typography>
-                        <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
+                        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>
                           {language === 'uz'
                             ? "Email tasdiqlanmagan yoki profili tõliq tõldirilmagan foydalanuvçilar õçiriladi."
                             : 'Deletes users who have not verified their email or completed their profile.'}
                         </Typography>
                       </Box>
-                      <Button
-                        variant="contained"
-                        color="error"
-                        sx={{ borderRadius: 2, fontWeight: 800, px: 3, flexShrink: 0, textTransform: 'none' }}
-                        onClick={async () => {
-                          if (!window.confirm(language === 'uz' ? "Ishonchingiz komilmi? Bu amalni ortga qaytarib bo'lmaydi." : 'Are you sure? This cannot be undone.')) return;
-                          try {
-                            const { data } = await adminAPI.purgeIncomplete();
-                            toast.success(data.message || "O'chirildi");
-                            loadStats();
-                            loadUsers();
-                          } catch {
-                            toast.error(language === 'uz' ? 'Xato yuz berdi' : 'Error occurred');
-                          }
-                        }}
-                      >
-                        {language === 'uz' ? "O'chirish" : 'Delete'}
-                      </Button>
                     </Stack>
-                  </Card>
-                </Box>
-              )}
-              </>
-            )}
-
-            {currentTab === 'users' && !selectedUserId && (
-              <Box>
-                <Paper elevation={0} sx={{ p: 2.5, mb: 4, borderRadius: 2, bgcolor: alpha(theme.palette.background.paper, 0.4), backdropFilter: 'blur(10px)', border: `1px solid ${theme.palette.divider}` }}>
-                  <Stack direction={isMobile ? 'column' : 'row'} spacing={2} alignItems="center">
-                    <TextField
-                      placeholder={t.searchUsers}
-                      fullWidth
-                      size="small"
-                      value={search}
-                      onChange={e => setSearch(e.target.value)}
-                      onKeyDown={handleSearchKeyDown}
-                      InputProps={{ startAdornment: <SearchIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} /> }}
-                    />
-                    <FormControl size="small" sx={{ minWidth: 150 }}>
-                      <InputLabel>{t.role}</InputLabel>
-                      <Select value={role} label={t.role} onChange={e => setRole(e.target.value)}>
-                        <MenuItem value="">{t.allStatuses || 'All'}</MenuItem>
-                        <MenuItem value="user">{t.user}</MenuItem>
-                        <MenuItem value="doctor">{t.doctor}</MenuItem>
-                        <MenuItem value="admin">{t.admin}</MenuItem>
-                      </Select>
-                    </FormControl>
-                    <Button variant="contained" onClick={() => setIsAddPatientModalOpen(true)} startIcon={<AddIcon />} sx={{ borderRadius: 2, fontWeight: 900, whiteSpace: 'nowrap', py: 1 }}>{t.addPatient || "Bemor qo'shish"}</Button>
+                    <Button
+                      variant="outlined"
+                      color="error"
+                      startIcon={<DeleteOutlineIcon />}
+                      sx={{ flexShrink: 0 }}
+                      onClick={async () => {
+                        if (!window.confirm(language === 'uz' ? "Ishonchingiz komilmi? Bu amalni ortga qaytarib bo'lmaydi." : 'Are you sure? This cannot be undone.')) return;
+                        try {
+                          const { data } = await adminAPI.purgeIncomplete();
+                          toast.success(data.message || "O'chirildi");
+                          loadStats();
+                          loadUsers();
+                        } catch {
+                          toast.error(language === 'uz' ? 'Xato yuz berdi' : 'Error occurred');
+                        }
+                      }}
+                    >
+                      {language === 'uz' ? "O'chirish" : 'Delete'}
+                    </Button>
                   </Stack>
-                </Paper>
+                </Card>
+              )}
+            </Stack>
+          )}
 
-                <TableContainer component={Paper} elevation={0} sx={{ borderRadius: 2, border: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.background.paper, 0.4), backdropFilter: 'blur(10px)' }}>
-                  <Table>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell sx={{ fontWeight: 900 }}>{t.user}</TableCell>
-                        <TableCell sx={{ fontWeight: 900 }}>{t.regionLabel}</TableCell>
-                        <TableCell align="right"></TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {users.map(u => (
-                        <TableRow key={u._id} hover onClick={() => { if (u.role === 'superadmin' && user?.role !== 'superadmin') return; setSelectedUserId(u._id); loadSpecificUser(u._id); setUserTab('info'); }} sx={{ cursor: 'pointer' }}>
-                          <TableCell>
-                            <Stack direction="row" spacing={2} alignItems="center">
-                              <Avatar src={u.avatar} sx={{ borderRadius: 1.5, bgcolor: alpha(theme.palette.primary.main, 0.1), color: 'primary.main', fontWeight: 900 }}>{u.firstName?.[0]}</Avatar>
-                              <Box>
-                                <Typography variant="body2" sx={{ fontWeight: 800 }}>{u.firstName} {u.lastName}</Typography>
-                                <Typography variant="caption" color="text.secondary">{u.email}</Typography>
-                              </Box>
-                            </Stack>
-                          </TableCell>
-                          <TableCell>
-                            <Typography variant="body2" sx={{ fontWeight: 700 }}>{u.region || '—'}</Typography>
-                            <Chip label={u.role.toUpperCase()} size="small" sx={{ height: 16, fontSize: 8, fontWeight: 900 }} />
-                          </TableCell>
-                          <TableCell align="right">
-                            <Stack direction="row" spacing={1} justifyContent="flex-end">
-                              <IconButton size="small" color="primary"><EditIcon fontSize="small" /></IconButton>
-                              <IconButton size="small" color="error" onClick={(e) => { e.stopPropagation(); if (confirm("Delete?")) adminAPI.deleteUser(u._id).then(() => loadUsers(search, role)); }}><DeleteIcon fontSize="small" /></IconButton>
-                            </Stack>
-                          </TableCell>
+          {currentTab === 'users' && !selectedUserId && (
+            <Stack spacing={2}>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} alignItems={{ sm: 'center' }}>
+                <TextField
+                  placeholder={t.searchUsers}
+                  fullWidth
+                  size="small"
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  onKeyDown={handleSearchKeyDown}
+                  InputProps={{
+                    startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment>,
+                    endAdornment: userLoading ? <CircularProgress size={16} /> : undefined,
+                  }}
+                />
+                <FormControl size="small" sx={{ minWidth: 170 }}>
+                  <InputLabel>{t.role}</InputLabel>
+                  <Select value={role} label={t.role} onChange={e => setRole(e.target.value)}>
+                    <MenuItem value="">{t.allStatuses || 'All'}</MenuItem>
+                    <MenuItem value="user">{t.user}</MenuItem>
+                    <MenuItem value="doctor">{t.doctor}</MenuItem>
+                    <MenuItem value="admin">{t.admin}</MenuItem>
+                  </Select>
+                </FormControl>
+                <Button variant="contained" onClick={() => setIsAddPatientModalOpen(true)} startIcon={<PersonAddAlt1OutlinedIcon />} sx={{ whiteSpace: 'nowrap', flexShrink: 0 }}>
+                  {t.addPatient || "Bemor qo'shish"}
+                </Button>
+              </Stack>
+
+              <Card sx={{ overflow: 'hidden' }}>
+                {users.length === 0 ? (
+                  <EmptyState icon={<PeopleAltOutlinedIcon />} title={language === 'ru' ? 'Пользователи не найдены' : language === 'en' ? 'No users found' : 'Foydalanuvçilar topilmadi'} />
+                ) : (
+                  <TableContainer>
+                    <Table>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>{t.user}</TableCell>
+                          <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{t.regionLabel}</TableCell>
+                          <TableCell>{t.role}</TableCell>
+                          <TableCell align="right" />
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </Box>
-            )}
-
-
-
-            {selectedUserId && selectedUser && (
-              <Box>
-                 {/* TAB BO'LIMLARI */}
-                 <Stack direction="row" spacing={2} sx={{ mb: 3 }} overflow="auto">
-                    <Button variant={userTab === 'info' ? 'contained' : 'outlined'} onClick={() => setUserTab('info')} sx={{ borderRadius: 1.5, fontWeight: 900, px: 3 }}>Ma'lumotlar</Button>
-                    <Button variant={userTab === 'manage' ? 'contained' : 'outlined'} onClick={() => setUserTab('manage')} sx={{ borderRadius: 1.5, fontWeight: 900, px: 3 }}>Boshqaruv</Button>
-                    <Button variant={userTab === 'analytics' ? 'contained' : 'outlined'} onClick={() => setUserTab('analytics')} sx={{ borderRadius: 1.5, fontWeight: 900, px: 3 }}>Tahlillar</Button>
-                 </Stack>
-
-                 {/* === 1. SHAXSIY MA'LUMOTLAR === */}
-                 {userTab === 'info' && (
-                <Card elevation={0} sx={{ mb: 3, borderRadius: 2, bgcolor: alpha(theme.palette.background.paper, 0.6), backdropFilter: 'blur(20px)', border: `1px solid ${theme.palette.divider}` }}>
-                   <Box sx={{ p: 4 }}>
-                      <Stack direction={isMobile ? 'column' : 'row'} spacing={4} alignItems={isMobile ? 'flex-start' : 'center'} justifyContent="space-between">
-                         <Stack direction="row" spacing={3} alignItems="center">
-                            <Avatar src={selectedUser.avatar} sx={{ width: 80, height: 80, borderRadius: 2, bgcolor: 'primary.main', fontSize: 32, fontWeight: 900 }}>{selectedUser.firstName?.[0]}</Avatar>
-                            <Box>
-                               <Typography variant="h5" sx={{ fontWeight: 900 }}>{selectedUser.firstName} {selectedUser.lastName}</Typography>
-                               <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 700 }}>{selectedUser.email}</Typography>
-                               <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
-                                  <Chip label={selectedUser.role.toUpperCase()} size="small" color="primary" sx={{ fontWeight: 900 }} />
-                                  <Chip label={selectedUser.isBanned ? 'BANNED' : 'ACTIVE'} size="small" color={selectedUser.isBanned ? 'error' : 'success'} sx={{ fontWeight: 900 }} />
-                               </Stack>
-                            </Box>
-                         </Stack>
-                         <Stack direction={isMobile ? 'row' : 'column'} spacing={1.5}>
-                            <Button variant="contained" color={selectedUser.isBanned ? 'success' : 'error'} onClick={() => adminAPI.toggleBan(selectedUser._id).then(() => loadSpecificUser(selectedUser._id))} sx={{ borderRadius: 2, fontWeight: 900 }}>{selectedUser.isBanned ? 'Unban' : 'Ban'}</Button>
-                            <Button variant="outlined" startIcon={<ArrowBackIcon />} onClick={() => setSelectedUserId(null)} sx={{ borderRadius: 2, fontWeight: 900 }}>{t.backToList}</Button>
-                         </Stack>
-                      </Stack>
-
-                      <Divider sx={{ my: 3 }} />
-
-                      <Grid container spacing={4}>
-                         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800, textTransform: 'uppercase', display: 'block', mb: 0.5 }}>{t.diabetesTypeLabel}</Typography>
-                            <Typography variant="body1" sx={{ fontWeight: 900 }}>{selectedUser.diabetesType || '—'}</Typography>
-                         </Grid>
-                         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800, textTransform: 'uppercase', display: 'block', mb: 0.5 }}>{t.genderAndAge}</Typography>
-                            <Typography variant="body1" sx={{ fontWeight: 900 }}>{t[selectedUser.gender] || selectedUser.gender} • {selectedUser.dateOfBirth ? `${new Date().getFullYear() - new Date(selectedUser.dateOfBirth).getFullYear()} yosh` : '—'}</Typography>
-                         </Grid>
-                         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800, textTransform: 'uppercase', display: 'block', mb: 0.5 }}>{t.phoneNumberLabel || 'Telefon'}</Typography>
-                            <Typography variant="body1" sx={{ fontWeight: 900 }}>{selectedUser.phone || '—'}</Typography>
-                         </Grid>
-                         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800, textTransform: 'uppercase', display: 'block', mb: 0.5 }}>{t.regionLabel || 'Viloyat'}</Typography>
-                            <Typography variant="body1" sx={{ fontWeight: 900 }}>{[selectedUser.region, selectedUser.district].filter(Boolean).join(', ') || '—'}</Typography>
-                         </Grid>
-                         {selectedUser.createdBy && (
-                           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800, textTransform: 'uppercase', display: 'block', mb: 0.5 }}>Qo'shgan Admin</Typography>
-                              <Typography variant="body1" sx={{ fontWeight: 900 }}>{selectedUser.createdBy.firstName} {selectedUser.createdBy.lastName}</Typography>
-                           </Grid>
-                         )}
-                      </Grid>
-                   </Box>
-                </Card>
-                 )}
-
-                {/* === 2. BOSHQARUV AMALLARI === */}
-                 {userTab === 'manage' && (
-                <Card elevation={0} sx={{ mb: 3, borderRadius: 2, bgcolor: alpha(theme.palette.background.paper, 0.4), backdropFilter: 'blur(20px)', border: `1px solid ${theme.palette.divider}` }}>
-                   <Box sx={{ p: 3, px: 4, borderBottom: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.secondary.main, 0.03) }}>
-                      <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5, color: 'secondary.main' }}>{t.managementActions || 'Boshqaruv'}</Typography>
-                   </Box>
-                   <Box sx={{ p: 4 }}>
-                      <Grid container spacing={4}>
-                         <Grid size={{ xs: 12, md: 6 }}>
-                            <Typography variant="caption" sx={{ fontWeight: 800, mb: 1.5, display: 'block', textTransform: 'uppercase' }}>{t.assignDoctor}</Typography>
-                            <FormControl fullWidth size="small">
-                               <Select value={selectedUser.assignedDoctor?._id || selectedUser.assignedDoctor || ''} onChange={e => adminAPI.assignDoctor(selectedUser._id, e.target.value || null).then(() => { toast.success(t.doctorAssigned); loadSpecificUser(selectedUser._id); })} sx={{ borderRadius: 2 }}>
-                                  <MenuItem value=""><em>{t.assignDoctor}</em></MenuItem>
-                                  {availableDoctors.map(doc => <MenuItem key={doc._id} value={doc._id}>{doc.firstName} {doc.lastName}</MenuItem>)}
-                               </Select>
-                            </FormControl>
-                            {selectedUser.assignedDoctor && (
-                               <Typography variant="caption" color="success.main" sx={{ fontWeight: 800, mt: 1, display: 'block' }}>
-                                  ✓ {typeof selectedUser.assignedDoctor === 'object' ? `${selectedUser.assignedDoctor.firstName} ${selectedUser.assignedDoctor.lastName}` : t.doctorAssigned}
-                               </Typography>
-                            )}
-                         </Grid>
-                         {user?.role === 'superadmin' && (
-                           <Grid size={{ xs: 12, md: 6 }}>
-                              <Typography variant="caption" sx={{ fontWeight: 800, mb: 1.5, display: 'block', textTransform: 'uppercase' }}>{t.updateRoleLabel || 'Rol'}</Typography>
-                              <FormControl fullWidth size="small">
-                                 <Select value={selectedUser.role} onChange={e => adminAPI.updateRole(selectedUser._id, e.target.value).then(() => { toast.success('Rol o\'zgartirildi'); loadSpecificUser(selectedUser._id); })} sx={{ borderRadius: 2 }}>
-                                    <MenuItem value="user">{t.user || 'Foydalanuvchi'}</MenuItem>
-                                    <MenuItem value="doctor">{t.doctor || 'Shifokor'}</MenuItem>
-                                    <MenuItem value="admin">{t.admin || 'Admin'}</MenuItem>
-                                 </Select>
-                              </FormControl>
-                           </Grid>
-                         )}
-                         {user?.role === 'superadmin' && (
-                           <Grid size={{ xs: 12, md: 6 }}>
-                              <Typography variant="caption" sx={{ fontWeight: 800, mb: 1.5, display: 'block', textTransform: 'uppercase', color: 'error.main' }}>{t.resetPassword || 'Parolni tiklash'}</Typography>
-                              <Stack direction="row" spacing={1}>
-                                <TextField
-                                  fullWidth
-                                  size="small"
-                                  placeholder="Yangi parol (kamida 6 ta belgi)"
-                                  value={newPassword}
-                                  onChange={e => setNewPassword(e.target.value)}
-                                  type="text"
-                                />
-                                <Button 
-                                  variant="contained" 
-                                  color="error" 
-                                  onClick={handleResetPassword}
-                                  disabled={isResettingPassword || newPassword.length < 6}
-                                  sx={{ fontWeight: 900, whiteSpace: 'nowrap' }}
-                                >
-                                  {isResettingPassword ? <CircularProgress size={20} color="inherit" /> : 'Yangilash'}
-                                </Button>
+                      </TableHead>
+                      <TableBody>
+                        {users.map(u => (
+                          <TableRow key={u._id} hover onClick={() => { if (u.role === 'superadmin' && user?.role !== 'superadmin') return; setSelectedUserId(u._id); loadSpecificUser(u._id); setUserTab('info'); }} sx={{ cursor: 'pointer' }}>
+                            <TableCell>
+                              <Stack direction="row" spacing={1.5} alignItems="center">
+                                <Avatar src={u.avatar} sx={{ width: 38, height: 38, fontSize: 14, bgcolor: alpha(theme.palette.primary.main, 0.12), color: 'primary.main' }}>{u.firstName?.[0]}{u.lastName?.[0]}</Avatar>
+                                <Box sx={{ minWidth: 0 }}>
+                                  <Stack direction="row" spacing={0.75} alignItems="center">
+                                    <Typography variant="body2" sx={{ fontWeight: 600 }} noWrap>{u.firstName} {u.lastName}</Typography>
+                                    {u.isBanned && <Tooltip title="Banned"><BlockRoundedIcon sx={{ fontSize: 15, color: 'error.main' }} /></Tooltip>}
+                                  </Stack>
+                                  <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block' }}>{u.email}</Typography>
+                                </Box>
                               </Stack>
-                           </Grid>
-                         )}
-                      </Grid>
-                   </Box>
-                </Card>
-                 )}
+                            </TableCell>
+                            <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
+                              <Typography variant="body2" color="text.secondary">{u.region || '—'}</Typography>
+                            </TableCell>
+                            <TableCell>
+                              <Chip label={roleLabel(u.role)} size="small" color={roleColor(u.role) as any} variant="outlined" sx={{ height: 24 }} />
+                            </TableCell>
+                            <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
+                              <Tooltip title={language === 'uz' ? "Õçiriş" : 'Delete'}>
+                                <IconButton size="small" onClick={(e) => { e.stopPropagation(); if (confirm("Delete?")) adminAPI.deleteUser(u._id).then(() => loadUsers(search, role)); }} sx={{ color: 'text.secondary', '&:hover': { color: 'error.main' } }}>
+                                  <DeleteOutlineIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                              <ChevronRightIcon sx={{ color: 'text.disabled', verticalAlign: 'middle', ml: 0.5 }} />
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                )}
+              </Card>
+            </Stack>
+          )}
 
-                {/* === 3. GLYUKOZA VA IZOHLAR === */}
-                 {userTab === 'analytics' && (
-                 <Grid container spacing={3}>
-                    <Grid size={{ xs: 12 }}>
-                       <Statistics customRecords={selectedUserRecords} customLanguage={language} />
-                    </Grid>
-                    
-                    <Grid size={{ xs: 12 }}>
-                       <Card elevation={0} sx={{ p: 4, borderRadius: 2, border: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.background.paper, 0.4), backdropFilter: 'blur(10px)' }}>
-                          <Typography variant="caption" sx={{ fontWeight: 900, color: 'warning.main', textTransform: 'uppercase', mb: 2, display: 'block' }}>{t.administrativeNotes || 'Admin Izohi'}</Typography>
-                          <TextField fullWidth multiline rows={4} variant="outlined" placeholder={t.notesPlaceholder} value={selectedUser.adminNotes || ''} onChange={e => setSelectedUser({...selectedUser, adminNotes: e.target.value})} sx={{ mb: 3, '& .MuiOutlinedInput-root': { borderRadius: 2, bgcolor: alpha(theme.palette.background.default, 0.5) } }} />
-                          <Button variant="contained" onClick={() => handleSaveAdminNotes(selectedUserId!, selectedUser.adminNotes)} sx={{ borderRadius: 1.5, fontWeight: 900, py: 1.5, px: 4 }}>{t.saveNotes || 'Izohni saqlash'}</Button>
-                       </Card>
-                    </Grid>
-                 </Grid>
-                 )}
-              </Box>
-            )}
-
-            {currentTab === 'audit' && user?.role === 'superadmin' && (
+          {selectedUserId && selectedUser && (
+            <Stack spacing={3}>
               <Box>
-                <Stack direction="row" justifyContent="space-between" sx={{ mb: 4 }}>
-                   <Typography variant="h6" sx={{ fontWeight: 900 }}>Audit Logs</Typography>
-                   <Button variant="outlined" onClick={loadAuditLogs} startIcon={<HistoryIcon />} sx={{ borderRadius: 2 }}>Refresh</Button>
+                <Button startIcon={<ArrowBackIcon />} color="inherit" onClick={() => setSelectedUserId(null)}>{t.backToList}</Button>
+              </Box>
+
+              {/* User header */}
+              <Card sx={{ p: { xs: 2.5, sm: 3 } }}>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2.5} alignItems={{ xs: 'flex-start', sm: 'center' }} justifyContent="space-between">
+                  <Stack direction="row" spacing={2} alignItems="center" sx={{ minWidth: 0 }}>
+                    <Avatar src={selectedUser.avatar} sx={{ width: 64, height: 64, fontSize: 22, bgcolor: alpha(theme.palette.primary.main, 0.12), color: 'primary.main' }}>{selectedUser.firstName?.[0]}{selectedUser.lastName?.[0]}</Avatar>
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography variant="h5" noWrap>{selectedUser.firstName} {selectedUser.lastName}</Typography>
+                      <Typography variant="body2" color="text.secondary" noWrap>{selectedUser.email}</Typography>
+                      <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+                        <Chip label={roleLabel(selectedUser.role)} size="small" color={roleColor(selectedUser.role) as any} variant="outlined" />
+                        <Chip
+                          icon={selectedUser.isBanned ? <BlockRoundedIcon /> : <CheckCircleOutlineRoundedIcon />}
+                          label={selectedUser.isBanned ? 'Banned' : 'Active'}
+                          size="small"
+                          color={selectedUser.isBanned ? 'error' : 'success'}
+                          variant="outlined"
+                        />
+                      </Stack>
+                    </Box>
+                  </Stack>
+                  <Button
+                    variant="outlined"
+                    color={selectedUser.isBanned ? 'success' : 'error'}
+                    startIcon={selectedUser.isBanned ? <CheckCircleOutlineRoundedIcon /> : <BlockRoundedIcon />}
+                    onClick={() => adminAPI.toggleBan(selectedUser._id).then(() => loadSpecificUser(selectedUser._id))}
+                  >
+                    {selectedUser.isBanned ? 'Unban' : 'Ban'}
+                  </Button>
                 </Stack>
-                <TableContainer component={Paper} elevation={0} sx={{ borderRadius: 2, border: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.background.paper, 0.4), backdropFilter: 'blur(10px)' }}>
-                  <Table>
+              </Card>
+
+              <Tabs value={userTab} onChange={(_, v) => setUserTab(v)} variant="scrollable" scrollButtons={false} sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                <Tab value="info" label="Ma'lumotlar" />
+                <Tab value="manage" label="Boshqaruv" />
+                <Tab value="analytics" label="Tahlillar" />
+              </Tabs>
+
+              {/* === 1. SHAXSIY MA'LUMOTLAR === */}
+              {userTab === 'info' && (
+                <Card sx={{ p: { xs: 2.5, sm: 3 } }}>
+                  <Grid container spacing={3}>
+                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                      <Typography variant="caption" sx={fieldLabelSx}>{t.diabetesTypeLabel}</Typography>
+                      <Typography variant="subtitle2">{selectedUser.diabetesType || '—'}</Typography>
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                      <Typography variant="caption" sx={fieldLabelSx}>{t.genderAndAge}</Typography>
+                      <Typography variant="subtitle2">{t[selectedUser.gender] || selectedUser.gender || '—'} · {selectedUser.dateOfBirth ? `${new Date().getFullYear() - new Date(selectedUser.dateOfBirth).getFullYear()} yosh` : '—'}</Typography>
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                      <Typography variant="caption" sx={fieldLabelSx}>{t.phoneNumberLabel || 'Telefon'}</Typography>
+                      <Typography variant="subtitle2">{selectedUser.phone || '—'}</Typography>
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                      <Typography variant="caption" sx={fieldLabelSx}>{t.regionLabel || 'Viloyat'}</Typography>
+                      <Typography variant="subtitle2">{[selectedUser.region, selectedUser.district].filter(Boolean).join(', ') || '—'}</Typography>
+                    </Grid>
+                    {selectedUser.createdBy && (
+                      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                        <Typography variant="caption" sx={fieldLabelSx}>Qo'shgan admin</Typography>
+                        <Typography variant="subtitle2">{selectedUser.createdBy.firstName} {selectedUser.createdBy.lastName}</Typography>
+                      </Grid>
+                    )}
+                  </Grid>
+                </Card>
+              )}
+
+              {/* === 2. BOSHQARUV AMALLARI === */}
+              {userTab === 'manage' && (
+                <SectionCard title={t.managementActions || 'Boshqaruv'} icon={<ManageAccountsOutlinedIcon />} iconColor="secondary">
+                  <Grid container spacing={3}>
+                    <Grid size={{ xs: 12, md: 6 }}>
+                      <Typography variant="caption" sx={fieldLabelSx}>{t.assignDoctor}</Typography>
+                      <FormControl fullWidth size="small">
+                        <Select displayEmpty value={selectedUser.assignedDoctor?._id || selectedUser.assignedDoctor || ''} onChange={e => adminAPI.assignDoctor(selectedUser._id, e.target.value || null).then(() => { toast.success(t.doctorAssigned); loadSpecificUser(selectedUser._id); })}>
+                          <MenuItem value=""><em>{t.assignDoctor}</em></MenuItem>
+                          {availableDoctors.map(doc => <MenuItem key={doc._id} value={doc._id}>{doc.firstName} {doc.lastName}</MenuItem>)}
+                        </Select>
+                      </FormControl>
+                      {selectedUser.assignedDoctor && (
+                        <Typography variant="caption" color="success.main" sx={{ fontWeight: 600, mt: 1, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <CheckCircleOutlineRoundedIcon sx={{ fontSize: 15 }} />
+                          {typeof selectedUser.assignedDoctor === 'object' ? `${selectedUser.assignedDoctor.firstName} ${selectedUser.assignedDoctor.lastName}` : t.doctorAssigned}
+                        </Typography>
+                      )}
+                    </Grid>
+                    {user?.role === 'superadmin' && (
+                      <Grid size={{ xs: 12, md: 6 }}>
+                        <Typography variant="caption" sx={fieldLabelSx}>{t.updateRoleLabel || 'Rol'}</Typography>
+                        <FormControl fullWidth size="small">
+                          <Select value={selectedUser.role} onChange={e => adminAPI.updateRole(selectedUser._id, e.target.value).then(() => { toast.success('Rol o\'zgartirildi'); loadSpecificUser(selectedUser._id); })}>
+                            <MenuItem value="user">{t.user || 'Foydalanuvchi'}</MenuItem>
+                            <MenuItem value="doctor">{t.doctor || 'Shifokor'}</MenuItem>
+                            <MenuItem value="admin">{t.admin || 'Admin'}</MenuItem>
+                          </Select>
+                        </FormControl>
+                      </Grid>
+                    )}
+                    {user?.role === 'superadmin' && (
+                      <Grid size={{ xs: 12, md: 6 }}>
+                        <Typography variant="caption" sx={{ ...fieldLabelSx, color: 'error.main' }}>{t.resetPassword || 'Parolni tiklash'}</Typography>
+                        <Stack direction="row" spacing={1}>
+                          <TextField
+                            fullWidth
+                            size="small"
+                            placeholder="Yangi parol (kamida 6 ta belgi)"
+                            value={newPassword}
+                            onChange={e => setNewPassword(e.target.value)}
+                            type="text"
+                            error={newPassword.length > 0 && newPassword.length < 6}
+                          />
+                          <Button
+                            variant="outlined"
+                            color="error"
+                            onClick={handleResetPassword}
+                            disabled={isResettingPassword || newPassword.length < 6}
+                            sx={{ whiteSpace: 'nowrap' }}
+                          >
+                            {isResettingPassword ? <CircularProgress size={18} color="inherit" /> : 'Yangilash'}
+                          </Button>
+                        </Stack>
+                      </Grid>
+                    )}
+                  </Grid>
+                </SectionCard>
+              )}
+
+              {/* === 3. GLYUKOZA VA IZOHLAR === */}
+              {userTab === 'analytics' && (
+                <Stack spacing={3}>
+                  <Statistics customRecords={selectedUserRecords} customLanguage={language} />
+                  <SectionCard title={t.administrativeNotes || 'Admin izohi'} icon={<EditNoteRoundedIcon />} iconColor="warning">
+                    <TextField fullWidth multiline minRows={4} placeholder={t.notesPlaceholder} value={selectedUser.adminNotes || ''} onChange={e => setSelectedUser({ ...selectedUser, adminNotes: e.target.value })} sx={{ mb: 2 }} />
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                      <Button variant="contained" onClick={() => handleSaveAdminNotes(selectedUserId!, selectedUser.adminNotes)}>{t.saveNotes || 'Izohni saqlash'}</Button>
+                    </Box>
+                  </SectionCard>
+                </Stack>
+              )}
+            </Stack>
+          )}
+
+          {selectedUserId && !selectedUser && (
+            <Card sx={{ p: 3 }}>
+              <Stack direction="row" spacing={2} alignItems="center">
+                <Skeleton variant="circular" width={64} height={64} />
+                <Box sx={{ flexGrow: 1 }}><Skeleton width="40%" /><Skeleton width="25%" /></Box>
+              </Stack>
+            </Card>
+          )}
+
+          {currentTab === 'audit' && user?.role === 'superadmin' && (
+            <SectionCard
+              title={t.auditLogs || 'Audit logs'}
+              subtitle={auditTotal ? `${auditTotal}` : undefined}
+              icon={<HistoryIcon />}
+              noPadding
+              action={<Button size="small" variant="outlined" onClick={loadAuditLogs} startIcon={auditLoading ? <CircularProgress size={14} /> : <RefreshRoundedIcon />}>Refresh</Button>}
+            >
+              {auditLogs.length === 0 && !auditLoading ? (
+                <EmptyState compact icon={<HistoryIcon />} title={language === 'ru' ? 'Записей нет' : language === 'en' ? 'No entries' : 'Yozuvlar yõq'} />
+              ) : (
+                <TableContainer>
+                  <Table size="small">
                     <TableHead>
                       <TableRow>
-                        <TableCell sx={{ fontWeight: 900 }}>Admin</TableCell>
-                        <TableCell sx={{ fontWeight: 900 }}>Action</TableCell>
-                        <TableCell sx={{ fontWeight: 900 }}>Details</TableCell>
-                        <TableCell align="right" sx={{ fontWeight: 900 }}>Date</TableCell>
+                        <TableCell>Admin</TableCell>
+                        <TableCell>Action</TableCell>
+                        <TableCell>Details</TableCell>
+                        <TableCell align="right">Date</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
                       {auditLogs.map(log => (
-                        <TableRow key={log._id}>
-                          <TableCell><Typography variant="body2" fontWeight={800}>{log.adminId?.firstName} {log.adminId?.lastName}</Typography></TableCell>
-                          <TableCell><Chip label={log.action} size="small" /></TableCell>
-                          <TableCell>
-                            <Typography variant="caption" sx={{ display: 'block' }}>
+                        <TableRow key={log._id} hover>
+                          <TableCell sx={{ whiteSpace: 'nowrap' }}><Typography variant="body2" fontWeight={600}>{log.adminId?.firstName} {log.adminId?.lastName}</Typography></TableCell>
+                          <TableCell><Chip label={log.action} size="small" variant="outlined" sx={{ fontFamily: 'ui-monospace, monospace', fontSize: 11 }} /></TableCell>
+                          <TableCell sx={{ maxWidth: 420 }}>
+                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', wordBreak: 'break-word' }}>
                               {log.action === 'DELETE_USER' && (
-                                <>O'chirildi: <b>{log.details?.userEmail}</b> (Rol: {log.details?.userRole || 'user'}) <br/> O'chiruvchi: {log.details?.deletedByEmail} ({log.details?.deletedByRole})</>
+                                <>O'chirildi: <b>{log.details?.userEmail}</b> (Rol: {log.details?.userRole || 'user'}) <br /> O'chiruvchi: {log.details?.deletedByEmail} ({log.details?.deletedByRole})</>
                               )}
                               {log.action === 'PURGE_INCOMPLETE_USERS' && (
                                 <>{log.details?.deleted} ta chala akkaunt o'chirildi.</>
@@ -754,96 +615,99 @@ export default function AdminPage() {
                               )}
                             </Typography>
                           </TableCell>
-                          <TableCell align="right"><Typography variant="caption">{format(new Date(log.createdAt), 'dd.MM HH:mm')}</Typography></TableCell>
+                          <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
+                            <Typography variant="caption" color="text.secondary">{formatDate(log.createdAt).slice(0, 5)} {formatTime(log.createdAt)}</Typography>
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
                   </Table>
                 </TableContainer>
-              </Box>
-            )}
-          </motion.div>
-        </AnimatePresence>
+              )}
+            </SectionCard>
+          )}
+        </motion.div>
+      </AnimatePresence>
+      )}
 
-
-        {/* Add Patient Modal */}
-        <Dialog open={isAddPatientModalOpen} onClose={() => setIsAddPatientModalOpen(false)} fullWidth maxWidth="sm" PaperProps={{ sx: { borderRadius: 2 } }}>
-          <DialogTitle sx={{ fontWeight: 900 }}>{t.addPatient || "Bemor Qo'shish"}</DialogTitle>
-          <form onSubmit={handleSavePatient}>
-            <DialogContent>
-              <Grid container spacing={2}>
-                {/* 1. Ism va Familiya */}
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField fullWidth label={t.firstName || "Ism"} required size="small" value={patientForm.firstName} onChange={e => setPatientForm({...patientForm, firstName: e.target.value})} />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField fullWidth label={t.lastName || "Familiya"} required size="small" value={patientForm.lastName} onChange={e => setPatientForm({...patientForm, lastName: e.target.value})} />
-                </Grid>
-                {/* 2. Telefon va Tug'ilgan sana */}
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField fullWidth label="Telefon" required size="small" value={patientForm.phone} onChange={e => setPatientForm({...patientForm, phone: e.target.value})} />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField
-                    fullWidth
-                    label={t.dob || "Tug'ilgan sana"}
-                    required
-                    size="small"
-                    type="date"
-                    value={patientForm.dateOfBirth}
-                    onChange={e => setPatientForm({...patientForm, dateOfBirth: e.target.value})}
-                    InputLabelProps={{ shrink: true }}
-                    inputProps={{ max: new Date().toISOString().split('T')[0] }}
-                  />
-                </Grid>
-                {/* 3. Diabet turi va Bo'y */}
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <FormControl fullWidth size="small" required>
-                    <InputLabel>Diabet Turi *</InputLabel>
-                    <Select value={patientForm.diabetesType} label="Diabet Turi *" onChange={e => setPatientForm({...patientForm, diabetesType: e.target.value})}>
-                      <MenuItem value="1-toifa">1-toifa</MenuItem>
-                      <MenuItem value="2-toifa">2-toifa</MenuItem>
-                      <MenuItem value="Homiladorlik">Homiladorlik</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField fullWidth label="Bo'y (sm)" required size="small" type="number" value={patientForm.height} onChange={e => setPatientForm({...patientForm, height: e.target.value})} />
-                </Grid>
-                {/* 4. Vazn va Viloyat */}
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField fullWidth label="Vazn (kg)" required size="small" type="number" value={patientForm.weight} onChange={e => setPatientForm({...patientForm, weight: e.target.value})} />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField fullWidth label={t.region || "Viloyat"} required size="small" value={patientForm.region} onChange={e => setPatientForm({...patientForm, region: e.target.value})} />
-                </Grid>
-                {/* 5. Tuman */}
-                <Grid size={{ xs: 12 }}>
-                  <TextField fullWidth label="Tuman / Shahar" required size="small" value={patientForm.district} onChange={e => setPatientForm({...patientForm, district: e.target.value})} />
-                </Grid>
-                {/* 6. Login va Parol — OXIRIDA */}
-                <Grid size={{ xs: 12 }}>
-                  <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: 1 }}>
-                    Kirish ma'lumotlari
-                  </Typography>
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField fullWidth label="Login (Tel raqam / Email)" required size="small" value={patientForm.email} onChange={e => setPatientForm({...patientForm, email: e.target.value})} />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField fullWidth label={t.password || "Parol"} required size="small" type="password" value={patientForm.password} onChange={e => setPatientForm({...patientForm, password: e.target.value})} />
-                </Grid>
+      {/* Add Patient Modal */}
+      <Dialog open={isAddPatientModalOpen} onClose={() => setIsAddPatientModalOpen(false)} fullWidth maxWidth="sm">
+        <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <IconTile size={36}><PersonAddAlt1OutlinedIcon /></IconTile>
+          {t.addPatient || "Bemor qo'shish"}
+        </DialogTitle>
+        <form onSubmit={handleSavePatient}>
+          <DialogContent>
+            <Grid container spacing={2} sx={{ pt: 1 }}>
+              {/* 1. Ism va Familiya */}
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField fullWidth label={t.firstName || "Ism"} required size="small" value={patientForm.firstName} onChange={e => setPatientForm({ ...patientForm, firstName: e.target.value })} />
               </Grid>
-            </DialogContent>
-            <DialogActions sx={{ p: 2 }}>
-              <Button onClick={() => setIsAddPatientModalOpen(false)}>Bekor qilish</Button>
-              <Button type="submit" variant="contained" sx={{ fontWeight: 800 }}>{t.save || 'Saqlash'}</Button>
-            </DialogActions>
-          </form>
-        </Dialog>
-
-        <Toaster position="top-right" richColors />
-      </Box>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField fullWidth label={t.lastName || "Familiya"} required size="small" value={patientForm.lastName} onChange={e => setPatientForm({ ...patientForm, lastName: e.target.value })} />
+              </Grid>
+              {/* 2. Telefon va Tug'ilgan sana */}
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField fullWidth label="Telefon" required size="small" value={patientForm.phone} onChange={e => setPatientForm({ ...patientForm, phone: e.target.value })} />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField
+                  fullWidth
+                  label={t.dob || "Tug'ilgan sana"}
+                  required
+                  size="small"
+                  type="date"
+                  value={patientForm.dateOfBirth}
+                  onChange={e => setPatientForm({ ...patientForm, dateOfBirth: e.target.value })}
+                  InputLabelProps={{ shrink: true }}
+                  inputProps={{ max: new Date().toISOString().split('T')[0] }}
+                />
+              </Grid>
+              {/* 3. Diabet turi va Bo'y */}
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <FormControl fullWidth size="small" required>
+                  <InputLabel>Diabet turi</InputLabel>
+                  <Select value={patientForm.diabetesType} label="Diabet turi" onChange={e => setPatientForm({ ...patientForm, diabetesType: e.target.value })}>
+                    <MenuItem value="1-toifa">1-toifa</MenuItem>
+                    <MenuItem value="2-toifa">2-toifa</MenuItem>
+                    <MenuItem value="Homiladorlik">Homiladorlik</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField fullWidth label="Bo'y (sm)" required size="small" type="number" value={patientForm.height} onChange={e => setPatientForm({ ...patientForm, height: e.target.value })} />
+              </Grid>
+              {/* 4. Vazn va Viloyat */}
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField fullWidth label="Vazn (kg)" required size="small" type="number" value={patientForm.weight} onChange={e => setPatientForm({ ...patientForm, weight: e.target.value })} />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField fullWidth label={t.region || "Viloyat"} required size="small" value={patientForm.region} onChange={e => setPatientForm({ ...patientForm, region: e.target.value })} />
+              </Grid>
+              {/* 5. Tuman */}
+              <Grid size={{ xs: 12 }}>
+                <TextField fullWidth label="Tuman / Shahar" required size="small" value={patientForm.district} onChange={e => setPatientForm({ ...patientForm, district: e.target.value })} />
+              </Grid>
+              {/* 6. Login va Parol — OXIRIDA */}
+              <Grid size={{ xs: 12 }}>
+                <Typography variant="subtitle2" sx={{ pt: 1, borderTop: 1, borderColor: 'divider', mt: 1 }}>
+                  Kirish ma'lumotlari
+                </Typography>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField fullWidth label="Login (tel raqam / email)" required size="small" value={patientForm.email} onChange={e => setPatientForm({ ...patientForm, email: e.target.value })} />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField fullWidth label={t.password || "Parol"} required size="small" type="password" value={patientForm.password} onChange={e => setPatientForm({ ...patientForm, password: e.target.value })} />
+              </Grid>
+            </Grid>
+          </DialogContent>
+          <DialogActions>
+            <Button color="inherit" onClick={() => setIsAddPatientModalOpen(false)}>Bekor qilish</Button>
+            <Button type="submit" variant="contained">{t.save || 'Saqlash'}</Button>
+          </DialogActions>
+        </form>
+      </Dialog>
     </Box>
   );
 }

@@ -3,7 +3,6 @@ import {
   Box, IconButton, Typography, TextField, Avatar,
   CircularProgress, Chip, alpha, useTheme, Paper, Fade, Tooltip
 } from '@mui/material';
-import SmartToyIcon from '@mui/icons-material/SmartToy';
 import CloseIcon from '@mui/icons-material/Close';
 import SendIcon from '@mui/icons-material/Send';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
@@ -53,15 +52,18 @@ const TOOL_LABELS: Record<string, string> = {
 };
 
 // Simple markdown-like renderer
+const escapeHtml = (text: string) =>
+  text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
 const renderMarkdown = (text: string) => {
-  return text
+  return escapeHtml(text)
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.*?)\*/g, '<em>$1</em>')
     .replace(/^• /gm, '&nbsp;&nbsp;• ')
     .replace(/\n/g, '<br/>');
 };
 
-export default function AIAgentChat() {
+export default function AIAgentChat({ bottomOffset = 0 }: { bottomOffset?: number }) {
   const theme = useTheme();
   const { language } = useApp();
   const { user } = useAuth();
@@ -230,9 +232,9 @@ export default function AIAgentChat() {
         ref={toggleBtnRef}
         sx={{
           position: 'fixed',
-          bottom: 28,
-          right: 28,
-          zIndex: 1500,
+          bottom: { xs: 16 + bottomOffset, sm: 24 + bottomOffset },
+          right: { xs: 16, sm: 24 },
+          zIndex: 1300,
         }}
       >
         {/* Unread / attention pulse ring */}
@@ -258,19 +260,21 @@ export default function AIAgentChat() {
         } placement="left">
           <IconButton
             onClick={() => setOpen(o => !o)}
+            aria-label="AI"
             sx={{
-              width: 58,
-              height: 58,
-              bgcolor: open ? alpha(accentColor, 0.15) : accentColor,
-              color: open ? accentColor : 'white',
-              border: open ? `2px solid ${accentColor}` : 'none',
+              width: 56,
+              height: 56,
+              borderRadius: '18px',
+              bgcolor: open ? 'background.paper' : accentColor,
+              color: open ? 'text.primary' : theme.palette.primary.contrastText,
+              border: open ? `1px solid ${theme.palette.divider}` : 'none',
               boxShadow: open
-                ? `0 0 0 4px ${alpha(accentColor, 0.15)}`
-                : `0 4px 20px ${alpha(accentColor, 0.5)}`,
-              transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                ? '0 4px 16px rgba(0,0,0,0.12)'
+                : `0 8px 24px ${alpha(accentColor, 0.4)}`,
+              transition: 'all 0.2s ease',
               '&:hover': {
-                transform: 'scale(1.1)',
-                bgcolor: open ? alpha(accentColor, 0.2) : theme.palette.primary.dark,
+                bgcolor: open ? 'background.paper' : theme.palette.primary.dark,
+                boxShadow: `0 10px 28px ${alpha(accentColor, 0.45)}`,
               },
             }}
           >
@@ -279,7 +283,7 @@ export default function AIAgentChat() {
               transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
               display: 'flex',
             }}>
-              {open ? <CloseIcon /> : <SmartToyIcon />}
+              {open ? <CloseIcon /> : <AutoAwesomeIcon />}
             </Box>
           </IconButton>
         </Tooltip>
@@ -292,54 +296,55 @@ export default function AIAgentChat() {
           elevation={24}
           sx={{
             position: 'fixed',
-            bottom: 100,
-            right: 28,
+            bottom: { xs: 84 + bottomOffset, sm: 92 + bottomOffset },
+            right: { xs: 16, sm: 24 },
             width: { xs: 'calc(100vw - 32px)', sm: 400 },
             maxWidth: 400,
-            height: { xs: 'calc(100vh - 120px)', sm: 580 },
-            maxHeight: 580,
-            borderRadius: 3,
+            height: { xs: `calc(100dvh - ${110 + bottomOffset}px)`, sm: 580 },
+            maxHeight: 600,
+            borderRadius: '20px',
             display: 'flex',
             flexDirection: 'column',
             overflow: 'hidden',
-            zIndex: 1499,
-            border: `1px solid ${alpha(accentColor, 0.2)}`,
-            boxShadow: `0 20px 60px ${alpha(accentColor, 0.25)}, 0 8px 24px rgba(0,0,0,0.2)`,
+            zIndex: 1299,
+            border: `1px solid ${theme.palette.divider}`,
+            boxShadow: isDark ? '0 24px 60px rgba(0,0,0,0.6)' : '0 24px 60px rgba(15,30,46,0.18), 0 4px 12px rgba(15,30,46,0.08)',
           }}
         >
           {/* Header */}
           <Box sx={{
-            px: 2.5,
-            py: 2,
-            background: `linear-gradient(135deg, ${accentColor} 0%, ${theme.palette.primary.dark} 100%)`,
+            px: 2,
+            py: 1.5,
+            bgcolor: 'background.paper',
+            borderBottom: `1px solid ${theme.palette.divider}`,
             display: 'flex',
             alignItems: 'center',
             gap: 1.5,
           }}>
             <Box sx={{
-              width: 40, height: 40,
-              borderRadius: '50%',
-              bgcolor: alpha('#fff', 0.2),
+              width: 38, height: 38,
+              borderRadius: 2.5,
+              background: `linear-gradient(140deg, ${theme.palette.primary.light}, ${theme.palette.primary.dark})`,
+              color: theme.palette.primary.contrastText,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              border: '2px solid ' + alpha('#fff', 0.3),
             }}>
-              <SmartToyIcon sx={{ color: 'white', fontSize: 22 }} />
+              <AutoAwesomeIcon sx={{ fontSize: 20 }} />
             </Box>
             <Box sx={{ flexGrow: 1 }}>
-              <Typography variant="subtitle2" fontWeight={900} color="white" sx={{ lineHeight: 1.2 }}>
+              <Typography variant="subtitle2" fontWeight={700} sx={{ lineHeight: 1.2 }}>
                 {lang === 'uz' ? 'Diabet AI Agent' : lang === 'ru' ? 'Диабет AI Агент' : 'Diabetes AI Agent'}
               </Typography>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.2 }}>
-                <Box sx={{ width: 7, height: 7, borderRadius: '50%', bgcolor: '#4ade80', flexShrink: 0 }} />
-                <Typography variant="caption" color={alpha('#fff', 0.85)} fontWeight={600} sx={{ fontSize: 10 }}>
+                <Box sx={{ width: 7, height: 7, borderRadius: '50%', bgcolor: 'success.main', flexShrink: 0 }} />
+                <Typography variant="caption" color="text.secondary" fontWeight={500} sx={{ fontSize: 11 }}>
                   {lang === 'uz' ? 'Faol • Gemini 2.5 + Groq' : lang === 'ru' ? 'Активен • Gemini 2.5 + Groq' : 'Active • Gemini 2.5 + Groq'}
                 </Typography>
               </Box>
             </Box>
             <Tooltip title={lang === 'uz' ? 'Tozalaş' : lang === 'ru' ? 'Очистить' : 'Clear'}>
-              <IconButton size="small" onClick={clearChat} sx={{ color: alpha('#fff', 0.8), '&:hover': { color: 'white', bgcolor: alpha('#fff', 0.15) } }}>
+              <IconButton size="small" onClick={clearChat} sx={{ color: 'text.secondary' }}>
                 <DeleteOutlineIcon fontSize="small" />
               </IconButton>
             </Tooltip>
@@ -353,7 +358,7 @@ export default function AIAgentChat() {
             display: 'flex',
             flexDirection: 'column',
             gap: 1.5,
-            bgcolor: isDark ? alpha(theme.palette.background.default, 0.7) : alpha(accentColor, 0.02),
+            bgcolor: 'background.default',
             '&::-webkit-scrollbar': { width: 4 },
             '&::-webkit-scrollbar-thumb': { bgcolor: alpha(accentColor, 0.3), borderRadius: 2 },
           }}>
@@ -370,11 +375,12 @@ export default function AIAgentChat() {
                 {/* Avatar */}
                 {msg.role === 'assistant' && (
                   <Avatar sx={{
-                    width: 30, height: 30, flexShrink: 0,
-                    bgcolor: accentColor,
+                    width: 28, height: 28, flexShrink: 0,
+                    bgcolor: alpha(accentColor, 0.14),
+                    color: accentColor,
                     '& .MuiSvgIcon-root': { fontSize: 16 }
                   }}>
-                    <SmartToyIcon />
+                    <AutoAwesomeIcon />
                   </Avatar>
                 )}
 
@@ -388,9 +394,9 @@ export default function AIAgentChat() {
                           label={TOOL_LABELS[tool] || tool}
                           size="small"
                           sx={{
-                            height: 18,
-                            fontSize: 9,
-                            fontWeight: 700,
+                            height: 20,
+                            fontSize: 10.5,
+                            fontWeight: 600,
                             bgcolor: alpha(accentColor, 0.1),
                             color: accentColor,
                             '& .MuiChip-label': { px: 0.8 },
@@ -409,7 +415,7 @@ export default function AIAgentChat() {
                       px: 2, py: 1.5,
                       bgcolor: theme.palette.background.paper,
                       borderRadius: '16px 16px 16px 4px',
-                      border: `1px solid ${alpha(accentColor, 0.15)}`,
+                      border: `1px solid ${theme.palette.divider}`,
                     }}>
                       {[0, 1, 2].map(i => (
                         <Box key={i} sx={{
@@ -434,16 +440,14 @@ export default function AIAgentChat() {
                         bgcolor: msg.role === 'user'
                           ? accentColor
                           : theme.palette.background.paper,
-                        color: msg.role === 'user' ? 'white' : 'text.primary',
+                        color: msg.role === 'user' ? theme.palette.primary.contrastText : 'text.primary',
                         borderRadius: msg.role === 'user'
                           ? '16px 16px 4px 16px'
                           : '16px 16px 16px 4px',
-                        boxShadow: msg.role === 'user'
-                          ? `0 3px 10px ${alpha(accentColor, 0.35)}`
-                          : `0 2px 8px rgba(0,0,0,0.08)`,
+                        boxShadow: 'none',
                         border: msg.role === 'user'
                           ? 'none'
-                          : `1px solid ${alpha(accentColor, 0.12)}`,
+                          : `1px solid ${theme.palette.divider}`,
                         position: 'relative',
                         cursor: 'default',
                         '&:hover .copy-btn': { opacity: 1 },
@@ -455,9 +459,9 @@ export default function AIAgentChat() {
                         sx={{
                           fontWeight: 500,
                           lineHeight: 1.6,
-                          fontSize: '0.82rem',
+                          fontSize: '0.875rem',
                           wordBreak: 'break-word',
-                          '& strong': { fontWeight: 800 },
+                          '& strong': { fontWeight: 700 },
                         }}
                         dangerouslySetInnerHTML={{ __html: renderMarkdown(msg.content) }}
                       />
@@ -486,10 +490,10 @@ export default function AIAgentChat() {
                   {!msg.isLoading && (
                     <Typography variant="caption" sx={{
                       display: 'block',
-                      fontSize: 9,
+                      fontSize: 10.5,
                       color: 'text.disabled',
-                      fontWeight: 600,
-                      mt: 0.25,
+                      fontWeight: 500,
+                      mt: 0.4,
                       textAlign: msg.role === 'user' ? 'right' : 'left',
                       px: 0.5,
                     }}>
@@ -508,8 +512,7 @@ export default function AIAgentChat() {
             <Box sx={{
               px: 2, pt: 1, pb: 0.5,
               display: 'flex', flexWrap: 'wrap', gap: 0.75,
-              borderTop: `1px solid ${alpha(accentColor, 0.1)}`,
-              bgcolor: isDark ? alpha(accentColor, 0.03) : alpha(accentColor, 0.02),
+              bgcolor: 'background.default',
             }}>
               {quickPrompts.map(prompt => (
                 <Chip
@@ -518,13 +521,13 @@ export default function AIAgentChat() {
                   size="small"
                   onClick={() => sendMessage(prompt)}
                   sx={{
-                    height: 26,
-                    fontSize: '0.7rem',
-                    fontWeight: 700,
+                    height: 30,
+                    fontSize: '0.75rem',
+                    fontWeight: 500,
                     cursor: 'pointer',
-                    bgcolor: alpha(accentColor, 0.08),
-                    color: 'text.secondary',
-                    border: `1px solid ${alpha(accentColor, 0.15)}`,
+                    bgcolor: 'background.paper',
+                    color: 'text.primary',
+                    border: `1px solid ${theme.palette.divider}`,
                     '&:hover': {
                       bgcolor: alpha(accentColor, 0.15),
                       color: accentColor,
@@ -563,12 +566,8 @@ export default function AIAgentChat() {
               disabled={loading}
               sx={{
                 '& .MuiOutlinedInput-root': {
-                  borderRadius: 2.5,
-                  fontSize: '0.82rem',
-                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                    borderColor: accentColor,
-                    borderWidth: 1.5,
-                  }
+                  borderRadius: 3,
+                  fontSize: '0.875rem',
                 }
               }}
             />
@@ -578,15 +577,15 @@ export default function AIAgentChat() {
               sx={{
                 width: 40, height: 40, flexShrink: 0,
                 bgcolor: accentColor,
-                color: 'white',
-                borderRadius: 2,
-                '&:hover': { bgcolor: theme.palette.primary.dark, transform: 'scale(1.05)' },
-                '&:disabled': { bgcolor: alpha(accentColor, 0.25) },
+                color: theme.palette.primary.contrastText,
+                borderRadius: 3,
+                '&:hover': { bgcolor: theme.palette.primary.dark },
+                '&.Mui-disabled': { bgcolor: alpha(accentColor, 0.25), color: theme.palette.primary.contrastText },
                 transition: 'all 0.2s',
               }}
             >
               {loading
-                ? <CircularProgress size={18} sx={{ color: 'white' }} />
+                ? <CircularProgress size={18} color="inherit" />
                 : <SendIcon sx={{ fontSize: 18 }} />
               }
             </IconButton>
@@ -595,15 +594,15 @@ export default function AIAgentChat() {
           {/* Powered by */}
           <Box sx={{
             px: 2, py: 0.75,
-            borderTop: `1px solid ${alpha(accentColor, 0.08)}`,
+            bgcolor: 'background.paper',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             gap: 0.5,
           }}>
             <AutoAwesomeIcon sx={{ fontSize: 10, color: 'text.disabled' }} />
-            <Typography variant="caption" color="text.disabled" fontWeight={700} sx={{ fontSize: 9, letterSpacing: 0.5 }}>
-              GEMINI 2.5 FLASH + GROQ LLAMA 3.3
+            <Typography variant="caption" color="text.disabled" fontWeight={500} sx={{ fontSize: 10 }}>
+              Gemini 2.5 Flash + Groq Llama 3.3
             </Typography>
           </Box>
         </Paper>

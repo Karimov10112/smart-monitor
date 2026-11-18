@@ -8,44 +8,41 @@ import { toast } from 'sonner';
 
 // MUI Components
 import {
-  Container,
   Box,
   Typography,
   TextField,
   Button,
-  Paper,
   InputAdornment,
   Link,
   CircularProgress,
   Stack,
-  useTheme,
-  alpha,
-  IconButton
+  Alert,
+  IconButton,
 } from '@mui/material';
+import { AuthLayout } from '../components/common';
 
 // MUI Icons
-import EmailIcon from '@mui/icons-material/EmailOutlined';
-import LockIcon from '@mui/icons-material/LockOutlined';
-import LoginIcon from '@mui/icons-material/Login';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import StorageIcon from '@mui/icons-material/Storage';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
-import DarkModeIcon from '@mui/icons-material/DarkMode';
-import LightModeIcon from '@mui/icons-material/LightMode';
-import LanguageIcon from '@mui/icons-material/Language';
+import PersonOutlineRoundedIcon from '@mui/icons-material/PersonOutlineRounded';
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
+import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
+import LocalHospitalOutlinedIcon from '@mui/icons-material/LocalHospitalOutlined';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
-  const { language, setLanguage, isDarkMode, toggleDarkMode } = useApp();
+  const { language } = useApp();
   const navigate = useNavigate();
-  const theme = useTheme();
+  const [showPassword, setShowPassword] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const t = translations[language];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitted(true);
+    if (!email.trim() || !password) return;
     setLoading(true);
     try {
       const trimmedEmail = email.trim().toLowerCase();
@@ -71,151 +68,81 @@ export default function LoginPage() {
     }
   };
 
+  const COPY: Record<string, { title: string; subtitle: string; notice: string; loginLabel: string; loginPlaceholder: string; clinic: string; required: string }> = {
+    uz: { title: 'Xuş kelibsiz', subtitle: 'Hisobingizga kiring va kõrsatkiçlaringizni kuzatib boring', notice: 'Tizimga kiriş uçun login va parolni şifokoringizdan oling.', loginLabel: 'Login (telefon yoki email)', loginPlaceholder: '+998901234567 yoki email', clinic: "Tizimda rõyxatdan õtiş uçun klinikaga murojaat qiling", required: 'Majburiy maydon' },
+    ru: { title: 'Добро пожаловать', subtitle: 'Войдите, чтобы следить за своими показателями', notice: 'Логин и пароль для входа выдаёт ваш врач.', loginLabel: 'Логин (телефон или email)', loginPlaceholder: '+998901234567 или email', clinic: 'Для регистрации обратитесь в клинику', required: 'Обязательное поле' },
+    en: { title: 'Welcome back', subtitle: 'Sign in to keep track of your health data', notice: 'Your login and password are provided by your doctor.', loginLabel: 'Login (phone or email)', loginPlaceholder: '+998901234567 or email', clinic: 'Contact your clinic to register', required: 'Required field' },
+  };
+  const c = COPY[language] || COPY.uz;
+
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        p: 3,
-        bgcolor: 'background.default',
-        position: 'relative'
-      }}
-    >
-      <Box sx={{ position: 'absolute', top: 24, right: 24, display: 'flex', gap: 2, zIndex: 10 }}>
-        <IconButton
-          onClick={() => setLanguage(language === 'uz' ? 'ru' : language === 'ru' ? 'en' : 'uz')}
-          sx={{ bgcolor: alpha(theme.palette.primary.main, 0.1), color: 'primary.main', '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.2) } }}
-        >
-          <LanguageIcon />
-        </IconButton>
-        <IconButton
-          onClick={toggleDarkMode}
-          sx={{ bgcolor: alpha(theme.palette.primary.main, 0.1), color: 'primary.main', '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.2) } }}
-        >
-          {isDarkMode ? <LightModeIcon /> : <DarkModeIcon />}
-        </IconButton>
-      </Box>
+    <AuthLayout title={c.title} subtitle={c.subtitle}>
+      <Alert severity="info" icon={<LocalHospitalOutlinedIcon fontSize="inherit" />} sx={{ mb: 3 }}>
+        {c.notice}
+      </Alert>
 
-      <Container maxWidth="sm">
-        <Box sx={{ textAlign: 'center', mb: 4 }}>
-          <Box
-            sx={{
-              width: 64,
-              height: 64,
-              background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
-              borderRadius: 2,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white',
-              mx: 'auto',
-              mb: 2,
-              boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.1)}`
+      <Box component="form" onSubmit={handleSubmit} noValidate>
+        <Stack spacing={2.5}>
+          <TextField
+            label={c.loginLabel}
+            placeholder={c.loginPlaceholder}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            autoComplete="username"
+            autoFocus
+            error={submitted && !email.trim()}
+            helperText={submitted && !email.trim() ? c.required : undefined}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <PersonOutlineRoundedIcon fontSize="small" />
+                </InputAdornment>
+              ),
             }}
-          >
-            <StorageIcon sx={{ fontSize: 32 }} />
+          />
+
+          <TextField
+            label={t.passwordLabel}
+            type={showPassword ? 'text' : 'password'}
+            placeholder="••••••••"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            autoComplete="current-password"
+            error={submitted && !password}
+            helperText={submitted && !password ? c.required : undefined}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <LockOutlinedIcon fontSize="small" />
+                </InputAdornment>
+              ),
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton size="small" onClick={() => setShowPassword(v => !v)} edge="end" aria-label="toggle password">
+                    {showPassword ? <VisibilityOffOutlinedIcon fontSize="small" /> : <VisibilityOutlinedIcon fontSize="small" />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+          />
+
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: '-4px !important' }}>
+            <Link component={RouterLink} to="/forgot-password" variant="body2" underline="hover" sx={{ fontWeight: 600 }}>
+              {t.forgotPassword}
+            </Link>
           </Box>
-          <Typography variant="h4" sx={{ fontWeight: 800, mb: 1 }}>
-            {t.appName.split(' ')[0]} <Box component="span" sx={{ color: 'primary.main' }}>{t.appName.split(' ')[1] || ''}</Box>
+
+          <Button type="submit" variant="contained" size="large" fullWidth disabled={loading}>
+            {loading ? <CircularProgress size={22} color="inherit" /> : t.login}
+          </Button>
+
+          <Typography variant="body2" align="center" color="text.secondary">
+            {c.clinic}
           </Typography>
-          <Typography variant="overline" sx={{ fontWeight: 800, letterSpacing: 2, color: 'text.secondary', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-            <AutoAwesomeIcon sx={{ fontSize: 14, color: 'primary.main' }} /> {t.appName || 'Smart Monitor System'}
-          </Typography>
-        </Box>
-
-        <Paper
-          elevation={0}
-          sx={{
-            borderRadius: 2,
-            border: `1px solid ${theme.palette.divider}`,
-            boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
-          }}
-        >
-          {/* Official Banner */}
-          <Box sx={{ bgcolor: alpha(theme.palette.primary.main, 0.02), p: 3, textAlign: 'center', borderBottom: `1px solid ${theme.palette.divider}` }}>
-            <Typography variant="caption" sx={{ display: 'block', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1, color: 'text.secondary' }}>
-              Diqqat: Tizimga kirish uchun login va parolni shifokoringizdan oling.
-            </Typography>
-          </Box>
-
-          <Box component="form" onSubmit={handleSubmit} sx={{ p: { xs: 4, md: 6 } }}>
-            <Stack spacing={3}>
-              <TextField
-                label="Login (Tel yoki Email)"
-                placeholder="+998901234567 yoki email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <EmailIcon color="action" fontSize="small" />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-
-              <TextField
-                label={t.passwordLabel}
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <LockIcon color="action" fontSize="small" />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-
-              <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                <Link
-                  component={RouterLink}
-                  to="/forgot-password"
-                  variant="caption"
-                  sx={{ fontWeight: 800, textTransform: 'uppercase', textDecoration: 'none' }}
-                >
-                  {t.forgotPassword}
-                </Link>
-              </Box>
-
-              <Button
-                type="submit"
-                variant="contained"
-                size="large"
-                fullWidth
-                disabled={loading}
-                endIcon={!loading && <LoginIcon />}
-                sx={{
-                  py: 1.5,
-                  height: 54,
-                  fontWeight: 800,
-                  boxShadow: 'none',
-                  '&:hover': { boxShadow: 'none' }
-                }}
-              >
-                {loading ? <CircularProgress size={24} color="inherit" /> : t.login}
-              </Button>
-
-              <Typography variant="caption" align="center" sx={{ fontWeight: 600, color: 'text.secondary' }}>
-                Tizimda ro'yxatdan o'tish uchun klinikaga murojaat qiling
-              </Typography>
-            </Stack>
-          </Box>
-        </Paper>
-
-        <Box sx={{ mt: 4, textAlign: 'center', opacity: 0.5 }}>
-          <Typography variant="caption" sx={{ fontWeight: 800, color: 'text.secondary', letterSpacing: 2 }}>
-            © {new Date().getFullYear()} QAND NAZORATI. PROFESSIONAL VERSION.
-          </Typography>
-        </Box>
-      </Container>
-    </Box>
+        </Stack>
+      </Box>
+    </AuthLayout>
   );
 }

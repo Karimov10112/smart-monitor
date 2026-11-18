@@ -9,33 +9,24 @@ import { toast } from 'sonner';
 import {
   Box,
   Typography,
-  Card,
-  CardContent,
   TextField,
   Button,
   Stack,
-  Container,
-  Paper,
-  IconButton,
   Link,
   CircularProgress,
-  useTheme,
-  alpha
+  InputAdornment,
 } from '@mui/material';
+import { AuthLayout, IconTile } from '../components/common';
 
 // MUI Icons
 import MailOutlineIcon from '@mui/icons-material/MailOutline';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SendIcon from '@mui/icons-material/Send';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import ActivityIcon from '@mui/icons-material/HistoryEdu';
-import DarkModeIcon from '@mui/icons-material/DarkMode';
-import LightModeIcon from '@mui/icons-material/LightMode';
-import LanguageIcon from '@mui/icons-material/Language';
+import KeyOutlinedIcon from '@mui/icons-material/KeyOutlined';
 
 export default function ForgotPasswordPage() {
-  const { language, setLanguage, isDarkMode, toggleDarkMode } = useApp();
-  const theme = useTheme();
+  const { language } = useApp();
   const t = translations[language];
 
   const [email, setEmail] = useState('');
@@ -59,90 +50,48 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', py: 4, position: 'relative' }}>
-      <Box sx={{ position: 'absolute', top: 24, right: 24, display: 'flex', gap: 2, zIndex: 10 }}>
-        <IconButton
-          onClick={() => setLanguage(language === 'uz' ? 'ru' : language === 'ru' ? 'en' : 'uz')}
-          sx={{ bgcolor: alpha(theme.palette.primary.main, 0.1), color: 'primary.main', '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.2) } }}
-        >
-          <LanguageIcon />
-        </IconButton>
-        <IconButton
-          onClick={toggleDarkMode}
-          sx={{ bgcolor: alpha(theme.palette.primary.main, 0.1), color: 'primary.main', '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.2) } }}
-        >
-          {isDarkMode ? <LightModeIcon /> : <DarkModeIcon />}
-        </IconButton>
-      </Box>
+    <AuthLayout
+      title={sent ? t.sent : t.forgotPassword}
+      subtitle={sent ? undefined : t.enterEmailToReset}
+      icon={sent ? undefined : <KeyOutlinedIcon />}
+    >
+      {!sent ? (
+        <Box component="form" onSubmit={handleSubmit}>
+          <Stack spacing={2.5}>
+            <TextField
+              fullWidth
+              label={t.email}
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              required
+              autoFocus
+              autoComplete="email"
+              InputProps={{ startAdornment: <InputAdornment position="start"><MailOutlineIcon fontSize="small" /></InputAdornment> }}
+            />
 
-      <Container maxWidth="xs">
-        <Box sx={{ textAlign: 'center', mb: 6 }}>
-          <Box sx={{ width: 64, height: 64, bgcolor: 'primary.main', borderRadius: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'center', mx: 'auto', mb: 2, color: 'white' }}>
-            <ActivityIcon sx={{ fontSize: 32 }} />
-          </Box>
-          <Typography variant="h4" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 2 }}>{t.forgotPassword}</Typography>
-          <Typography variant="overline" sx={{ fontWeight: 800, color: 'text.secondary', letterSpacing: 1.5 }}>
-            Password Recovery Process
-          </Typography>
+            <Button fullWidth type="submit" variant="contained" size="large" disabled={loading} endIcon={!loading && <SendIcon fontSize="small" />}>
+              {loading ? <CircularProgress size={22} color="inherit" /> : t.sendLink}
+            </Button>
+
+            <Link component={RouterLink} to="/login" underline="hover" variant="body2" sx={{ fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.75 }}>
+              <ArrowBackIcon sx={{ fontSize: 16 }} /> {t.backToLogin}
+            </Link>
+          </Stack>
         </Box>
-
-        <Card elevation={0} sx={{ border: `1px solid ${theme.palette.divider}` }}>
-          <CardContent sx={{ p: 4 }}>
-            {!sent ? (
-              <Box component="form" onSubmit={handleSubmit}>
-                <Typography variant="body2" sx={{ fontWeight: 700, textAlign: 'center', mb: 4, color: 'text.secondary', px: 2 }}>
-                  {t.enterEmailToReset}
-                </Typography>
-                
-                <Stack spacing={4}>
-                  <TextField
-                    fullWidth
-                    label={t.email}
-                    type="email"
-                    size="small"
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    required
-                    InputProps={{
-                      startAdornment: <MailOutlineIcon sx={{ mr: 1, fontSize: 18, color: 'text.secondary' }} />
-                    }}
-                  />
-
-                  <Button
-                    fullWidth
-                    type="submit"
-                    variant="contained"
-                    disabled={loading}
-                    endIcon={!loading && <SendIcon fontSize="small" />}
-                    sx={{ height: 48, fontWeight: 800 }}
-                  >
-                    {loading ? <CircularProgress size={20} color="inherit" /> : t.sendLink}
-                  </Button>
-
-                  <Box sx={{ textAlign: 'center' }}>
-                     <Link component={RouterLink} to="/login" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1, textDecoration: 'none', fontSize: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-                       <ArrowBackIcon sx={{ fontSize: 14 }} /> {t.backToLogin}
-                     </Link>
-                  </Box>
-                </Stack>
-              </Box>
-            ) : (
-              <Box sx={{ textAlign: 'center', py: 2 }}>
-                <Box sx={{ width: 64, height: 64, bgcolor: alpha(theme.palette.success.main, 0.08), color: 'success.main', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', mx: 'auto', mb: 3 }}>
-                  <CheckCircleOutlineIcon sx={{ fontSize: 32 }} />
-                </Box>
-                <Typography variant="h6" sx={{ fontWeight: 900, mb: 1 }}>{t.sent}</Typography>
-                <Typography variant="body2" sx={{ fontWeight: 700, color: 'text.secondary', mb: 4, px: 2 }}>
-                  {t.checkEmail}. {language === 'uz' ? 'Agar xat kelmasa, spam papkasini ham tekshirib ko\'ring.' : 'Если письмо не пришло, проверьте папку спам.'}
-                </Typography>
-                <Button fullWidth variant="outlined" component={RouterLink} to="/login" sx={{ fontWeight: 800, borderRadius: 1.5 }}>
-                   {t.backToLogin}
-                </Button>
-              </Box>
-            )}
-          </CardContent>
-        </Card>
-      </Container>
-    </Box>
+      ) : (
+        <Box>
+          <Stack direction="row" spacing={2} alignItems="flex-start" sx={{ p: 2, mb: 3, borderRadius: 3, border: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
+            <IconTile color="success"><CheckCircleOutlineIcon /></IconTile>
+            <Typography variant="body2" color="text.secondary">
+              {t.checkEmail}. {language === 'uz' ? 'Agar xat kelmasa, spam papkasini ham tekşirib kõring.' : language === 'ru' ? 'Если письмо не пришло, проверьте папку спам.' : "If you don't see the email, check your spam folder."}
+            </Typography>
+          </Stack>
+          <Button fullWidth variant="outlined" size="large" component={RouterLink} to="/login" startIcon={<ArrowBackIcon fontSize="small" />}>
+            {t.backToLogin}
+          </Button>
+        </Box>
+      )}
+    </AuthLayout>
   );
 }
