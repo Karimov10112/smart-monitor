@@ -1,15 +1,24 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
+/**
+ * The app loads the live site, so every push to main (Vercel deploy) reaches
+ * the phone on the next launch without reinstalling the APK.
+ * Build with CAP_BUNDLED=1 to ship the local dist/ copy instead (offline-first).
+ */
+const LIVE_URL = process.env.CAP_BUNDLED ? undefined : 'https://diabetmed.uz';
+
 const config: CapacitorConfig = {
   appId: 'uz.diabetmed.app',
   appName: 'Qand Nazorati',
   webDir: 'dist',
   android: {
-    // WebView content is served from https://localhost (backend CORS already allows it)
     allowMixedContent: false,
   },
   server: {
     androidScheme: 'https',
+    url: LIVE_URL,
+    // Shown from the APK when the site cannot be reached (no internet)
+    errorPath: 'offline.html',
   },
   plugins: {
     SplashScreen: {

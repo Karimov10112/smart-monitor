@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Qand Nazorati — internet yõq</title>
+  <style>
+    :root { color-scheme: light dark; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      font-family: 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif;
+      background: #F4F7FA; color: #0F1E2E; padding: 24px; text-align: center;
+    }
+    @media (prefers-color-scheme: dark) { body { background: #0B1220; color: #E6EDF5; } .card { background: #111A2B; border-color: rgba(148,163,184,.16); } p { color: #94A3B8; } }
+    .card { max-width: 360px; width: 100%; background: #fff; border: 1px solid #E2E8F0; border-radius: 20px; padding: 32px 24px; }
+    .logo { width: 64px; height: 64px; margin: 0 auto 20px; border-radius: 18px; display: grid; place-items: center;
+      background: linear-gradient(140deg, #0891B2, #155E75); }
+    h1 { font-size: 20px; margin: 0 0 8px; }
+    p { font-size: 15px; line-height: 1.5; color: #5A6B7D; margin: 0 0 24px; }
+    button { width: 100%; height: 48px; border: 0; border-radius: 12px; background: #0E7490; color: #fff; font-size: 16px; font-weight: 600; }
+    button:active { background: #155E75; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M12 2.7S5.5 10.2 5.5 14.5a6.5 6.5 0 0 0 13 0C18.5 10.2 12 2.7 12 2.7z"/></svg>
+    </div>
+    <h1 id="t">Internet aloqasi yõq</h1>
+    <p id="d">Ilova işlaşi uçun internet kerak. Wi-Fi yoki mobil internetni yoqib, qayta urinib kõring.</p>
+    <button id="b" onclick="location.href='https://diabetmed.uz/'">Qayta uriniş</button>
+  </div>
+  <script>
+    var lang = 'uz';
+    try { lang = localStorage.getItem('language') || (navigator.language || '').slice(0, 2); } catch (e) {}
+    var T = {
+      ru: ['Нет подключения к интернету', 'Для работы приложения нужен интернет. Включите Wi-Fi или мобильные данные и попробуйте снова.', 'Повторить'],
+      en: ['No internet connection', 'The app needs internet. Turn on Wi-Fi or mobile data and try again.', 'Try again']
+    };
+    if (T[lang]) { document.getElementById('t').textContent = T[lang][0]; document.getElementById('d').textContent = T[lang][1]; document.getElementById('b').textContent = T[lang][2]; }
+    window.addEventListener('online', function () { location.href = 'https://diabetmed.uz/'; });
+  </script>
+</body>
+</html>
