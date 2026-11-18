@@ -11,7 +11,7 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  const BACKEND_URL = 'https://smart-monitor-4fv9.onrender.com';
+  const BACKEND_URL = 'https://smart-monitor-1-a037.onrender.com';
 
   try {
     const response = await fetch(`${BACKEND_URL}/api/cron/check-reminders`, {

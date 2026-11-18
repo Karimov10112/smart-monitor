@@ -8,6 +8,6 @@
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "env": {
-    "VITE_API_URL": "https://smart-monitor-4fv9.onrender.com"
+    "VITE_API_URL": "https://smart-monitor-1-a037.onrender.com"
   }
 }

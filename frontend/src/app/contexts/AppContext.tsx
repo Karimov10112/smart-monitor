@@ -56,7 +56,7 @@ const isLocalHost = typeof window !== 'undefined' && (
 
 const SOCKET_URL = isLocalHost
   ? 'http://localhost:5000'
-  : ((import.meta as any).env?.VITE_API_URL || 'https://smart-monitor-4fv9.onrender.com');
+  : ((import.meta as any).env?.VITE_API_URL || 'https://smart-monitor-1-a037.onrender.com');
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const { isAuthenticated, user, updateUser } = useAuth();

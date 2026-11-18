@@ -62,7 +62,7 @@ function initReminderScheduler(io) {
   console.log('⏰ Telegram Reminder scheduler initialized (Asia/Tashkent)');
 
   // 🔄 Self-Ping keep-alive: Server har 5 daqiqada o'zini o'zi uyg'otib turadi (hech qachon uxlamaydi!)
-  const BACKEND_URL = process.env.RENDER_EXTERNAL_URL || 'https://smart-monitor-4fv9.onrender.com';
+  const BACKEND_URL = process.env.RENDER_EXTERNAL_URL || 'https://smart-monitor-1-a037.onrender.com';
   cron.schedule('*/5 * * * *', async () => {
     try {
       const res = await fetch(`${BACKEND_URL}/api/health`);
