@@ -144,3 +144,77 @@ export async function syncReminderNotifications(
     console.warn('Reminder notifications could not be scheduled', err);
   }
 }
+
+export interface ReminderNotificationStatus {
+  native: boolean;          // running inside the Android app
+  available: boolean;       // this APK has the notifications plugin
+  permission?: string;      // granted / denied / prompt
+  exact?: string;           // exact alarms: granted / denied
+  scheduled?: number;       // reminder notifications waiting on the phone
+  next?: string;            // next one (local time)
+  error?: string;
+}
+
+/** Snapshot of the phone-side reminder setup, shown in the reminders dialog. */
+export async function getReminderNotificationStatus(): Promise<ReminderNotificationStatus> {
+  if (!isNativeApp) return { native: false, available: false };
+  if (!nativeRemindersAvailable) return { native: true, available: false };
+  try {
+    const { LocalNotifications } = await import('@capacitor/local-notifications');
+    const perm = await LocalNotifications.checkPermissions();
+    const exact: any = await LocalNotifications.checkExactNotificationSetting().catch(() => ({}));
+    const pending = await LocalNotifications.getPending();
+    const ours = pending.notifications.filter(n => isOurs(n.id));
+    const times = ours
+      .map(n => (n.schedule as any)?.at ? new Date((n.schedule as any).at).getTime() : NaN)
+      .filter(t => !Number.isNaN(t) && t > Date.now())
+      .sort((a, b) => a - b);
+    const next = times.length ? new Date(times[0]) : null;
+    return {
+      native: true,
+      available: true,
+      permission: perm.display,
+      exact: exact?.exact_alarm,
+      scheduled: ours.length,
+      next: next ? `${next.toLocaleDateString()} ${String(next.getHours()).padStart(2, '0')}:${String(next.getMinutes()).padStart(2, '0')}` : undefined,
+    };
+  } catch (err: any) {
+    return { native: true, available: true, error: String(err?.message || err) };
+  }
+}
+
+/** Schedules a one-off test notification ~1 minute from now (asks for permission if needed). */
+export async function sendTestNotification(title: string, body: string): Promise<{ ok: boolean; at?: string; error?: string }> {
+  if (!nativeRemindersAvailable) return { ok: false, error: 'plugin' };
+  try {
+    const { LocalNotifications } = await import('@capacitor/local-notifications');
+    let perm = await LocalNotifications.checkPermissions();
+    if (perm.display !== 'granted') perm = await LocalNotifications.requestPermissions();
+    if (perm.display !== 'granted') return { ok: false, error: 'permission' };
+    if (!channelReady && Capacitor.getPlatform() === 'android') {
+      await LocalNotifications.createChannel({ id: CHANNEL_ID, name: 'Eslatmalar', description: 'Dori va insulin eslatmalari', importance: 5, visibility: 1, vibration: true });
+      channelReady = true;
+    }
+    const exact = await exactAlarmsAllowed();
+    const at = new Date(Date.now() + 60000);
+    await LocalNotifications.schedule({
+      notifications: [{ id: ID_BASE - 1, title, body, channelId: CHANNEL_ID, schedule: { at, allowWhileIdle: true }, isExactNotification: exact }],
+    });
+    return { ok: true, at: `${String(at.getHours()).padStart(2, '0')}:${String(at.getMinutes()).padStart(2, '0')}` };
+  } catch (err: any) {
+    return { ok: false, error: String(err?.message || err) };
+  }
+}
+
+/** Removes every reminder notification from the phone (explicit logout only). */
+export async function clearReminderNotifications(): Promise<void> {
+  lastArgs = null;
+  lastSignature = '';
+  if (!nativeRemindersAvailable) return;
+  try {
+    const { LocalNotifications } = await import('@capacitor/local-notifications');
+    const pending = await LocalNotifications.getPending();
+    const ours = pending.notifications.filter(n => isOurs(n.id) || n.id === ID_BASE - 1);
+    if (ours.length) await LocalNotifications.cancel({ notifications: ours.map(n => ({ id: n.id })) });
+  } catch { /* ignore */ }
+}

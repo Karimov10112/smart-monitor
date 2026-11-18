@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { authAPI } from '../utils/api';
+import { isNativeApp } from '../utils/platform';
+import { clearReminderNotifications } from '../utils/nativeReminders';
 
 export type UserRole = 'user' | 'doctor' | 'admin' | 'superadmin';
 
@@ -82,6 +84,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = React.useCallback(async () => {
+    // Explicit sign-out: also remove this user's reminder notifications from the phone
+    clearReminderNotifications();
     try { await authAPI.logout(); } catch {}
     localStorage.removeItem('token');
     localStorage.removeItem('refreshToken');
@@ -97,9 +101,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // 30 Minutes Inactivity Auto-Logout
+  // 30 Minutes Inactivity Auto-Logout (website only: in the phone app it would sign the
+  // user out in the background and cancel their medication reminders)
   useEffect(() => {
-    if (!token) return;
+    if (!token || isNativeApp) return;
 
     const INACTIVITY_LIMIT = 30 * 60 * 1000; // 30 minutes
     localStorage.setItem('lastActivity', Date.now().toString());

@@ -161,12 +161,13 @@ function App() {
     return () => clearInterval(interval);
   }, [isAuthenticated, reminders, t.reminderTriggered]);
 
-  // Android app: keep phone notifications in sync with the reminder list (cleared on logout)
+  // Android app: keep phone notifications in sync with the reminder list
   useEffect(() => {
     if (loading) return; // auth still resolving at startup: keep what is scheduled
     if (!isAuthenticated) {
+      // Session ended (expired token etc.): keep the phone's reminders; an explicit
+      // "Log out" clears them in AuthContext.logout
       setRemindersLoaded(false);
-      syncReminderNotifications([], t.reminderTriggered || 'Eslatma'); // logged out: clear
       return;
     }
     if (!remindersLoaded) return; // not loaded yet / request failed: keep what is scheduled

@@ -5,7 +5,8 @@ import { reminderAPI } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useTelegramLink } from '../utils/useTelegramLink';
 import { toast } from 'sonner';
-import { nativeRemindersAvailable, exactAlarmsAllowed, openExactAlarmSettings } from '../utils/nativeReminders';
+import { nativeRemindersAvailable, exactAlarmsAllowed, openExactAlarmSettings, getReminderNotificationStatus, sendTestNotification, type ReminderNotificationStatus } from '../utils/nativeReminders';
+import { isNativeApp } from '../utils/platform';
 
 interface ReminderModalProps {
   isOpen: boolean;
@@ -31,6 +32,17 @@ const COPY = {
     exactTitle: 'Eslatmalar aniq vaqtda kelsin',
     exactDesc: 'Telefon sozlamalarida "Signal va eslatmalar" ruxsatini yoqing, aks holda eslatma bir necha daqiqa kech kelişi mumkin.',
     exactBtn: 'Ruxsat beriş',
+    diagTitle: 'Telefon bildirişnomalari',
+    diagWeb: "Telefon bildirişnomalari faqat Android ilovasida işlaydi. Siz hozir saytni brauzerda oçgansiz — eslatmalar Telegram orqali keladi.",
+    diagOld: "Ilovangiz eski versiyada. Bildirişnomalar uçun yangi QandNazorati.apk ni õrnating.",
+    diagPerm: 'Bildirişnoma ruxsati',
+    diagExact: 'Aniq vaqt ruxsati',
+    diagCount: 'Rejalaştirilgan',
+    diagNext: 'Keyingisi',
+    diagTest: 'Sinov bildirişnomasi (1 daqiqa)',
+    diagTestSent: 'Sinov {t} da keladi. Ilovani yopib, ekranni õçirib kuting.',
+    diagTestFail: 'Sinovni rejalaştirib bõlmadi',
+    yes: 'Ha', no: "Yõq",
   },
   ru: {
     tgTitle: 'Напоминания в Telegram',
@@ -46,6 +58,17 @@ const COPY = {
     exactTitle: 'Напоминания точно по времени',
     exactDesc: 'Включите разрешение «Будильники и напоминания» в настройках телефона, иначе напоминание может прийти на несколько минут позже.',
     exactBtn: 'Разрешить',
+    diagTitle: 'Уведомления на телефоне',
+    diagWeb: 'Уведомления на телефоне работают только в Android-приложении. Сейчас открыт сайт в браузере — напоминания приходят в Telegram.',
+    diagOld: 'У вас старая версия приложения. Установите новый QandNazorati.apk для уведомлений.',
+    diagPerm: 'Разрешение на уведомления',
+    diagExact: 'Точное время',
+    diagCount: 'Запланировано',
+    diagNext: 'Следующее',
+    diagTest: 'Тестовое уведомление (1 мин)',
+    diagTestSent: 'Тест придёт в {t}. Закройте приложение и выключите экран.',
+    diagTestFail: 'Не удалось запланировать тест',
+    yes: 'Да', no: 'Нет',
   },
   en: {
     tgTitle: 'Reminders in Telegram',
@@ -61,6 +84,17 @@ const COPY = {
     exactTitle: 'Get reminders on time',
     exactDesc: 'Turn on "Alarms & reminders" for this app in phone settings, otherwise a reminder may arrive a few minutes late.',
     exactBtn: 'Allow',
+    diagTitle: 'Phone notifications',
+    diagWeb: 'Phone notifications only work in the Android app. You are using the website in a browser — reminders arrive via Telegram.',
+    diagOld: 'Your app is an old version. Install the new QandNazorati.apk to get notifications.',
+    diagPerm: 'Notification permission',
+    diagExact: 'Exact time',
+    diagCount: 'Scheduled',
+    diagNext: 'Next',
+    diagTest: 'Test notification (1 min)',
+    diagTestSent: 'The test arrives at {t}. Close the app and turn the screen off.',
+    diagTestFail: 'Could not schedule the test',
+    yes: 'Yes', no: 'No',
   },
 };
 
@@ -81,6 +115,19 @@ export const ReminderModal: React.FC<ReminderModalProps> = ({ isOpen, onClose, l
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [touched, setTouched] = useState(false);
   const [exactOk, setExactOk] = useState(true);
+  const [diag, setDiag] = useState<ReminderNotificationStatus | null>(null);
+  const [testMsg, setTestMsg] = useState<string | null>(null);
+  const isPhone = typeof window !== 'undefined' && (isNativeApp || window.innerWidth < 900);
+
+  // Phone-notification diagnostics (refreshed when opened and after the list changes)
+  useEffect(() => {
+    if (!isOpen || !isPhone) return;
+    let alive = true;
+    const load = () => getReminderNotificationStatus().then(st => { if (alive) setDiag(st); });
+    load();
+    const timer = setTimeout(load, 2500);
+    return () => { alive = false; clearTimeout(timer); };
+  }, [isOpen, reminders, isPhone]);
 
   // Android app: check the "Alarms & reminders" permission each time the dialog opens
   useEffect(() => {
@@ -202,6 +249,46 @@ export const ReminderModal: React.FC<ReminderModalProps> = ({ isOpen, onClose, l
                   {user?.telegramChatId ? c.reconnect : c.connect}
                 </a>
               </div>
+
+
+              {/* Phone notification diagnostics */}
+              {isPhone && diag && (
+                <div className="mx-5 sm:mx-6 mt-3 p-3.5 rounded-2xl border border-border bg-muted/50">
+                  <p className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2"><BellRing className="w-4 h-4 text-primary" />{c.diagTitle}</p>
+                  {!diag.native ? (
+                    <p className="text-xs text-muted-foreground">{c.diagWeb}</p>
+                  ) : !diag.available ? (
+                    <p className="text-xs text-glucose-high font-medium">{c.diagOld}</p>
+                  ) : (
+                    <>
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                        <span className="text-muted-foreground">{c.diagPerm}</span>
+                        <span className={`font-semibold ${diag.permission === 'granted' ? 'text-glucose-in-range' : 'text-destructive'}`}>{diag.permission === 'granted' ? c.yes : `${c.no} (${diag.permission || '?'})`}</span>
+                        <span className="text-muted-foreground">{c.diagExact}</span>
+                        <span className={`font-semibold ${diag.exact === 'denied' ? 'text-glucose-high' : 'text-glucose-in-range'}`}>{diag.exact === 'denied' ? c.no : c.yes}</span>
+                        <span className="text-muted-foreground">{c.diagCount}</span>
+                        <span className="font-semibold text-foreground tabular-nums">{diag.scheduled ?? 0}</span>
+                        <span className="text-muted-foreground">{c.diagNext}</span>
+                        <span className="font-semibold text-foreground tabular-nums">{diag.next || '—'}</span>
+                      </div>
+                      {diag.error && <p className="text-xs text-destructive mt-2 break-all">{diag.error}</p>}
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          setTestMsg(null);
+                          const r = await sendTestNotification(t.reminderTriggered || 'Eslatma', 'Qand Nazorati — test');
+                          setTestMsg(r.ok ? c.diagTestSent.replace('{t}', r.at || '') : `${c.diagTestFail}: ${r.error}`);
+                          getReminderNotificationStatus().then(setDiag);
+                        }}
+                        className="mt-3 w-full h-9 rounded-[10px] border border-border bg-card text-sm font-semibold text-foreground hover:bg-muted transition-colors"
+                      >
+                        {c.diagTest}
+                      </button>
+                      {testMsg && <p className="text-xs text-muted-foreground mt-2">{testMsg}</p>}
+                    </>
+                  )}
+                </div>
+              )}
 
               {nativeRemindersAvailable && !exactOk && reminders.length > 0 && (
                 <div className="mx-5 sm:mx-6 mt-3 p-3.5 rounded-2xl border border-glucose-high/30 bg-glucose-high/[0.08] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
