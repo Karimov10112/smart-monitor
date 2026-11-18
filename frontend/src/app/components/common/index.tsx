@@ -22,6 +22,7 @@ import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import { useApp } from '../../contexts/AppContext';
 import { classifyGlucose, glucoseLabel } from '../../utils/glucose';
 import { translations } from '../../utils/translations';
+import { AuthIllustration } from './AuthIllustration';
 
 /* -------------------------------------------------------------------------- */
 /* Brand                                                                       */
@@ -373,9 +374,12 @@ export function AuthLayout({ children, title, subtitle, icon, maxWidth = 440 }: 
           justifyContent: 'space-between',
           width: { md: '42%', lg: '40%' },
           maxWidth: 560,
-          p: 6,
+          p: { md: 5, lg: 6 },
+          position: 'sticky',
+          top: 0,
+          height: '100dvh',
+          gap: 3,
           color: '#fff',
-          position: 'relative',
           overflow: 'hidden',
           background: isDark
             ? 'linear-gradient(160deg, #0B3B4A 0%, #0B1220 100%)'
@@ -395,8 +399,22 @@ export function AuthLayout({ children, title, subtitle, icon, maxWidth = 440 }: 
           </Box>
         </Stack>
 
+        {/* Illustration + subtle grid */}
+        <Box
+          sx={{
+            position: 'absolute', inset: 0, pointerEvents: 'none', opacity: 0.5,
+            backgroundImage: `linear-gradient(${alpha('#fff', 0.05)} 1px, transparent 1px), linear-gradient(90deg, ${alpha('#fff', 0.05)} 1px, transparent 1px)`,
+            backgroundSize: '32px 32px',
+            maskImage: 'radial-gradient(ellipse at 50% 40%, #000 30%, transparent 75%)',
+            WebkitMaskImage: 'radial-gradient(ellipse at 50% 40%, #000 30%, transparent 75%)',
+          }}
+        />
+        <Box sx={{ position: 'relative', flex: 1, minHeight: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <AuthIllustration sx={{ maxWidth: 440, maxHeight: '100%', '& svg': { maxHeight: '36vh' } }} />
+        </Box>
+
         <Box sx={{ position: 'relative' }}>
-          <Typography sx={{ fontSize: { md: '1.75rem', lg: '2rem' }, fontWeight: 700, lineHeight: 1.25, letterSpacing: '-0.02em', mb: 3 }}>
+          <Typography sx={{ fontSize: { md: '1.625rem', lg: '1.875rem' }, fontWeight: 700, lineHeight: 1.25, letterSpacing: '-0.02em', mb: 3 }}>
             {copy.headline}
           </Typography>
           <Stack spacing={1.5}>
@@ -417,7 +435,13 @@ export function AuthLayout({ children, title, subtitle, icon, maxWidth = 440 }: 
       </Box>
 
       {/* Form side */}
-      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+      <Box
+        sx={{
+          flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, position: 'relative',
+          backgroundImage: `radial-gradient(${alpha(theme.palette.primary.main, isDark ? 0.14 : 0.1)} 1px, transparent 1.5px), radial-gradient(circle at 100% 0%, ${alpha(theme.palette.primary.main, isDark ? 0.18 : 0.1)}, transparent 45%), radial-gradient(circle at 0% 100%, ${alpha(theme.palette.ai.main, isDark ? 0.12 : 0.06)}, transparent 40%)`,
+          backgroundSize: '22px 22px, 100% 100%, 100% 100%',
+        }}
+      >
         <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ p: { xs: 2, sm: 3 } }}>
           <Box sx={{ display: { md: 'none' } }}><BrandMark size={34} showName name={appName} /></Box>
           <Box sx={{ display: { xs: 'none', md: 'block' } }} />
@@ -429,6 +453,22 @@ export function AuthLayout({ children, title, subtitle, icon, maxWidth = 440 }: 
 
         <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', px: { xs: 2, sm: 3 }, pb: 6 }}>
           <Box sx={{ width: '100%', maxWidth }}>
+            <Box
+              sx={{
+                display: { xs: 'flex', md: 'none' },
+                justifyContent: 'center',
+                mb: 3,
+                px: 2,
+                py: 1.5,
+                borderRadius: 5,
+                overflow: 'hidden',
+                background: isDark
+                  ? 'linear-gradient(160deg, #0B3B4A 0%, #0B1220 100%)'
+                  : 'linear-gradient(160deg, #0E7490 0%, #0B4F63 100%)',
+              }}
+            >
+              <AuthIllustration sx={{ maxWidth: 250 }} />
+            </Box>
             <Box sx={{ mb: 3.5 }}>
               {icon && <IconTile size={48} sx={{ mb: 2 }}>{icon}</IconTile>}
               <Typography variant="h4" component="h1">{title}</Typography>
