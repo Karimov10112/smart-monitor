@@ -5,6 +5,7 @@ import { useApp } from './contexts/AppContext';
 import { translations } from './utils/translations';
 import { sentenceCase } from './utils/glucose';
 import { formatLongToday } from './utils/format';
+import { syncReminderNotifications, nativeRemindersAvailable } from './utils/nativeReminders';
 
 // MUI Components
 import {
@@ -122,7 +123,8 @@ function App() {
   };
 
   useEffect(() => {
-    if (!isAuthenticated || reminders.length === 0) return;
+    // In the Android app the phone schedules these itself (see nativeReminders.ts)
+    if (!isAuthenticated || reminders.length === 0 || nativeRemindersAvailable) return;
 
     const checkReminders = () => {
       const now = new Date();
@@ -153,6 +155,11 @@ function App() {
     const interval = setInterval(checkReminders, 15000); // Check every 15s for better accuracy
     checkReminders();
     return () => clearInterval(interval);
+  }, [isAuthenticated, reminders, t.reminderTriggered]);
+
+  // Android app: keep phone notifications in sync with the reminder list (cleared on logout)
+  useEffect(() => {
+    syncReminderNotifications(isAuthenticated ? reminders : [], t.reminderTriggered || 'Eslatma');
   }, [isAuthenticated, reminders, t.reminderTriggered]);
 
   const openReminders = () => {

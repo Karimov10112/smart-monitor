@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Clock, Pill, Syringe, Trash2, Send, Loader2, BellRing, CheckCircle2 } from 'lucide-react';
+import { X, Clock, Pill, Syringe, Trash2, Send, Loader2, BellRing, CheckCircle2, AlarmClock } from 'lucide-react';
 import { reminderAPI } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useTelegramLink } from '../utils/useTelegramLink';
 import { toast } from 'sonner';
+import { nativeRemindersAvailable, exactAlarmsAllowed, openExactAlarmSettings } from '../utils/nativeReminders';
 
 interface ReminderModalProps {
   isOpen: boolean;
@@ -27,6 +28,9 @@ const COPY = {
     emptyHint: 'Çap tomondagi şakl orqali birinçi eslatmani qõşing',
     daily: 'Har kuni',
     required: 'Majburiy maydon',
+    exactTitle: 'Eslatmalar aniq vaqtda kelsin',
+    exactDesc: 'Telefon sozlamalarida "Signal va eslatmalar" ruxsatini yoqing, aks holda eslatma bir necha daqiqa kech kelişi mumkin.',
+    exactBtn: 'Ruxsat beriş',
   },
   ru: {
     tgTitle: 'Напоминания в Telegram',
@@ -39,6 +43,9 @@ const COPY = {
     emptyHint: 'Добавьте первое напоминание с помощью формы',
     daily: 'Ежедневно',
     required: 'Обязательное поле',
+    exactTitle: 'Напоминания точно по времени',
+    exactDesc: 'Включите разрешение «Будильники и напоминания» в настройках телефона, иначе напоминание может прийти на несколько минут позже.',
+    exactBtn: 'Разрешить',
   },
   en: {
     tgTitle: 'Reminders in Telegram',
@@ -51,6 +58,9 @@ const COPY = {
     emptyHint: 'Add your first reminder using the form',
     daily: 'Daily',
     required: 'Required field',
+    exactTitle: 'Get reminders on time',
+    exactDesc: 'Turn on "Alarms & reminders" for this app in phone settings, otherwise a reminder may arrive a few minutes late.',
+    exactBtn: 'Allow',
   },
 };
 
@@ -70,6 +80,16 @@ export const ReminderModal: React.FC<ReminderModalProps> = ({ isOpen, onClose, l
   const [loading, setLoading] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [touched, setTouched] = useState(false);
+  const [exactOk, setExactOk] = useState(true);
+
+  // Android app: check the "Alarms & reminders" permission each time the dialog opens
+  useEffect(() => {
+    if (!isOpen || !nativeRemindersAvailable) return;
+    exactAlarmsAllowed().then(setExactOk);
+    const onVisible = () => { if (document.visibilityState === 'visible') exactAlarmsAllowed().then(setExactOk); };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [isOpen]);
 
   // Close on Escape
   useEffect(() => {
@@ -182,6 +202,25 @@ export const ReminderModal: React.FC<ReminderModalProps> = ({ isOpen, onClose, l
                   {user?.telegramChatId ? c.reconnect : c.connect}
                 </a>
               </div>
+
+              {nativeRemindersAvailable && !exactOk && reminders.length > 0 && (
+                <div className="mx-5 sm:mx-6 mt-3 p-3.5 rounded-2xl border border-glucose-high/30 bg-glucose-high/[0.08] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-start gap-3 min-w-0">
+                    <AlarmClock className="w-5 h-5 text-glucose-high shrink-0 mt-0.5" />
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-foreground">{c.exactTitle}</p>
+                      <p className="text-xs text-muted-foreground">{c.exactDesc}</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => openExactAlarmSettings()}
+                    className="h-9 px-3.5 rounded-[10px] bg-primary text-primary-foreground text-sm font-semibold whitespace-nowrap hover:bg-primary/90 transition-colors"
+                  >
+                    {c.exactBtn}
+                  </button>
+                </div>
+              )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-0 p-5 sm:p-6">
                 {/* Form Section */}

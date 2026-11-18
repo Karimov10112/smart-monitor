@@ -28,6 +28,10 @@ const config: CapacitorConfig = {
       showSpinner: false,
       androidScaleType: 'CENTER_CROP',
     },
+    LocalNotifications: {
+      smallIcon: 'ic_stat_reminder',
+      iconColor: '#0E7490',
+    },
     StatusBar: {
       backgroundColor: '#0E7490',
       style: 'DARK',
