@@ -85,6 +85,9 @@ function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isReminderModalOpen, setIsReminderModalOpen] = useState(false);
   const [reminders, setReminders] = useState<any[]>([]);
+  // True only after the list came back from the server (an empty initial/failed
+  // load must not wipe the reminders already scheduled on the phone)
+  const [remindersLoaded, setRemindersLoaded] = useState(false);
   const [adminContacts, setAdminContacts] = useState({ phone: '', telegramUsername: '' });
   const [userMenuAnchor, setUserMenuAnchor] = useState<null | HTMLElement>(null);
   const triggeredReminders = React.useRef<Set<string>>(new Set());
@@ -103,6 +106,7 @@ function App() {
       try {
         const { data: remData } = await reminderAPI.getAll();
         setReminders(remData.reminders || []);
+        setRemindersLoaded(true);
       } catch (err) {}
     };
     if (isAuthenticated) loadData();
@@ -118,6 +122,7 @@ function App() {
     try {
       const { data } = await reminderAPI.getAll();
       setReminders(data.reminders || []);
+      setRemindersLoaded(true);
     } catch { }
   };
 
@@ -158,8 +163,15 @@ function App() {
 
   // Android app: keep phone notifications in sync with the reminder list (cleared on logout)
   useEffect(() => {
-    syncReminderNotifications(isAuthenticated ? reminders : [], t.reminderTriggered || 'Eslatma');
-  }, [isAuthenticated, reminders, t.reminderTriggered]);
+    if (loading) return; // auth still resolving at startup: keep what is scheduled
+    if (!isAuthenticated) {
+      setRemindersLoaded(false);
+      syncReminderNotifications([], t.reminderTriggered || 'Eslatma'); // logged out: clear
+      return;
+    }
+    if (!remindersLoaded) return; // not loaded yet / request failed: keep what is scheduled
+    syncReminderNotifications(reminders, t.reminderTriggered || 'Eslatma');
+  }, [loading, isAuthenticated, remindersLoaded, reminders, t.reminderTriggered]);
 
   const openReminders = () => {
     setIsSidebarOpen(false);
