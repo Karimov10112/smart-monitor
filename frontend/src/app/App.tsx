@@ -98,12 +98,11 @@ function App() {
 
   useEffect(() => {
     const loadData = async () => {
+      // Independent requests: a failing contacts call must not leave reminders unloaded
+      adminAPI.getContacts().then(({ data }) => setAdminContacts(data.contacts)).catch(() => {});
       try {
-        const { data: contactsData } = await adminAPI.getContacts();
-        setAdminContacts(contactsData.contacts);
-
         const { data: remData } = await reminderAPI.getAll();
-        setReminders(remData.reminders);
+        setReminders(remData.reminders || []);
       } catch (err) {}
     };
     if (isAuthenticated) loadData();
