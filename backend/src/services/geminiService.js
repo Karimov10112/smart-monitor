@@ -211,6 +211,18 @@ const getNutritionRecommendation = async (req, res) => {
           : `\n\n!!! URGENT: Sugar level is critically high (${latestSugar} mmol/l). Contact a doctor !!!`;
     }
 
+    // ─── High sugar: doctor's rule — ask for a daily glycemic profile, never "re-check in N days" ───
+    const latestNum = latestSugar ? parseFloat(latestSugar) : 0;
+    const needsProfile = latestNum > 0 && (isFasting ? latestNum >= 11 : latestNum >= 13);
+    const profileRule = !needsProfile ? '' : language === 'ru'
+      ? `
+3. Сахар высокий: в разделе ДЕЙСТВИЕ НЕ пишите «перемерьте через несколько дней». Напишите: сделать СУТОЧНЫЙ ГЛИКЕМИЧЕСКИЙ ПРОФИЛЬ сегодня или завтра — натощак до инсулина/таблеток; через 2 ч после завтрака; перед обедом (при 1 типе — до короткого инсулина); через 2 ч после обеда; перед ужином до короткого инсулина; перед сном в 21:00–22:00 до Инсулатарда или Лантуса — и показать результаты врачу.`
+      : language === 'en'
+      ? `
+3. Sugar is high: in ACTION STEP do NOT say "re-check in a few days". Say: do a DAILY GLUCOSE PROFILE today or tomorrow — fasting before insulin/tablets; 2 h after breakfast; before lunch (type 1: before short-acting insulin); 2 h after lunch; before dinner before short-acting insulin; at bedtime 21:00–22:00 before Insulatard or Lantus — and show the results to the doctor.`
+      : `
+3. Qand yuqori: AMALIY HARAKAT bo'limida "bir necha kundan keyin qayta o'lchang" deb YOZMANG. Buning o'rniga: bugun yoki ertaga SUTKALIK GLIKEMIK PROFIL qilish — och qoringa insulin/tabletkadan oldin; nonushtadan 2 soat keyin; tushlikdan oldin (1-tipda oddiy insulindan oldin); tushlikdan 2 soat keyin; kechki ovqatdan oldin oddiy insulindan oldin; uxlashdan oldin soat 21:00–22:00 da Insulatard yoki Lantusdan oldin — va natijani shifokorga ko'rsatish.`;
+
     // ─── Build prompt with diversity nonce ───────────────────
     const nonce = Date.now().toString(36);
     let prompt = `[ID: ${nonce}]\n`;
@@ -230,7 +242,7 @@ const getNutritionRecommendation = async (req, res) => {
 
 ПРАВИЛА:
 1. ${mealRuleRu}
-2. Текст должен быть предельно кратким (буллеты по 1 строке).
+2. Текст должен быть предельно кратким (буллеты по 1 строке).${profileRule}
 
 ФОРМАТ ОТВЕТА (ТОЧНО ТАК):
 **1. АНАЛИЗ САХАРА**
@@ -258,7 +270,7 @@ PATIENT DATA:
 
 RULES:
 1. ${mealRuleEn}
-2. Keep it ultra-concise, single-line bullets only.
+2. Keep it ultra-concise, single-line bullets only.${profileRule}
 
 OUTPUT FORMAT:
 **1. GLUCOSE STATUS**
@@ -287,7 +299,7 @@ BEMOR MA'LUMOTLARI:
 
 QAT'IY QOIDALAR:
 1. ${mealRuleUz}
-2. MATN JUDA QISQA VA ANIQ BO'LSIN! Hech qanday umumiy so'zlar yoki keraksiz gaplarsiz, bemor 5 soniyada o'qib tushunadigan lo'nda punktlar bo'lsin.
+2. MATN JUDA QISQA VA ANIQ BO'LSIN! Hech qanday umumiy so'zlar yoki keraksiz gaplarsiz, bemor 5 soniyada o'qib tushunadigan lo'nda punktlar bo'lsin.${profileRule}
 
 JAVOB FORMATI (AYNAN SHUNDAY CHIQARING):
 **1. QAND HOLATI**

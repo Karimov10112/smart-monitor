@@ -61,6 +61,7 @@ import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import { SectionCard, StatTile, GlucoseBadge, IconTile } from './common';
 import { classifyGlucose, glucoseLabel, GLUCOSE_BANDS } from '../utils/glucose';
 import { formatShortDate } from '../utils/format';
+import { GlycemicProfileAdvice } from './GlycemicProfile';
 
 const UI: Record<string, Record<string, string>> = {
   uz: {
@@ -173,6 +174,8 @@ export function DailyJournal() {
   const postMealVal = parseFloat(formData.postMealLevel);
   const isHypo = (fastingVal > 0 && fastingVal < 3.9) || (postMealVal > 0 && postMealVal < 3.9);
   const isHyper = (fastingVal >= 13.0) || (postMealVal >= 13.0);
+  // High reading (same thresholds as the doctor alert, or the hyperglycemia warning) -> ask for a daily glucose profile
+  const needsProfile = isHyper || fastingVal >= 11 || postMealVal >= 14;
 
   // AI State
   const [aiLoading, setAiLoading] = useState(false);
@@ -444,6 +447,8 @@ export function DailyJournal() {
                       {t.hyperAdvice}
                     </Alert>
                   )}
+
+                  {needsProfile && <GlycemicProfileAdvice language={language} />}
 
                   <TextField
                     label={t.date}
