@@ -42,6 +42,24 @@ const {
   parseSFLOAT
 } = require('./deviceSync');
 const { t } = require('./i18n');
+const {
+  GLYCEMIC_PROFILE_POINTS,
+  buildGlycemicProfilePlan,
+  needsGlycemicProfile,
+  analyzeGlycemicProfile
+} = require('./glycemicProfile');
+const { analyzeGlucoseTrend, detectHypoglycemiaEpisodes } = require('./trends');
+const { PHYSIOLOGICAL_LIMITS, validateRecord, sanitizeRecords } = require('./validation');
+const { createDiabetesHandlers } = require('./integration/handlers');
+const { createExpressRouter } = require('./integration/express');
+const { getOpenAPISpec } = require('./integration/openapi');
+const {
+  createPatientMonitor,
+  signPayload,
+  verifyWebhookSignature,
+  sendWebhook
+} = require('./integration/monitor');
+const { version: VERSION } = require('../package.json');
 
 module.exports = {
   // 1. Asosiy monitoring va asoratlar xavfi
@@ -99,7 +117,32 @@ module.exports = {
   parseFHIRObservations,
   toFHIRRiskAssessment,
 
-  // 14. Yordamchi modellar va standartlar
+  // 14. Sutkalik glikemik profil (endokrinolog tavsiyasi bo'yicha 6 nuqtali o'lchov)
+  GLYCEMIC_PROFILE_POINTS,
+  buildGlycemicProfilePlan,
+  needsGlycemicProfile,
+  analyzeGlycemicProfile,
+
+  // 15. Dinamika (trend) tahlili
+  analyzeGlucoseTrend,
+  detectHypoglycemiaEpisodes,
+
+  // 16. Kiruvchi ma'lumotlarni tekshirish
+  PHYSIOLOGICAL_LIMITS,
+  validateRecord,
+  sanitizeRecords,
+
+  // 17. Integratsiya interfeyslari: REST handlerlar, Express router, OpenAPI, monitoring va webhook
+  createDiabetesHandlers,
+  createExpressRouter,
+  getOpenAPISpec,
+  createPatientMonitor,
+  signPayload,
+  verifyWebhookSignature,
+  sendWebhook,
+
+  // 18. Yordamchi modellar va standartlar
+  VERSION,
   calculateBMI,
   calculateAge,
   t,

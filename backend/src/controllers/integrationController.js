@@ -113,7 +113,9 @@ const fhirIntegrationAPI = async (req, res) => {
 const getIntegrationDocs = (req, res) => {
   res.json({
     title: "Diabetes Risk & Monitoring Integration Interface (API)",
-    version: "1.0.0",
+    version: "1.4.0",
+    library: "@karimov_dev/diabets (npm install @karimov_dev/diabets)",
+    openapi: "/api/v1/integration/openapi.json",
     description: "Qandli diabet monitoringi va asoratlar xavfini baholash uchun ochiq integratsiya interfeysi (REST API). Boshqa dasturchilar o'z dasturlariga (Python, Flutter, PHP, Java va boshqalar) ulab ishlatishi mumkin.",
     endpoints: [
       {

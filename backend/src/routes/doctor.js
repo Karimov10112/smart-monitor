@@ -15,6 +15,7 @@ router.use(requireRole('doctor', 'superadmin', 'admin'));
 
 router.get('/patients', doctorController.getPatients);
 router.get('/patients/:id/records', doctorController.getPatientRecords);
+router.get('/patients/:id/analytics', doctorController.getPatientAnalytics);
 router.patch('/patients/:id/notes', doctorController.addNote);
 
 module.exports = router;

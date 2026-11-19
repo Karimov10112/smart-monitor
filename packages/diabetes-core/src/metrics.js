@@ -82,6 +82,8 @@ function calculateGlycemicMetrics(records = [], options = {}) {
   // 4. Taxminiy HbA1c (Nathan et al. ADA formulasi)
   const meanMgDl = meanGlucose * 18.0182;
   const estimatedA1C = Number(((meanMgDl + 46.7) / 28.7).toFixed(1));
+  // 4b. GMI — Glucose Management Indicator (Bergenstal et al., 2018): GMI(%) = 3.31 + 0.02392 × o'rtacha qand (mg/dL)
+  const glucoseManagementIndicator = Number((3.31 + 0.02392 * meanMgDl).toFixed(1));
 
   // 5. TIR, TAR, TBR taqsimoti
   let inRangeCount = 0;
@@ -133,6 +135,7 @@ function calculateGlycemicMetrics(records = [], options = {}) {
     meanGlucose,
     meanGlucoseMgDl: Number(meanMgDl.toFixed(1)),
     estimatedA1C,
+    glucoseManagementIndicator,
     standardDeviation,
     coefficientOfVariation,
     stability,

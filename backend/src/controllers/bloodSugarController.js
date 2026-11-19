@@ -1,5 +1,5 @@
 const path = require('path');
-const { assessFullDiabetesRisk } = require(path.resolve(__dirname, '../../../packages/diabetes-core'));
+const { sdk, buildPatientAnalytics, toProfile } = require('../lib/diabets');
 const bloodSugarRepository = require('../repositories/BloodSugarRepository');
 const User = require('../models/User');
 const AuditLog = require('../models/AuditLog');
@@ -9,44 +9,19 @@ const addRecord = async (req, res) => {
   try {
     const record = await bloodSugarRepository.create({ ...req.body, user: req.user._id });
 
-    // ── Shifokorga avtomatik ogohlantirish mezonlari ─────────────────────────
+    // ── Shifokorga avtomatik ogohlantirish — @karimov_dev/diabets (evaluateDoctorAlert) ──
     // Och qoringa:  ≥ 11.0 mmol/l yoki ≤ 3.5 mmol/l
     // To'q qoringa:  ≥ 14.0 mmol/l yoki ≤ 3.5 mmol/l
-    const fasting = parseFloat(record.fastingLevel || 0);
-    const postMeal = parseFloat(record.postMealLevel || 0);
-
-    let isCritical = false;
-    let criticalLevel = 0;
-    let category = '';
-    let alertType = 'CRITICAL_HIGH';
-
-    if (fasting > 0) {
-      if (fasting >= 11.0) {
-        isCritical = true;
-        criticalLevel = fasting;
-        category = 'fasting';
-        alertType = 'CRITICAL_HIGH';
-      } else if (fasting <= 3.5) {
-        isCritical = true;
-        criticalLevel = fasting;
-        category = 'fasting';
-        alertType = 'CRITICAL_LOW';
-      }
-    }
-
-    if (!isCritical && postMeal > 0) {
-      if (postMeal >= 14.0) {
-        isCritical = true;
-        criticalLevel = postMeal;
-        category = 'post-meal';
-        alertType = 'CRITICAL_HIGH';
-      } else if (postMeal <= 3.5) {
-        isCritical = true;
-        criticalLevel = postMeal;
-        category = 'post-meal';
-        alertType = 'CRITICAL_LOW';
-      }
-    }
+    const reading = {
+      fastingLevel: parseFloat(record.fastingLevel) || undefined,
+      postMealLevel: parseFloat(record.postMealLevel) || undefined,
+    };
+    const alert = sdk.evaluateDoctorAlert(reading);
+    const glycemicProfile = sdk.needsGlycemicProfile({ ...reading, lang: req.body.lang || 'uz' });
+    const isCritical = alert.shouldAlert;
+    const criticalLevel = alert.criticalLevel;
+    const category = alert.category === 'postMeal' ? 'post-meal' : alert.category;
+    const alertType = alert.alertType;
 
     if (isCritical) {
       try {
@@ -116,7 +91,7 @@ const addRecord = async (req, res) => {
       }
     }
 
-    res.status(201).json({ success: true, record });
+    res.status(201).json({ success: true, record, analysis: { alert: { shouldAlert: alert.shouldAlert, alertType, criticalLevel, category }, glycemicProfile } });
   } catch (err) {
     console.error('addRecord error:', err);
     res.status(500).json({ success: false, message: 'Server xatosi' });
@@ -183,7 +158,7 @@ const getRiskAssessment = async (req, res) => {
     const user = await User.findById(req.user._id).select('firstName lastName dateOfBirth gender height weight diabetesType systolicPressure diastolicPressure');
     const records = await bloodSugarRepository.find({ user: req.user._id }, { sort: { date: -1 }, limit: 60 });
 
-    const assessment = assessFullDiabetesRisk(user || {}, records || []);
+    const assessment = sdk.assessFullDiabetesRisk(toProfile(user || {}), records || [], { lang: req.query.lang || 'uz' });
     res.json({ success: true, data: assessment });
   } catch (err) {
     console.error('getRiskAssessment error:', err);
@@ -191,4 +166,29 @@ const getRiskAssessment = async (req, res) => {
   }
 };
 
-module.exports = { addRecord, getMyRecords, updateRecord, deleteRecord, getStats, getRiskAssessment };
+// GET /api/blood-sugar/analytics — bemorning to'liq tahlili (@karimov_dev/diabets)
+const getAnalytics = async (req, res) => {
+  try {
+    const lang = ['uz', 'ru', 'en'].includes(req.query.lang) ? req.query.lang : 'uz';
+    const user = await User.findById(req.user._id).select('firstName lastName dateOfBirth gender height weight diabetesType');
+    const records = await bloodSugarRepository.find({ user: req.user._id }, { sort: { date: -1 }, limit: 180 });
+    res.json({ success: true, data: buildPatientAnalytics(user, records || [], lang) });
+  } catch (err) {
+    console.error('getAnalytics error:', err);
+    res.status(500).json({ success: false, message: 'Tahlil qilishda xatolik yuz berdi' });
+  }
+};
+
+// POST /api/blood-sugar/glycemic-profile/analyze — sutkalik profil natijasini tahlil qilish
+const analyzeProfile = async (req, res) => {
+  try {
+    const lang = ['uz', 'ru', 'en'].includes(req.body.lang) ? req.body.lang : 'uz';
+    const user = await User.findById(req.user._id).select('diabetesType');
+    const result = sdk.analyzeGlycemicProfile(req.body.measurements || {}, { lang, diabetesType: user && user.diabetesType });
+    res.json({ success: true, data: result });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Profilni tahlil qilishda xatolik' });
+  }
+};
+
+module.exports = { addRecord, getMyRecords, updateRecord, deleteRecord, getStats, getRiskAssessment, getAnalytics, analyzeProfile };

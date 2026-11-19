@@ -51,6 +51,24 @@ exports.getPatientRecords = async (req, res) => {
   }
 };
 
+// @desc    Patient analytics: metrics, complication risk, trend (@karimov_dev/diabets)
+// @route   GET /api/doctor/patients/:id/analytics
+// @access  Private (Doctor)
+exports.getPatientAnalytics = async (req, res) => {
+  try {
+    const { buildPatientAnalytics } = require('../lib/diabets');
+    const User = require('../models/User');
+    const lang = ['uz', 'ru', 'en'].includes(req.query.lang) ? req.query.lang : 'uz';
+    const patient = await User.findById(req.params.id).select('firstName lastName dateOfBirth gender height weight diabetesType assignedDoctor');
+    if (!patient) return res.status(404).json({ success: false, message: 'Bemor topilmadi' });
+    const records = await bloodSugarRepository.find({ user: req.params.id }, { sort: { date: -1 }, limit: 180 });
+    res.json({ success: true, data: buildPatientAnalytics(patient, records || [], lang) });
+  } catch (err) {
+    console.error('getPatientAnalytics error:', err);
+    res.status(500).json({ success: false, message: 'Server xatosi' });
+  }
+};
+
 // @desc    Add medical note for a patient
 // @route   PATCH /api/doctor/patients/:id/notes
 // @access  Private (Doctor)

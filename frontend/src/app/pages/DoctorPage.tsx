@@ -54,6 +54,7 @@ import TrackChangesRoundedIcon from '@mui/icons-material/TrackChangesRounded';
 import EditNoteRoundedIcon from '@mui/icons-material/EditNoteRounded';
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 import NotificationBell from '../components/NotificationBell';
+import { RiskAnalysisCard } from '../components/RiskAnalysisCard';
 
 type TabType = 'patients' | 'patient-detail' | 'chat';
 
@@ -473,6 +474,8 @@ export default function DoctorPage() {
                   />
                 </Grid>
               </Grid>
+
+              <RiskAnalysisCard language={language} patientId={selectedPatient._id} refreshKey={records.length} />
 
               <SectionCard title={ui.trend} icon={<TimelineIcon />}>
                 {chartData.length > 0 ? (

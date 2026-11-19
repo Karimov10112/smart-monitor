@@ -40,6 +40,7 @@ import { GlucoseTrendChart } from './common/GlucoseTrendChart';
 import { classifyGlucose, glucoseLabel, GLUCOSE_BANDS } from '../utils/glucose';
 import { formatShortDate, formatDate, formatTime } from '../utils/format';
 import { savePdf } from '../utils/platform';
+import { RiskAnalysisCard } from './RiskAnalysisCard';
 import type { GlucoseLevel } from '../../theme';
 
 const UI: Record<string, Record<string, string>> = {
@@ -416,6 +417,9 @@ export function Statistics({ customRecords, customLanguage }: StatisticsProps = 
           </Grid>
         )}
       </Grid>
+
+      {/* Complication risk & trend — @karimov_dev/diabets (own statistics only) */}
+      {!customRecords && <RiskAnalysisCard language={language} refreshKey={records.length} />}
 
       {/* Chart Section */}
       <SectionCard title={ui.trend} subtitle={ui.trendSub} icon={<TimelineIcon />}>
