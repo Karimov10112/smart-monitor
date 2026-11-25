@@ -1,43 +1,114 @@
-# 💙 Qandli Diabet Bemorlari Holatini Monitoring Qilish va Asoratlar Xavfini Baholash Dasturiy Kutubxonasi hamda Integratsiya Interfeyslari
+<p align="center">
+  <img src="./.github/assets/banner.svg" alt="Smart Monitor — diabet monitoringi va asoratlar xavfini baholash" width="100%"/>
+</p>
 
+<p align="center">
+  <a href="https://diabetmed.uz"><img src="https://img.shields.io/badge/Live-diabetmed.uz-22d3ee?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Live"/></a>
+  <a href="https://www.npmjs.com/package/@karimov_dev/diabets"><img src="https://img.shields.io/npm/v/@karimov_dev/diabets?style=for-the-badge&logo=npm&color=CB3837&label=SDK" alt="npm"/></a>
+  <img src="https://img.shields.io/badge/HL7-FHIR%20R4-0b5cad?style=for-the-badge" alt="FHIR R4"/>
+  <img src="https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React"/>
+  <img src="https://img.shields.io/badge/Android-Capacitor-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Android"/>
+  <img src="https://img.shields.io/badge/AI-Gemini%20%2B%20Groq-8E75B2?style=for-the-badge&logo=googlegemini&logoColor=white" alt="AI"/>
+</p>
+
+<p align="center">
+  <b>Qandli diabet bilan kasallangan bemorlar holatini monitoring qilish va asoratlar xavfini baholash uchun<br/>dasturiy kutubxona (SDK), integratsiya interfeyslari va namoyish monitoring tizimi.</b>
+</p>
+
+<p align="center">
+  <a href="#-loyiha-tarkibi">Tarkibi</a> •
+  <a href="#-sdk--diabetes-core">SDK</a> •
+  <a href="#-ishga-tushirish">Ishga tushirish</a> •
+  <a href="#-funksiyalar">Funksiyalar</a> •
+  <a href="#-api-endpointlar">API</a> •
+  <a href="#-texnologiyalar">Texnologiyalar</a>
+</p>
+
+> [!NOTE]
 > **Diplom loyihasi:** Qandli diabet bilan kasallangan bemorlarning holatini monitoring qilish va asoratlar xavfini baholash uchun dasturiy kutubxona va integratsiya interfeyslarini ishlab chiqish.
 
-Ushbu loyiha boshqa dasturchilar va tibbiyot axborot tizimlari (MIS/EHR) uchun diabet asoratlarini baholovchi **ochiq dasturiy kutubxona (SDK)**, **REST/FHIR integratsiya interfeyslari** hamda amaliy **namoyish monitoring veb-tizimini** o'z ichiga oladi.
-
 ---
 
-## 📁 Loyiha tuzilmasi
+## 🧩 Loyiha tarkibi
+
+Loyiha boshqa dasturchilar va tibbiyot axborot tizimlari (MIS/EHR) uchun **ochiq SDK**, **REST/FHIR integratsiya interfeyslari** hamda amaliy **namoyish monitoring veb-tizimini** o‘z ichiga oladi.
+
+```mermaid
+flowchart LR
+    SDK["📦 packages/diabetes-core<br/>@karimov_dev/diabets"]
+    BE["⚙️ backend/<br/>REST API · FHIR · WebSocket"]
+    FE["💻 frontend/<br/>React · Web + Android"]
+    EX["🧪 examples/<br/>Node.js · Python · cURL"]
+    MIS["🏥 MIS / EHR tizimlari"]
+    AI["🤖 Gemini 2.5 Flash<br/>+ Groq Llama 3.3"]
+    DB[("MongoDB")]
+
+    SDK --> BE
+    BE --> FE
+    BE --> DB
+    BE --> AI
+    EX -- HTTP --> BE
+    MIS -- "REST / FHIR R4" --> BE
+```
 
 ```
-diabetes_project/
+smart-monitor/
 ├── packages/
-│   └── diabetes-core/    # ⭐️ Dasturiy kutubxona (Mustaqil SDK / Hisoblash yadrosi)
-├── examples/             # ⭐️ Boshqa dasturchilar uchun namunalar (Node.js, Python, cURL)
+│   └── diabetes-core/    # ⭐ Dasturiy kutubxona (mustaqil SDK / hisoblash yadrosi)
+├── examples/             # ⭐ Boshqa dasturchilar uchun namunalar (Node.js, Python, cURL)
 ├── backend/              # Integratsiya interfeyslari (REST API, FHIR adapter, WebSocket)
-└── frontend/             # Namoyish monitoring tizimi (React + TypeScript + Tailwind)
+└── frontend/             # Namoyish monitoring tizimi (React + TypeScript + Tailwind, Android)
 ```
 
----
+## 📦 SDK — `diabetes-core`
+
+```bash
+npm install @karimov_dev/diabets
+```
+
+| Modul | Nima qiladi |
+|---|---|
+| 📊 **Glisemik metrikalar** | TIR / TAR / TBR, CV%, eA1c (Nathan), GMI (Bergenstal 2018) |
+| 🩺 **Asoratlar xavfi** | Retinopatiya, nefropatiya, kardiovaskulyar (ASCVD), neyropatiya va diabetik tovon |
+| 📋 **FINDRISC** | WHO standarti bo‘yicha 10 yillik 2-tur diabet xavfi |
+| 📄 **CGM parser** | FreeStyle Libre, Dexcom va universal glyukometr CSV fayllari |
+| 📡 **Qurilma sinxronizatsiyasi** | BLE Glucose Service (`0x1808` / `0x2A18`) va USB Serial dekoderi |
+| 💉 **Insulin kalkulyatori** | Bolus / basal: 500-Rule (ICR), 1800/100-Rule (ISF) |
+| 🗓 **Glikemik profil** | 6 nuqtali sutkalik profil rejasi va tahlili |
+| 📈 **Trendlar** | Chiziqli regressiya (mmol/L/hafta, R²), gipoglikemiya epizodlari |
+| 🏥 **HL7 FHIR R4** | `Observation` o‘qish → `RiskAssessment` eksport |
+| 🔌 **Integratsiya** | Express router, REST handlerlar, OpenAPI 3.0, real-time monitor, HMAC webhooklar |
+| 📑 **Hisobotlar** | Shifokor uchun chop etishga tayyor HTML/PDF xulosa |
+| 🌍 **i18n** | O‘zbek, rus, ingliz |
+
+```javascript
+const {
+  parseGlucoseCSV,
+  calculateFINDRISC,
+  assessFullDiabetesRisk,
+  calculateBolusDose,
+} = require('@karimov_dev/diabets');
+
+const records = parseGlucoseCSV(csvDataString);
+const risk = assessFullDiabetesRisk(profile, records);
+```
+
+To‘liq API va misollar: **[packages/diabetes-core/README.md](./packages/diabetes-core/README.md)** · Integratsiya namunalari: **[examples/](./examples)**
 
 ## 🚀 Ishga tushirish
 
-### 1. MongoDB o'rnatish
-MongoDB'ni o'rnating yoki [MongoDB Atlas](https://www.mongodb.com/atlas) dan foydalaning.
+**1. MongoDB** — mahalliy o‘rnating yoki [MongoDB Atlas](https://www.mongodb.com/atlas) dan foydalaning.
 
-### 2. Backend sozlash
+**2. Backend**
 
 ```bash
 cd backend
 npm install
-
-# .env fayl yarating
-cp .env.example .env
-# .env faylini tahrirlang (pastda tushuntirish bor)
-
+cp .env.example .env   # .env faylini tahrirlang (pastda tushuntirish bor)
 npm run dev
 ```
 
-### 3. Frontend sozlash
+**3. Frontend**
 
 ```bash
 cd frontend
@@ -45,12 +116,15 @@ npm install
 npm run dev
 ```
 
-Frontend: http://localhost:5173
-Backend:  http://localhost:5000
+| Xizmat | Manzil |
+|---|---|
+| Frontend | http://localhost:5173 |
+| Backend | http://localhost:5000 |
 
----
+> Ikkalasini birga ishga tushirish: ildiz papkada `npm run install:all`, so‘ng `npm run dev`.
 
-## ⚙️ .env Sozlamalari (backend/.env)
+<details>
+<summary><b>⚙️ <code>backend/.env</code> sozlamalari</b></summary>
 
 ```env
 PORT=5000
@@ -92,69 +166,64 @@ SUPER_ADMIN_EMAIL=admin@diabetesapp.uz
 SUPER_ADMIN_PASSWORD=SuperAdmin123!
 ```
 
----
+</details>
 
 ## 🔑 Funksiyalar
 
-### Autentifikatsiya
-- ✅ Email + parol bilan ro'yxatdan o'tish
-- ✅ Email OTP tasdiqlash (6 xonali kod)
-- ✅ Parol bilan kirish
-- ✅ Email OTP bilan kirish (parolsiz)
-- ✅ Google OAuth
-- ✅ Facebook OAuth
-- ✅ Parolni unutdim / tiklash
-- ✅ JWT Access + Refresh token
-- ✅ Auto token yangilash
+<table>
+<tr>
+<td width="50%" valign="top">
 
-### Foydalanuvchi profili
-- ✅ Ism, familiya, telefon
-- ✅ Tug'ilgan sana, jins
-- ✅ **Viloyat** (14 ta O'zbekiston viloyati)
-- ✅ **Tuman/Shahar**
-- ✅ Diabet turi (1-tip, 2-tip, prediabet, homiladorlik, yo'q)
-- ✅ Shifokor ismi
+### 🔐 Autentifikatsiya
+- Email + parol bilan ro‘yxatdan o‘tish
+- Email OTP tasdiqlash (6 xonali kod)
+- Parol yoki email OTP bilan (parolsiz) kirish
+- Google va Facebook OAuth
+- Parolni tiklash
+- JWT access + refresh token, avtomatik yangilash
 
-### Super Admin Panel
-- ✅ Dashboard: foydalanuvchilar soni, aktiv, bloklangan
-- ✅ Viloyatlar bo'yicha statistika
-- ✅ Diabet turlari bo'yicha statistika
-- ✅ Barcha foydalanuvchilarni ko'rish (qidirish, filtrlash)
-- ✅ Foydalanuvchi qon shakari yozuvlarini ko'rish
-- ✅ Foydalanuvchini bloklash / blokdan chiqarish
-- ✅ Rolni o'zgartirish (user / doctor / superadmin)
-- ✅ Admin eslatmasi qo'shish
-- ✅ Foydalanuvchini o'chirish
+### 👤 Foydalanuvchi profili
+- Ism, familiya, telefon, tug‘ilgan sana, jins
+- **Viloyat** (O‘zbekistonning 14 hududi) va **tuman/shahar**
+- Diabet turi: 1-tip, 2-tip, prediabet, homiladorlik, yo‘q
+- Shifokor ismi
 
-### Qon shakari
-- ✅ Yozuv qo'shish (och qoringa, ovqatdan keyin)
-- ✅ Tarix ko'rish
-- ✅ Statistika
-- ✅ Maslahatlar
+### 🩸 Qon shakari
+- Yozuv qo‘shish (och qoringa, ovqatdan keyin)
+- Tarix, statistika va maslahatlar
 
-### 🤖 AI Agent (Gemini 2.5 Flash + Groq Llama 3.3 70B)
-- ✅ Barcha sahifalarda suzuvchi (floating) AI maslahatchi
-- ✅ Agentic Loop & Tool Calling (avtomatik asboblar chaqirish)
-- ✅ `get_recent_blood_sugar` — oxirgi qand ko'rsatkichlarini DB'dan olish
-- ✅ `get_user_profile` — xavfsiz profil ma'lumotlarini o'qish (parol/tokenlar chiqarilmaydi)
-- ✅ `get_nutrition_advice` — uglevod, non birligi (XE), glikemik indeks maslahatlari
-- ✅ `alert_doctor` — server tomonida tekshiriluvchi kritik qand holatida shifokorga real-time ogohlantirish (Socket.io) va AuditLog
-- ✅ Gemini birlamchi + Groq zaxira (har doim bepul va yuqori tezlikda)
-- ✅ Ko'p muloqotli xotira (Multi-turn conversation history)
-- ✅ 3 tilda javob (uz/ru/en) va tezkor takliflar (Quick prompts)
-- ✅ Rate limiting (har bir autentifikatsiyalangan foydalanuvchiga 20 so'rov/daqiqa)
+</td>
+<td width="50%" valign="top">
 
-### UI/UX
-- ✅ Dark / Light mode
-- ✅ 3 til: O'zbek, Rus, Ingliz
-- ✅ To'liq responsive (mobil + desktop)
-- ✅ Smooth animatsiyalar
+### 🛡 Super admin paneli
+- Dashboard: jami, aktiv va bloklangan foydalanuvchilar
+- Viloyatlar va diabet turlari bo‘yicha statistika
+- Foydalanuvchilarni qidirish, filtrlash, yozuvlarini ko‘rish
+- Bloklash, rol o‘zgartirish (user / doctor / superadmin)
+- Admin eslatmalari, foydalanuvchini o‘chirish
 
----
+### 🤖 AI agent (Gemini 2.5 Flash + Groq Llama 3.3 70B)
+- Barcha sahifalarda suzuvchi AI maslahatchi
+- Agentic loop va tool calling:
+  `get_recent_blood_sugar` · `get_user_profile` · `get_nutrition_advice` · `alert_doctor`
+- Kritik qand holatida shifokorga real-time ogohlantirish (Socket.io) + AuditLog
+- Gemini birlamchi, Groq zaxira provayder
+- Ko‘p bosqichli suhbat xotirasi, uz/ru/en javoblar
+- Rate limiting: foydalanuvchiga 20 so‘rov/daqiqa
 
-## 🔒 API Endpointlar
+### 🎨 UI/UX
+- Dark / Light rejim · 3 til · to‘liq responsive
+- Android ilova (Capacitor) va PWA
 
-### Auth
+</td>
+</tr>
+</table>
+
+## 🔒 API endpointlar
+
+<details>
+<summary><b>Auth</b></summary>
+
 ```
 POST /api/auth/register          - Ro'yxatdan o'tish
 POST /api/auth/verify-otp        - Email OTP tasdiqlash
@@ -170,7 +239,11 @@ GET  /api/auth/google            - Google bilan kirish
 GET  /api/auth/facebook          - Facebook bilan kirish
 ```
 
-### Qon shakari
+</details>
+
+<details>
+<summary><b>Qon shakari</b></summary>
+
 ```
 GET    /api/blood-sugar          - Yozuvlar ro'yxati
 POST   /api/blood-sugar          - Yangi yozuv
@@ -179,7 +252,11 @@ PUT    /api/blood-sugar/:id      - Yozuvni yangilash
 DELETE /api/blood-sugar/:id      - Yozuvni o'chirish
 ```
 
-### Admin (faqat superadmin)
+</details>
+
+<details>
+<summary><b>Admin (faqat superadmin)</b></summary>
+
 ```
 GET    /api/admin/stats              - Dashboard statistika
 GET    /api/admin/users              - Barcha foydalanuvchilar
@@ -191,36 +268,37 @@ PATCH  /api/admin/users/:id/notes    - Admin eslatmasi
 DELETE /api/admin/users/:id          - O'chirish
 ```
 
-### AI Agent
+</details>
+
+<details>
+<summary><b>AI agent</b></summary>
+
 ```
 POST /api/ai/agent      - AI Agent bilan suhbat (Tool-calling, Gemini + Groq)
 POST /api/ai/chat       - Oddiy AI chat
 POST /api/ai/analyze    - Statistikani tahlil qilish
 ```
 
----
+</details>
 
 ## 📦 Texnologiyalar
 
-### Backend
-- **Node.js** + **Express** — server
-- **MongoDB** + **Mongoose** — database
-- **JWT** — autentifikatsiya (Access + Refresh tokens)
-- **Socket.io** — real-time shifokor ogohlantirishlari va chat
-- **Passport.js** — Google/Facebook OAuth
-- **Nodemailer / Resend** — email xizmatlari
-- **bcryptjs** — parol shifrlash
-- **express-rate-limit** — xavfsizlik va DDoS himoyasi
+<p>
+  <img src="https://skillicons.dev/icons?i=nodejs,express,mongodb,react,ts,tailwind,materialui,vite,androidstudio,vercel&theme=dark" alt="Stack"/>
+</p>
 
-### Frontend
-- **React 18** + **TypeScript**
-- **React Router v6** — routing
-- **Axios** — API so'rovlar
-- **Material-UI (MUI)** & **Tailwind CSS** — dizayn tizimi
-- **Framer Motion** — premium animatsiyalar
-- **Recharts** — interaktiv tibbiy grafiklar
-- **Sonner** — bildirishnomalar
+| Qatlam | Texnologiyalar |
+|---|---|
+| **Backend** | Node.js, Express, MongoDB + Mongoose, JWT, Socket.io, Passport.js (Google/Facebook), Nodemailer / Resend, bcryptjs, express-rate-limit |
+| **Frontend** | React 18, TypeScript, React Router v6, Axios, MUI + Tailwind CSS, Framer Motion, Recharts, Sonner, Capacitor (Android) |
+| **AI** | Google Gemini 2.5 Flash (`@google/generative-ai`) — asosiy tool-calling agent · Groq Cloud `llama-3.3-70b-versatile` — zaxira |
+| **Standartlar** | ADA tavsiyalari, WHO FINDRISC, HL7 FHIR R4, OpenAPI 3.0 |
 
-### AI Texnologiyalari
-- **Google Gemini 2.5 Flash** (`@google/generative-ai`) — Tool-calling qobiliyatiga ega asosiy aqlli agent
-- **Groq Cloud API** (`llama-3.3-70b-versatile`) — yuqori tezlikdagi zaxira LLM provider
+---
+
+> [!IMPORTANT]
+> Ushbu tizim tibbiy qaror qabul qilish uchun yordamchi vosita. Davolash bo‘yicha yakuniy qarorlar shifokor tomonidan qabul qilinadi.
+
+<p align="center">
+  Muallif: <a href="https://github.com/Karimov10112"><b>Azamatjon Karimov</b></a> · <a href="https://diabetmed.uz">diabetmed.uz</a> · <a href="https://www.npmjs.com/package/@karimov_dev/diabets">npm</a>
+</p>
